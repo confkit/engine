@@ -1,4 +1,4 @@
- # confkit CLI 技术实现文档
+ # confkit engine CLI 技术实现文档
 
 本文档介绍了confkit CLI的技术架构、项目结构和开发指南。
 
@@ -29,7 +29,7 @@
 ## 📁 项目结构
 
 ```
-confkit-cli/
+engine/
 ├── Cargo.toml                      # 项目配置
 ├── src/
 │   ├── main.rs                     # 程序入口

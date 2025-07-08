@@ -5,15 +5,40 @@
 ## 📋 目录
 
 - [项目配置文件](#项目配置文件)
-- [全局配置文件](#全局配置文件)
 - [环境变量](#环境变量)
 - [参数优先级](#参数优先级)
 - [配置示例](#配置示例)
 - [最佳实践](#最佳实践)
 
-## 📄 项目配置文件
+## 📄 配置文件
 
-项目配置文件定义了单个项目的构建流水线，通常放在项目仓库的 `.confkit/` 目录或独立的配置仓库中。
+### 基本结构
+
+```
+.confkit/
+├──builders/
+│   ├── golang
+│   │   ├── Dockerfile.1.22
+│   │   ├── Dockerfile.1.24
+│   │   └── ...
+│   ├── rust
+│   │   ├── Dockerfile.1.28.1
+│   │   └── ...
+│   └── node
+│       ├── Dockerfile.22
+│       └── ...
+└──spaces 
+    ├── space_01
+    │   ├── config.yml
+    │   ├── projects
+    │   │   ├── project_01.yml
+    │   │   ├── project_02.yml
+    │   │   └── ...
+    └── space_02
+        ├── project_01.yml
+        ├── project_02.yml
+        └── ...
+```
 
 ### 基本结构
 
@@ -336,206 +361,6 @@ step_options:
   timeout: "15m"
 ```
 
-## ⚙️ 全局配置文件
-
-全局配置文件定义了confkit CLI的系统级设置，通常位于 `~/.config/confkit/config.yml` 或 `/etc/confkit/config.yml`。
-
-```yaml
-# ~/.config/confkit/config.yml
-# 构建器定义
-builders:
-  golang-builder-1.24:
-    image: "golang:1.24-alpine"
-    dockerfile: "./builders/golang/Dockerfile.1.24"
-    required: true
-    health_check: "go version"
-    volumes:
-      - "./volumes/workspace:/workspace"
-      - "./volumes/cache/go:/go/pkg/mod"
-      - "./volumes/artifacts:/artifacts"
-    environment:
-      GOPROXY: "https://goproxy.cn,direct"
-      GOSUMDB: "sum.golang.org"
-    ports:
-      - "8080:8080"  # 可选，用于调试
-    
-  node-builder-22:
-    image: "node:22-alpine"
-    dockerfile: "./builders/node/Dockerfile.22"
-    required: false
-    health_check: "node --version && pnpm --version"
-    volumes:
-      - "./volumes/workspace:/workspace"
-      - "./volumes/cache/node:/root/.cache"
-      - "./volumes/artifacts:/artifacts"
-    environment:
-      NPM_CONFIG_REGISTRY: "https://registry.npmmirror.com"
-      PNPM_STORE_DIR: "/root/.cache/pnpm"
-    
-  rust-builder-latest:
-    image: "rust:alpine"
-    dockerfile: "./builders/rust/Dockerfile.latest"
-    required: false
-    health_check: "rustc --version && cargo --version"
-    volumes:
-      - "./volumes/workspace:/workspace"
-      - "./volumes/cache/cargo:/usr/local/cargo/registry"
-      - "./volumes/artifacts:/artifacts"
-    environment:
-      CARGO_NET_GIT_FETCH_WITH_CLI: "true"
-      CARGO_REGISTRIES_CRATES_IO_PROTOCOL: "sparse"
-```
-
-```yaml
-# ~/.config/confkit/storage.yml
-# 存储配置
-storage:
-  logs_dir: "./volumes/logs"
-  artifacts_dir: "./volumes/artifacts"
-  workspace_dir: "./volumes/workspace"
-  cache_dir: "./volumes/cache"
-  
-  # 清理策略
-  cleanup:
-    logs_retention_days: 30      # 日志保留天数
-    artifacts_retention_days: 7  # 产物保留天数
-    workspace_cleanup: true      # 构建后清理工作空间
-    cache_max_size: "10GB"       # 缓存最大大小
-```
-
-```yaml
-# ~/.config/confkit/log.yml
-# 日志配置
-logging:
-  level: "info"                    # trace, debug, info, warn, error
-  format: "json"                   # json, text
-  console_output: true
-  file_output: true
-  
-  # 日志轮转
-  rotation:
-    max_file_size: "100MB"
-    max_files: 10
-    compress: true
-    
-  # 日志过滤
-  filters:
-    - pattern: ".*password.*"      # 过滤敏感信息
-      replacement: "[REDACTED]"
-```
-
-```yaml
-# ~/.config/confkit/task.yml
-# 任务配置
-task:
-  id_format: "${PROJECT_NAME}-${TIMESTAMP}-${RANDOM}"  # 任务ID格式
-  max_concurrent: 5                                    # 最大并发任务数
-  default_timeout: "30m"                              # 默认任务超时
-  workspace_isolation: true                           # 工作空间隔离
-  
-  # 任务优先级队列
-  priority_levels: ["urgent", "high", "normal", "low"]
-  default_priority: "normal"
-```
-
-```yaml
-# ~/.config/confkit/env.yml
-# 默认环境变量
-default_environment:
-  TZ: "Asia/Shanghai"
-  LANG: "C.UTF-8"
-  confkit_CLI_VERSION: "1.0.0"
-  
-  # CI/CD 标识
-  CI: "true"
-  confkit: "true"
-```
-
-```yaml
-# ~/.config/confkit/git.yml
-# Git配置
-git:
-  default_branch: "main"
-  clone_depth: 1                   # 默认浅克隆深度
-  timeout: "300s"                  # Git操作超时
-  retry: 3                         # Git操作重试次数
-  
-  # 认证配置
-  credentials:
-    github.com:
-      username: "${GITHUB_USERNAME}"
-      token: "${GITHUB_TOKEN}"
-    gitlab.company.com:
-      username: "${GITLAB_USERNAME}"
-      token: "${GITLAB_TOKEN}"
-```
-
-```yaml
-# ~/.config/confkit/network.yml
-# 网络配置
-network:
-  proxy:
-    http: "${HTTP_PROXY}"
-    https: "${HTTPS_PROXY}"
-    no_proxy: "localhost,127.0.0.1,.company.com"
-  
-  timeout:
-    connect: "30s"
-    read: "300s"
-    write: "300s"
-```
-
-```yaml
-# ~/.config/confkit/security.yml
-# 安全配置
-security:
-  # 命令白名单/黑名单
-  allowed_commands: []             # 空表示允许所有
-  blocked_commands:                # 禁止的命令
-    - "rm -rf /"
-    - "mkfs"
-    - "dd if=/dev"
-    - ":(){ :|:& };:"              # fork bomb
-  
-  max_command_length: 10000        # 最大命令长度
-  
-  # 环境变量安全
-  environment_whitelist: []        # 空表示允许所有
-  sensitive_patterns:              # 敏感信息模式
-    - ".*password.*"
-    - ".*token.*"
-    - ".*secret.*"
-    - ".*key.*"
-  
-  # 容器安全
-  container_security:
-    read_only_root: false
-    no_new_privileges: true
-    drop_capabilities: ["ALL"]
-    add_capabilities: []
-```
-
-```yaml
-# ~/.config/confkit/notification.yml
-# 通知配置
-notifications:
-  default_channels: ["email"]
-  
-  email:
-    smtp_server: "smtp.company.com"
-    smtp_port: 587
-    username: "${SMTP_USERNAME}"
-    password: "${SMTP_PASSWORD}"
-    from: "confkit@company.com"
-    
-  slack:
-    default_webhook: "${SLACK_WEBHOOK_URL}"
-    
-  webhook:
-    timeout: "30s"
-    retry: 3
-```
-
 ## 🔧 环境变量
 
 ### 自动注入的环境变量
@@ -601,23 +426,11 @@ confkit CLI 使用以下优先级顺序来确定配置值（从高到低）：
      parallel: false
    ```
 
-4. **全局配置文件**
-   ```yaml
-   git:
-     default_branch: "main"
-   task:
-     default_parallel: false
-   ```
-
-5. **默认值** (最低优先级)
+4. **默认值** (最低优先级)
 
 ### 优先级示例
 
 ```yaml
-# 全局配置文件
-task:
-  default_timeout: "30m"
-
 # 项目配置文件
 step_options:
   timeout: "10m"
