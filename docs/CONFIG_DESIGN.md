@@ -530,13 +530,12 @@ steps:
 
 ```
 project-repo/
-├── .confkit/
-│   ├── build.yml           # 主构建流水线
-│   ├── test.yml           # 测试流水线
-│   ├── deploy-dev.yml     # 开发环境部署
-│   ├── deploy-prod.yml    # 生产环境部署
-│   └── cleanup.yml        # 清理任务
-├── src/
+├── docker-compose.yml/    # builders compose 配置文件
+├── .confkit/              # confkit 文件管理目录
+├── volumes/               # 临时存储目录
+│   ├── artifacts/         # 产物缓存
+│   ├── cache/             # 容器数据缓存
+│   ├── workspace/         # 宿主机拉取代码/容器构建 共用工作空间目录
 └── ...
 ```
 

@@ -1,0 +1,42 @@
+FROM golang:1.24-alpine
+
+# 设置时区
+ENV TZ=Asia/Shanghai
+
+# 安装必要工具
+RUN apk add --no-cache git curl bash make gcc musl-dev ca-certificates tzdata
+
+# 设置工作目录
+WORKDIR /workspace
+
+# 配置Go环境 - 使用国内镜像源
+ENV GO111MODULE=on
+ENV GOPROXY=https://goproxy.cn,direct
+ENV GOSUMDB=sum.golang.google.cn
+ENV GONOSUMDB=*
+
+# 预下载golangci-lint - 使用国内镜像加速
+RUN mkdir -p /tmp/downloads && \
+    cd /tmp/downloads && \
+    # 使用gitee镜像下载golangci-lint
+    GOLANGCI_LINT_VERSION=v1.55.2 && \
+    wget -O golangci-lint.tar.gz "https://gitee.com/golangci/golangci-lint/releases/download/${GOLANGCI_LINT_VERSION}/golangci-lint-${GOLANGCI_LINT_VERSION#v}-linux-amd64.tar.gz" || \
+    # 备用方案：直接从官方下载
+    wget -O golangci-lint.tar.gz "https://github.com/golangci/golangci-lint/releases/download/${GOLANGCI_LINT_VERSION}/golangci-lint-${GOLANGCI_LINT_VERSION#v}-linux-amd64.tar.gz" && \
+    tar -xzf golangci-lint.tar.gz && \
+    mv golangci-lint-*/golangci-lint /usr/local/bin/ && \
+    chmod +x /usr/local/bin/golangci-lint && \
+    rm -rf /tmp/downloads
+
+# 创建缓存目录
+RUN mkdir -p /go/pkg /artifacts
+
+# 预热go mod缓存
+RUN mkdir -p /tmp/dummy && \
+    cd /tmp/dummy && \
+    go mod init dummy && \
+    go get github.com/gin-gonic/gin@latest && \
+    go get github.com/gorilla/mux@latest && \
+    rm -rf /tmp/dummy
+
+CMD ["tail", "-f", "/dev/null"] 

@@ -1,0 +1,46 @@
+[package]
+name = "confkit-cli"
+version = "1.0.0"
+edition = "2021"
+authors = ["confkit team"]
+description = "confkit CLI - 配置驱动的构建和部署工具"
+license = "MIT"
+repository = "https://github.com/confkit/engine"
+keywords = ["cli", "build", "deploy", "docker", "ci-cd"]
+
+[[bin]]
+name = "confkit"
+path = "src/main.rs"
+
+[dependencies]
+# 核心依赖
+tokio = { version = "1.0", features = ["full"] }
+clap = { version = "4.4", features = ["derive"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_yaml = "0.9"
+anyhow = "1.0"
+async-trait = "0.1"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# Docker和Git
+bollard = "0.15"
+git2 = "0.18"
+
+# 工具库
+uuid = { version = "1.0", features = ["v4"] }
+chrono = { version = "0.4", features = ["serde"] }
+walkdir = "2.4"
+futures = "0.3"
+tokio-util = "0.7"
+reqwest = { version = "0.11", features = ["json", "multipart"] }
+regex = "1.10"
+
+[dev-dependencies]
+tokio-test = "0.4"
+tempfile = "3.8"
+
+[profile.release]
+lto = true
+codegen-units = 1
+panic = "abort" 

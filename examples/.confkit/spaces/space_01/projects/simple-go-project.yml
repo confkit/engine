@@ -1,0 +1,52 @@
+# 简单的Go项目构建示例
+project:
+  name: "simple-go-app"
+  type: "golang"
+  description: "简单的Go应用构建示例"
+
+source:
+  git_repo: "https://github.com/example/simple-go-app.git"
+  git_branch: "main"
+  clone_depth: 1
+
+environment:
+  CGO_ENABLED: "0"
+  GOOS: "linux"
+  GOARCH: "amd64"
+
+steps:
+  - name: "代码拉取"
+    working_dir: "./volumes/workspace"
+    commands:
+      - "git clone ${GIT_REPO} ${PROJECT_NAME}"
+      - "cd ${PROJECT_NAME}"
+      - "git checkout ${GIT_BRANCH}"
+    timeout: "5m"
+
+  - name: "依赖下载"
+    container: "golang-builder-1.24"
+    working_dir: "/workspace/${PROJECT_NAME}"
+    commands:
+      - "go mod download"
+      - "go mod verify"
+    depends_on: ["代码拉取"]
+
+  - name: "运行测试"
+    container: "golang-builder-1.24"
+    working_dir: "/workspace/${PROJECT_NAME}"
+    commands:
+      - "go test ./..."
+    depends_on: ["依赖下载"]
+
+  - name: "构建应用"
+    container: "golang-builder-1.24"
+    working_dir: "/workspace/${PROJECT_NAME}"
+    commands:
+      - "go build -o app ./cmd/main.go"
+      - "ls -la app"
+    depends_on: ["运行测试"]
+
+step_options:
+  retry: 1
+  timeout: "10m"
+  continue_on_error: false 
