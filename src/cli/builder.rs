@@ -95,98 +95,11 @@ async fn list_builders(verbose: bool, status_filter: Option<String>) -> Result<(
     // 创建带示例数据的构建器管理器
     let manager = BuilderManager::with_demo_data();
 
-    // 获取构建器列表
-    let builders = manager.list_builders();
+    // 调用 core 层的业务逻辑
+    let output = manager.list_builders_with_filter(verbose, status_filter)?;
 
-    if builders.is_empty() {
-        println!("没有找到任何构建器");
-        println!("\n提示：使用 'confkit builder create' 命令创建新的构建器");
-        return Ok(());
-    }
-
-    // 应用状态过滤
-    let filtered_builders: Vec<_> = if let Some(status) = status_filter {
-        let status_lower = status.to_lowercase();
-        builders
-            .into_iter()
-            .filter(|builder| {
-                let builder_status = match builder.status {
-                    crate::core::builder::BuilderStatus::NotCreated => "notcreated",
-                    crate::core::builder::BuilderStatus::Created => "created",
-                    crate::core::builder::BuilderStatus::Running => "running",
-                    crate::core::builder::BuilderStatus::Stopped => "stopped",
-                    crate::core::builder::BuilderStatus::Error => "error",
-                };
-                builder_status == status_lower
-            })
-            .collect()
-    } else {
-        builders
-    };
-
-    if filtered_builders.is_empty() {
-        println!("没有找到符合条件的构建器");
-        return Ok(());
-    }
-
-    // 显示构建器表格（基于过滤后的列表）
-    println!("构建器列表:");
-    println!(
-        "{}",
-        manager.format_filtered_builders_table(&filtered_builders)
-    );
-
-    // 显示统计信息（基于过滤后的列表）
-    let stats = manager.get_filtered_stats(&filtered_builders);
-    println!("\n统计信息:");
-    println!("  总数: {}", stats.get("total").unwrap_or(&0));
-    println!("  运行中: {}", stats.get("running").unwrap_or(&0));
-    println!("  已停止: {}", stats.get("stopped").unwrap_or(&0));
-    println!("  已创建: {}", stats.get("created").unwrap_or(&0));
-
-    if let Some(error_count) = stats.get("error") {
-        if *error_count > 0 {
-            println!("  错误: {}", error_count);
-        }
-    }
-
-    // 详细信息模式
-    if verbose {
-        println!("\n详细信息:");
-        for builder in filtered_builders {
-            println!("\n构建器: {}", builder.name);
-            println!("  镜像: {}", builder.config.image);
-            println!("  状态: {:?}", builder.status);
-
-            if let Some(container_id) = &builder.container_id {
-                println!("  容器ID: {}", container_id);
-            }
-
-            if let Some(created_at) = builder.created_at {
-                println!("  创建时间: {}", created_at.format("%Y-%m-%d %H:%M:%S UTC"));
-            }
-
-            if let Some(health) = &builder.last_health_check {
-                println!(
-                    "  健康状态: {} ({})",
-                    if health.healthy { "健康" } else { "异常" },
-                    health.message
-                );
-                println!(
-                    "  最后检查: {}",
-                    health.last_check.format("%Y-%m-%d %H:%M:%S UTC")
-                );
-            }
-
-            if !builder.config.volumes.is_empty() {
-                println!("  卷挂载: {}", builder.config.volumes.join(", "));
-            }
-
-            if !builder.config.ports.is_empty() {
-                println!("  端口映射: {}", builder.config.ports.join(", "));
-            }
-        }
-    }
+    // 直接输出结果
+    println!("{}", output);
 
     Ok(())
 }

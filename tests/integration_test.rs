@@ -1,6 +1,6 @@
 use anyhow::Result;
 // 注意：在测试中引用本地crate需要使用crate名称
-// 由于我们在Cargo.toml中定义的名称是"confkit-cli"，
+// 由于我们在Cargo.toml中定义的名称是"confkit-engine"，
 // 在Rust代码中对应的模块名是"confkit_cli"
 
 #[tokio::test]

@@ -1,5 +1,5 @@
 [package]
-name = "confkit-cli"
+name = "confkit-engine"
 version = "1.0.0"
 edition = "2021"
 authors = ["confkit team"]
@@ -35,6 +35,9 @@ futures = "0.3"
 tokio-util = "0.7"
 reqwest = { version = "0.11", features = ["json", "multipart"] }
 regex = "1.10"
+
+# 交互式界面
+inquire = "0.7"
 
 [dev-dependencies]
 tokio-test = "0.4"

@@ -1,0 +1,56 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Rust 编码规范（简明版）
+
+## 命名规范
+- **类型名**：`PascalCase` (MyStruct、HttpServer)
+- **函数/变量/模块**：`snake_case` (get_user_info、http_server)
+- **常量**：`SCREAMING_SNAKE_CASE` (MAX_RETRIES)
+
+## 模块与文件结构
+- 每个模块一个文件，使用 `mod.rs` 组织子模块
+- 避免深层嵌套（不超过 3 层）
+- 使用 `pub(crate)` 限制内部 API，少用裸 `pub`
+- 参考项目结构：[src/](mdc:src) - 核心逻辑在 [core/](mdc:src/core)，CLI 在 [cli/](mdc:src/cli)
+
+## 错误处理
+- 使用 `Result<T, E>` 代替 `panic!`
+- 参考项目错误处理：[error.rs](mdc:src/utils/error.rs)
+- 使用 `anyhow::Result` 和 `?` 操作符
+- 避免 `.unwrap()` 和 `.expect()`，除非在测试中
+
+## 代码风格
+- 每行不超过 100 字符
+- 使用 `cargo fmt` 和 `cargo clippy`
+- 优先使用 `if let Some(x)` 和 `match` 处理 Option/Result
+- 模块导入顺序：标准库 → 第三方 → 本地模块
+
+## 依赖规范
+- 明确版本号，避免通配符（参考 [Cargo.toml](mdc:Cargo.toml)）
+- 使用稳定库，定期更新依赖
+
+## 性能建议
+- 避免不必要的 `clone()`，优先使用引用
+- 使用 `Vec::with_capacity()` 预分配容量
+- 性能关键路径使用 `#[inline]`
+
+## 文档与注释
+- 所有 `pub` 接口使用 `///` 文档注释
+- 复杂逻辑使用 `//` 注释说明意图
+- 模块使用 `//!` 添加模块级说明
+
+## 安全与并发
+- 避免 `unsafe`，必要时详细注释安全保证
+- 多线程使用 `Arc<Mutex<_>>` 或 `Arc<RwLock<_>>`
+
+## 构建工具
+参考 [Makefile.toml](mdc:Makefile.toml)：
+```bash
+cargo make format  # 格式化
+cargo make clippy  # 静态检查
+cargo make test    # 测试
+cargo make build   # 构建
+```

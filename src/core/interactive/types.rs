@@ -66,7 +66,100 @@ impl CommandContext {
     }
 }
 
-/// 命令类型枚举
+/// 交互模式状态
+#[derive(Debug, Clone)]
+pub enum InteractiveMode {
+    /// 主菜单
+    MainMenu,
+    /// Builder 菜单
+    BuilderMenu,
+    /// Builder List 参数选择
+    BuilderListParams {
+        verbose: bool,
+        status_filter: Option<String>,
+    },
+}
+
+/// 菜单项
+#[derive(Debug, Clone)]
+pub struct MenuItem {
+    pub key: String,
+    pub title: String,
+    pub description: String,
+}
+
+/// 基础命令类型
+#[derive(Debug, Clone)]
+pub enum BaseCommand {
+    /// Builder 相关命令
+    Builder,
+    /// 任务相关命令
+    Task,
+    /// 配置相关命令
+    Config,
+    /// Git 相关命令
+    Git,
+}
+
+/// Builder 子命令
+#[derive(Debug, Clone)]
+pub enum BuilderSubCommand {
+    /// 列出构建器
+    List,
+    /// 创建构建器
+    Create,
+    /// 启动构建器
+    Start,
+    /// 停止构建器
+    Stop,
+    /// 删除构建器
+    Remove,
+    /// 健康检查
+    Health,
+}
+
+/// 构建器状态选项
+#[derive(Debug, Clone)]
+pub enum BuilderStatusOption {
+    /// 所有状态
+    All,
+    /// 未创建
+    NotCreated,
+    /// 已创建
+    Created,
+    /// 运行中
+    Running,
+    /// 已停止
+    Stopped,
+    /// 错误
+    Error,
+}
+
+impl BuilderStatusOption {
+    pub fn to_filter_string(&self) -> Option<String> {
+        match self {
+            BuilderStatusOption::All => None,
+            BuilderStatusOption::NotCreated => Some("notcreated".to_string()),
+            BuilderStatusOption::Created => Some("created".to_string()),
+            BuilderStatusOption::Running => Some("running".to_string()),
+            BuilderStatusOption::Stopped => Some("stopped".to_string()),
+            BuilderStatusOption::Error => Some("error".to_string()),
+        }
+    }
+
+    pub fn display_name(&self) -> &str {
+        match self {
+            BuilderStatusOption::All => "所有状态",
+            BuilderStatusOption::NotCreated => "未创建",
+            BuilderStatusOption::Created => "已创建",
+            BuilderStatusOption::Running => "运行中",
+            BuilderStatusOption::Stopped => "已停止",
+            BuilderStatusOption::Error => "错误",
+        }
+    }
+}
+
+/// 命令类型枚举 (保留向后兼容性)
 #[derive(Debug, Clone)]
 pub enum Command {
     /// 帮助命令
@@ -83,7 +176,7 @@ pub enum Command {
 }
 
 impl Command {
-    /// 从输入字符串解析命令
+    /// 从输入字符串解析命令 (保留向后兼容性)
     pub fn parse(input: &str) -> Result<Self> {
         let parts: Vec<&str> = input.split_whitespace().collect();
         if parts.is_empty() {

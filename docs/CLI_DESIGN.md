@@ -322,8 +322,8 @@ confkit run --interactive
 1. **安装工具**
    ```bash
    # 从源码编译（推荐）
-   git clone https://github.com/company/confkit-cli.git
-   cd confkit-cli && cargo build --release
+   git clone https://github.com/confkit/engine.git confkit-engine
+   cd confkit-engine && cargo build --release
    sudo cp target/release/confkit /usr/local/bin/
    ```
 

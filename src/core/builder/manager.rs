@@ -122,19 +122,187 @@ impl BuilderManager {
         Ok(builder_info)
     }
 
-    /// 从 Docker Compose 服务推断构建器状态
-    fn infer_builder_status(&self, service: &ComposeService) -> BuilderStatus {
-        // 这里可以扩展为实际查询 Docker 容器状态
-        // 目前基于服务名称进行简单推断
-        if let Some(builder_type) = service.get_builder_type() {
-            match builder_type.as_str() {
-                "golang" | "rust" => BuilderStatus::Running,
-                "node" => BuilderStatus::Stopped,
-                "tauri" => BuilderStatus::Created,
-                _ => BuilderStatus::Created,
-            }
+    /// 列出构建器（带过滤和格式化）
+    pub fn list_builders_with_filter(
+        &self,
+        verbose: bool,
+        status_filter: Option<String>,
+    ) -> Result<String> {
+        let builders = self.list_builders();
+
+        if builders.is_empty() {
+            return Ok(
+                "没有找到任何构建器\n\n提示：使用 'confkit builder create' 命令创建新的构建器"
+                    .to_string(),
+            );
+        }
+
+        // 应用状态过滤
+        let filtered_builders: Vec<_> = if let Some(status) = status_filter {
+            let status_lower = status.to_lowercase();
+            builders
+                .into_iter()
+                .filter(|builder| {
+                    let builder_status = match builder.status {
+                        BuilderStatus::NotCreated => "notcreated",
+                        BuilderStatus::Created => "created",
+                        BuilderStatus::Running => "running",
+                        BuilderStatus::Stopped => "stopped",
+                        BuilderStatus::Error => "error",
+                    };
+                    builder_status == status_lower
+                })
+                .collect()
         } else {
-            BuilderStatus::Created
+            builders
+        };
+
+        if filtered_builders.is_empty() {
+            return Ok("没有找到符合条件的构建器".to_string());
+        }
+
+        let mut output = String::new();
+
+        // 显示构建器表格
+        output.push_str("构建器列表:\n");
+        output.push_str(&self.format_filtered_builders_table(&filtered_builders));
+
+        // 显示统计信息
+        let stats = self.get_filtered_stats(&filtered_builders);
+        output.push_str("\n统计信息:\n");
+        output.push_str(&format!("  总数: {}\n", stats.get("total").unwrap_or(&0)));
+        output.push_str(&format!(
+            "  未创建: {}\n",
+            stats.get("not_created").unwrap_or(&0)
+        ));
+        output.push_str(&format!(
+            "  运行中: {}\n",
+            stats.get("running").unwrap_or(&0)
+        ));
+        output.push_str(&format!(
+            "  已停止: {}\n",
+            stats.get("stopped").unwrap_or(&0)
+        ));
+        output.push_str(&format!(
+            "  已创建: {}\n",
+            stats.get("created").unwrap_or(&0)
+        ));
+
+        if let Some(error_count) = stats.get("error") {
+            if *error_count > 0 {
+                output.push_str(&format!("  错误: {}\n", error_count));
+            }
+        }
+
+        // 详细信息模式
+        if verbose {
+            output.push_str("\n详细信息:\n");
+            for builder in filtered_builders {
+                output.push_str(&format!("\n构建器: {}\n", builder.name));
+                output.push_str(&format!("  镜像: {}\n", builder.config.image));
+                output.push_str(&format!("  状态: {:?}\n", builder.status));
+
+                if let Some(container_id) = &builder.container_id {
+                    output.push_str(&format!("  容器ID: {}\n", container_id));
+                }
+
+                if let Some(created_at) = builder.created_at {
+                    output.push_str(&format!(
+                        "  创建时间: {}\n",
+                        created_at.format("%Y-%m-%d %H:%M:%S UTC")
+                    ));
+                }
+
+                if let Some(health) = &builder.last_health_check {
+                    output.push_str(&format!(
+                        "  健康状态: {} ({})\n",
+                        if health.healthy { "健康" } else { "异常" },
+                        health.message
+                    ));
+                    output.push_str(&format!(
+                        "  最后检查: {}\n",
+                        health.last_check.format("%Y-%m-%d %H:%M:%S UTC")
+                    ));
+                }
+
+                if !builder.config.volumes.is_empty() {
+                    output.push_str(&format!(
+                        "  卷挂载: {}\n",
+                        builder.config.volumes.join(", ")
+                    ));
+                }
+
+                if !builder.config.ports.is_empty() {
+                    output.push_str(&format!(
+                        "  端口映射: {}\n",
+                        builder.config.ports.join(", ")
+                    ));
+                }
+            }
+        }
+
+        Ok(output)
+    }
+
+    /// 从 Docker Compose 服务推断构建器状态（查询实际Docker状态）
+    fn infer_builder_status(&self, service: &ComposeService) -> BuilderStatus {
+        // 尝试查询真实的 Docker 容器状态
+        if let Some(container_name) = &service.container_name {
+            if let Ok(status) = self.query_docker_container_status(container_name) {
+                return status;
+            }
+        }
+
+        // 如果查询失败，基于配置推断
+        if service.build.is_some() {
+            // 如果有 build 配置，说明需要构建，默认为未创建状态
+            BuilderStatus::NotCreated
+        } else {
+            // 如果只有 image，可能是预构建的，也默认为未创建
+            BuilderStatus::NotCreated
+        }
+    }
+
+    /// 查询 Docker 容器状态
+    fn query_docker_container_status(&self, container_name: &str) -> Result<BuilderStatus> {
+        use std::process::Command;
+
+        // 使用 docker ps 命令查询容器状态
+        let output = Command::new("docker")
+            .args([
+                "ps",
+                "-a",
+                "--filter",
+                &format!("name=^{}$", container_name),
+                "--format",
+                "{{.Status}}",
+            ])
+            .output()
+            .map_err(|e| anyhow::anyhow!("执行docker命令失败: {}", e))?;
+
+        if !output.status.success() {
+            return Err(anyhow::anyhow!("docker命令执行失败"));
+        }
+
+        let status_output = String::from_utf8_lossy(&output.stdout).trim().to_string();
+
+        if status_output.is_empty() {
+            // 容器不存在
+            return Ok(BuilderStatus::NotCreated);
+        }
+
+        // 解析容器状态
+        if status_output.starts_with("Up") {
+            Ok(BuilderStatus::Running)
+        } else if status_output.starts_with("Exited") {
+            Ok(BuilderStatus::Stopped)
+        } else if status_output.contains("Created") {
+            Ok(BuilderStatus::Created)
+        } else if status_output.contains("Restarting") || status_output.contains("Dead") {
+            Ok(BuilderStatus::Error)
+        } else {
+            // 未知状态，默认为已创建
+            Ok(BuilderStatus::Created)
         }
     }
 

@@ -114,7 +114,7 @@ impl BuilderManager {
 
 ```toml
 [package]
-name = "confkit-cli"
+name = "confkit-engine"
 version = "1.0.0"
 edition = "2021"
 
@@ -146,8 +146,8 @@ walkdir = "2.4"
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 
 # 克隆项目
-git clone https://github.com/company/confkit-cli.git
-cd confkit-cli
+git clone https://github.com/confkit/engine.git
+cd engine
 
 # 开发构建
 cargo build
