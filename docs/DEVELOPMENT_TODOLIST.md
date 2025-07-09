@@ -27,15 +27,17 @@
 
 ### 2.2 构建器管理
 - [ ] 实现 `BuilderManager::create_builder()`
-- [ ] 实现 `BuilderManager::list_builders()`
+- [x] 实现 `BuilderManager::list_builders()`，支持真实 Docker 状态
 - [ ] 实现 `BuilderManager::health_check()`
 - [ ] 实现 `BuilderManager::start_builder()` / `stop_builder()`
 
 ### 2.3 Builder 命令
-- [ ] 实现 `confkit builder list`
+- [x] 实现 `confkit builder list`，CLI/interactive 均可用
 - [ ] 实现 `confkit builder create <name> <image>`
 - [ ] 实现 `confkit builder start/stop <name>`
 - [ ] 实现 `confkit builder health <name>`
+- [x] 交互式 builder list 支持参数选择、状态过滤、详细模式
+- [x] 交互式 builder list 输出符合 ASCII 图标规范（•、●、▶、✓、✗、→、※ 等，除 👋 保留）
 
 **验证方式**: 能够管理 Docker 容器作为构建器
 
@@ -109,12 +111,12 @@
 > 目标：实现交互式界面，集成所有命令功能
 
 ### 6.1 交互式核心
-- [ ] 实现主菜单界面
+- [x] 实现主菜单界面
 - [ ] 实现项目配置选择
 - [ ] 实现实时状态显示
 
 ### 6.2 命令集成
-- [ ] 集成 builder 命令功能
+- [x] 集成 builder 命令功能（交互式 builder list、参数引导）
 - [ ] 集成 run 命令功能  
 - [ ] 集成 task 命令功能
 - [ ] 集成 logs 命令功能

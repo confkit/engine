@@ -28,7 +28,7 @@
 
 ```bash
 # 构建和管理构建环境
-confkit builder create <builder-name>    # 创建构建容器
+confkit builder create <builder-name>    # 创建构建镜像
 confkit builder list                     # 列出构建容器
 confkit builder start <builder-name>     # 启动构建容器
 confkit builder stop <builder-name>      # 停止构建容器

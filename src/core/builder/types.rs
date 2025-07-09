@@ -2,17 +2,59 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-/// 构建器配置
+/// 构建器配置（用于镜像构建）
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BuilderConfig {
     pub name: String,
     pub image: String,
-    pub dockerfile: Option<String>,
-    pub required: bool,
-    pub health_check: Option<String>,
-    pub volumes: Vec<String>,
-    pub environment: HashMap<String, String>,
-    pub ports: Vec<String>,
+    pub dockerfile: String,
+    pub context: String,                     // 构建上下文路径
+    pub build_args: HashMap<String, String>, // 构建参数
+}
+
+impl BuilderConfig {
+    /// 从基本参数创建构建器配置
+    pub fn new(name: String, dockerfile: String) -> Self {
+        // 从 Dockerfile 路径推断镜像名称和构建上下文
+        let (image, context) = Self::derive_image_and_context(&name, &dockerfile);
+
+        Self { name, image, dockerfile, context, build_args: HashMap::new() }
+    }
+
+    /// 从名称和 Dockerfile 路径推断镜像名称和构建上下文
+    fn derive_image_and_context(name: &str, dockerfile: &str) -> (String, String) {
+        let path = std::path::Path::new(dockerfile);
+
+        // 构建上下文是 Dockerfile 所在目录
+        let context = if let Some(parent) = path.parent() {
+            parent.to_string_lossy().to_string()
+        } else {
+            ".".to_string()
+        };
+
+        // 镜像名称格式: 构建器名:latest
+        let image = format!("{}:latest", name);
+
+        (image, context)
+    }
+
+    /// 添加构建参数
+    pub fn with_build_arg(mut self, key: String, value: String) -> Self {
+        self.build_args.insert(key, value);
+        self
+    }
+
+    /// 设置镜像名称
+    pub fn with_image(mut self, image: String) -> Self {
+        self.image = image;
+        self
+    }
+
+    /// 设置构建上下文
+    pub fn with_context(mut self, context: String) -> Self {
+        self.context = context;
+        self
+    }
 }
 
 /// 构建器状态
@@ -39,9 +81,9 @@ pub struct BuilderInfo {
     pub name: String,
     pub status: BuilderStatus,
     pub config: BuilderConfig,
-    pub container_id: Option<String>,
+    pub image_id: Option<String>, // 镜像 ID（替代容器 ID）
     pub created_at: Option<chrono::DateTime<chrono::Utc>>,
-    pub last_health_check: Option<HealthStatus>,
+    pub build_logs: Option<String>, // 构建日志（替代健康检查）
 }
 
 /// Docker Compose 文件结构

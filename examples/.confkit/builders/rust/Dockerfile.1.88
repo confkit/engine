@@ -1,4 +1,4 @@
-FROM rust:latest-alpine
+FROM rust:1.88-alpine
 
 # 安装必要工具
 RUN apk add --no-cache git curl bash make gcc musl-dev

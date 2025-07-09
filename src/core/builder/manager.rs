@@ -1,31 +1,23 @@
 use anyhow::Result;
 use std::collections::HashMap;
-use std::fs;
 use std::path::Path;
 
-use super::types::{
-    BuilderConfig, BuilderInfo, BuilderStatus, ComposeService, DockerCompose, HealthStatus,
-};
+use super::{BuilderConfig, BuilderFormatter, BuilderInfo, BuilderLoader, ImageBuilder};
 
 /// 构建器管理器
 pub struct BuilderManager {
-    docker_client: Option<crate::infrastructure::docker::DockerClient>,
     builders: HashMap<String, BuilderInfo>,
 }
 
 impl BuilderManager {
     pub fn new() -> Self {
-        Self {
-            docker_client: None, // TODO: 初始化Docker客户端
-            builders: HashMap::new(),
-        }
+        Self { builders: HashMap::new() }
     }
 
     /// 从当前目录的 docker-compose.yml 文件加载构建器
     pub fn from_docker_compose<P: AsRef<Path>>(compose_path: P) -> Result<Self> {
-        let mut manager = Self::new();
-        manager.load_from_docker_compose(compose_path)?;
-        Ok(manager)
+        let builders = BuilderLoader::load_from_docker_compose(compose_path)?;
+        Ok(Self { builders })
     }
 
     /// 从当前工作目录加载 docker-compose.yml
@@ -42,84 +34,44 @@ impl BuilderManager {
         }
 
         // 如果没有 docker-compose.yml 文件，则使用演示数据
-        let mut manager = Self::new();
-
-        let _ =
-            manager.add_demo_builder("golang-1.24", "golang:1.24-alpine", BuilderStatus::Running);
-        let _ = manager.add_demo_builder("node-22", "node:22-alpine", BuilderStatus::Stopped);
-        let _ = manager.add_demo_builder("rust-latest", "rust:1.75-alpine", BuilderStatus::Running);
-        let _ =
-            manager.add_demo_builder("tauri-latest", "tauri/tauri:latest", BuilderStatus::Created);
-
-        manager
+        let builders = BuilderLoader::create_demo_builders();
+        Self { builders }
     }
 
-    /// 从 docker-compose.yml 文件加载构建器
-    fn load_from_docker_compose<P: AsRef<Path>>(&mut self, compose_path: P) -> Result<()> {
-        let compose_path = compose_path.as_ref();
+    /// 创建新的构建器（构建镜像）
+    pub async fn create_builder(&mut self, name: &str, config: &BuilderConfig) -> Result<()> {
+        tracing::info!("创建构建器（构建镜像）: {}", name);
 
-        if !compose_path.exists() {
-            return Err(anyhow::anyhow!(
-                "docker-compose.yml 文件不存在: {}",
-                compose_path.display()
-            ));
+        // 1. 检查构建器是否已存在
+        if self.builders.contains_key(name) {
+            return Err(anyhow::anyhow!("构建器 '{}' 已存在", name));
         }
 
-        let content = fs::read_to_string(compose_path)?;
-        let compose: DockerCompose = serde_yaml::from_str(&content)?;
+        // 2. 使用 ImageBuilder 构建镜像
+        let builder_info = ImageBuilder::build_image(config).await?;
 
-        for (service_name, service) in compose.services {
-            // 只处理有 builder 标签的服务
-            if service.get_builder_type().is_some() {
-                let builder_info = self.compose_service_to_builder_info(&service_name, &service)?;
-                self.builders.insert(service_name, builder_info);
-            }
-        }
+        // 3. 保存构建器信息
+        self.builders.insert(name.to_string(), builder_info);
 
+        tracing::info!("构建器 '{}' 创建成功", name);
         Ok(())
     }
 
-    /// 将 Docker Compose 服务转换为构建器信息
-    fn compose_service_to_builder_info(
-        &self,
-        name: &str,
-        service: &ComposeService,
-    ) -> Result<BuilderInfo> {
-        let image = service.get_image_name();
+    /// 删除构建器（删除镜像）
+    pub async fn remove_builder(&mut self, name: &str, force: bool) -> Result<()> {
+        tracing::info!("删除构建器: {} (force: {})", name, force);
 
-        let config = BuilderConfig {
-            name: name.to_string(),
-            image: image.clone(),
-            dockerfile: service.build.as_ref().and_then(|b| b.dockerfile.clone()),
-            required: true,
-            health_check: Some("echo 'healthy'".to_string()),
-            volumes: service.volumes.clone(),
-            environment: HashMap::new(), // TODO: 从 environment 字段解析
-            ports: service.ports.clone(),
-        };
+        let builder =
+            self.builders.get(name).ok_or_else(|| anyhow::anyhow!("构建器 '{}' 不存在", name))?;
 
-        // 从容器名称推断状态（这里可以扩展为实际查询 Docker）
-        let status = self.infer_builder_status(&service);
-        let is_running = matches!(status, BuilderStatus::Running);
+        // 删除镜像
+        ImageBuilder::remove_image(&builder.config.image, force).await?;
 
-        let builder_info = BuilderInfo {
-            name: name.to_string(),
-            status,
-            config,
-            container_id: service.container_name.clone(),
-            created_at: Some(chrono::Utc::now() - chrono::Duration::hours(1)),
-            last_health_check: if is_running {
-                Some(HealthStatus {
-                    healthy: true,
-                    message: "构建器运行正常".to_string(),
-                    last_check: chrono::Utc::now() - chrono::Duration::minutes(5),
-                })
-            } else {
-                None
-            },
-        };
+        // 从管理器中移除
+        self.builders.remove(name);
 
-        Ok(builder_info)
+        tracing::info!("构建器 '{}' 删除成功", name);
+        Ok(())
     }
 
     /// 列出构建器（带过滤和格式化）
@@ -128,310 +80,9 @@ impl BuilderManager {
         verbose: bool,
         status_filter: Option<String>,
     ) -> Result<String> {
-        let builders = self.list_builders();
-
-        if builders.is_empty() {
-            return Ok(
-                "没有找到任何构建器\n\n提示：使用 'confkit builder create' 命令创建新的构建器"
-                    .to_string(),
-            );
-        }
-
-        // 应用状态过滤
-        let filtered_builders: Vec<_> = if let Some(status) = status_filter {
-            let status_lower = status.to_lowercase();
-            builders
-                .into_iter()
-                .filter(|builder| {
-                    let builder_status = match builder.status {
-                        BuilderStatus::NotCreated => "notcreated",
-                        BuilderStatus::Created => "created",
-                        BuilderStatus::Running => "running",
-                        BuilderStatus::Stopped => "stopped",
-                        BuilderStatus::Error => "error",
-                    };
-                    builder_status == status_lower
-                })
-                .collect()
-        } else {
-            builders
-        };
-
-        if filtered_builders.is_empty() {
-            return Ok("没有找到符合条件的构建器".to_string());
-        }
-
-        let mut output = String::new();
-
-        // 显示构建器表格
-        output.push_str("构建器列表:\n");
-        output.push_str(&self.format_filtered_builders_table(&filtered_builders));
-
-        // 显示统计信息
-        let stats = self.get_filtered_stats(&filtered_builders);
-        output.push_str("\n统计信息:\n");
-        output.push_str(&format!("  总数: {}\n", stats.get("total").unwrap_or(&0)));
-        output.push_str(&format!(
-            "  未创建: {}\n",
-            stats.get("not_created").unwrap_or(&0)
-        ));
-        output.push_str(&format!(
-            "  运行中: {}\n",
-            stats.get("running").unwrap_or(&0)
-        ));
-        output.push_str(&format!(
-            "  已停止: {}\n",
-            stats.get("stopped").unwrap_or(&0)
-        ));
-        output.push_str(&format!(
-            "  已创建: {}\n",
-            stats.get("created").unwrap_or(&0)
-        ));
-
-        if let Some(error_count) = stats.get("error") {
-            if *error_count > 0 {
-                output.push_str(&format!("  错误: {}\n", error_count));
-            }
-        }
-
-        // 详细信息模式
-        if verbose {
-            output.push_str("\n详细信息:\n");
-            for builder in filtered_builders {
-                output.push_str(&format!("\n构建器: {}\n", builder.name));
-                output.push_str(&format!("  镜像: {}\n", builder.config.image));
-                output.push_str(&format!("  状态: {:?}\n", builder.status));
-
-                if let Some(container_id) = &builder.container_id {
-                    output.push_str(&format!("  容器ID: {}\n", container_id));
-                }
-
-                if let Some(created_at) = builder.created_at {
-                    output.push_str(&format!(
-                        "  创建时间: {}\n",
-                        created_at.format("%Y-%m-%d %H:%M:%S UTC")
-                    ));
-                }
-
-                if let Some(health) = &builder.last_health_check {
-                    output.push_str(&format!(
-                        "  健康状态: {} ({})\n",
-                        if health.healthy { "健康" } else { "异常" },
-                        health.message
-                    ));
-                    output.push_str(&format!(
-                        "  最后检查: {}\n",
-                        health.last_check.format("%Y-%m-%d %H:%M:%S UTC")
-                    ));
-                }
-
-                if !builder.config.volumes.is_empty() {
-                    output.push_str(&format!(
-                        "  卷挂载: {}\n",
-                        builder.config.volumes.join(", ")
-                    ));
-                }
-
-                if !builder.config.ports.is_empty() {
-                    output.push_str(&format!(
-                        "  端口映射: {}\n",
-                        builder.config.ports.join(", ")
-                    ));
-                }
-            }
-        }
-
+        let builders: Vec<&BuilderInfo> = self.builders.values().collect();
+        let output = BuilderFormatter::format_builders_list(&builders, verbose, status_filter);
         Ok(output)
-    }
-
-    /// 从 Docker Compose 服务推断构建器状态（查询实际Docker状态）
-    fn infer_builder_status(&self, service: &ComposeService) -> BuilderStatus {
-        // 尝试查询真实的 Docker 容器状态
-        if let Some(container_name) = &service.container_name {
-            if let Ok(status) = self.query_docker_container_status(container_name) {
-                return status;
-            }
-        }
-
-        // 如果查询失败，基于配置推断
-        if service.build.is_some() {
-            // 如果有 build 配置，说明需要构建，默认为未创建状态
-            BuilderStatus::NotCreated
-        } else {
-            // 如果只有 image，可能是预构建的，也默认为未创建
-            BuilderStatus::NotCreated
-        }
-    }
-
-    /// 查询 Docker 容器状态
-    fn query_docker_container_status(&self, container_name: &str) -> Result<BuilderStatus> {
-        use std::process::Command;
-
-        // 使用 docker ps 命令查询容器状态
-        let output = Command::new("docker")
-            .args([
-                "ps",
-                "-a",
-                "--filter",
-                &format!("name=^{}$", container_name),
-                "--format",
-                "{{.Status}}",
-            ])
-            .output()
-            .map_err(|e| anyhow::anyhow!("执行docker命令失败: {}", e))?;
-
-        if !output.status.success() {
-            return Err(anyhow::anyhow!("docker命令执行失败"));
-        }
-
-        let status_output = String::from_utf8_lossy(&output.stdout).trim().to_string();
-
-        if status_output.is_empty() {
-            // 容器不存在
-            return Ok(BuilderStatus::NotCreated);
-        }
-
-        // 解析容器状态
-        if status_output.starts_with("Up") {
-            Ok(BuilderStatus::Running)
-        } else if status_output.starts_with("Exited") {
-            Ok(BuilderStatus::Stopped)
-        } else if status_output.contains("Created") {
-            Ok(BuilderStatus::Created)
-        } else if status_output.contains("Restarting") || status_output.contains("Dead") {
-            Ok(BuilderStatus::Error)
-        } else {
-            // 未知状态，默认为已创建
-            Ok(BuilderStatus::Created)
-        }
-    }
-
-    /// 添加示例构建器（内部方法）
-    fn add_demo_builder(&mut self, name: &str, image: &str, status: BuilderStatus) -> Result<()> {
-        let config = BuilderConfig {
-            name: name.to_string(),
-            image: image.to_string(),
-            dockerfile: Some(format!("Dockerfile.{}", name)),
-            required: true,
-            health_check: Some("echo 'healthy'".to_string()),
-            volumes: vec!["/workspace:/workspace".to_string()],
-            environment: HashMap::new(),
-            ports: vec!["8080:8080".to_string()],
-        };
-
-        let is_running = matches!(status, BuilderStatus::Running);
-        let builder_info = BuilderInfo {
-            name: name.to_string(),
-            status,
-            config,
-            container_id: Some(format!("container_{}", name.replace('-', "_"))),
-            created_at: Some(chrono::Utc::now() - chrono::Duration::hours(1)),
-            last_health_check: if is_running {
-                Some(HealthStatus {
-                    healthy: true,
-                    message: "构建器运行正常".to_string(),
-                    last_check: chrono::Utc::now() - chrono::Duration::minutes(5),
-                })
-            } else {
-                None
-            },
-        };
-
-        self.builders.insert(name.to_string(), builder_info);
-        Ok(())
-    }
-
-    /// 创建构建器
-    pub async fn create_builder(&mut self, name: &str, config: &BuilderConfig) -> Result<()> {
-        tracing::info!("创建构建器: {}", name);
-
-        // TODO: 实现构建器创建逻辑
-        // 1. 检查构建器是否已存在
-        // 2. 构建或拉取Docker镜像
-        // 3. 创建容器
-        // 4. 配置卷挂载和网络
-
-        let builder_info = BuilderInfo {
-            name: name.to_string(),
-            status: BuilderStatus::Created,
-            config: config.clone(),
-            container_id: Some(format!("container_{}", name)),
-            created_at: Some(chrono::Utc::now()),
-            last_health_check: None,
-        };
-
-        self.builders.insert(name.to_string(), builder_info);
-        Ok(())
-    }
-
-    /// 启动构建器
-    pub async fn start_builder(&mut self, name: &str) -> Result<()> {
-        tracing::info!("启动构建器: {}", name);
-
-        // TODO: 实现构建器启动逻辑
-        // 1. 检查构建器是否存在
-        // 2. 启动容器
-        // 3. 等待容器就绪
-        // 4. 执行健康检查
-
-        if let Some(builder) = self.builders.get_mut(name) {
-            builder.status = BuilderStatus::Running;
-        }
-
-        Ok(())
-    }
-
-    /// 停止构建器
-    pub async fn stop_builder(&mut self, name: &str) -> Result<()> {
-        tracing::info!("停止构建器: {}", name);
-
-        // TODO: 实现构建器停止逻辑
-        // 1. 检查构建器是否存在
-        // 2. 停止容器
-        // 3. 清理资源
-
-        if let Some(builder) = self.builders.get_mut(name) {
-            builder.status = BuilderStatus::Stopped;
-        }
-
-        Ok(())
-    }
-
-    /// 删除构建器
-    pub async fn remove_builder(&mut self, name: &str, force: bool) -> Result<()> {
-        tracing::info!("删除构建器: {} (force: {})", name, force);
-
-        // TODO: 实现构建器删除逻辑
-        // 1. 停止构建器（如果在运行）
-        // 2. 删除容器
-        // 3. 删除镜像（可选）
-        // 4. 清理配置
-
-        self.builders.remove(name);
-        Ok(())
-    }
-
-    /// 健康检查
-    pub async fn health_check(&mut self, name: &str) -> Result<HealthStatus> {
-        tracing::debug!("健康检查: {}", name);
-
-        // TODO: 实现健康检查逻辑
-        // 1. 检查容器是否运行
-        // 2. 执行自定义健康检查命令
-        // 3. 验证端口连接
-        // 4. 更新健康状态
-
-        let health_status = HealthStatus {
-            healthy: true,
-            message: "构建器运行正常".to_string(),
-            last_check: chrono::Utc::now(),
-        };
-
-        if let Some(builder) = self.builders.get_mut(name) {
-            builder.last_health_check = Some(health_status.clone());
-        }
-
-        Ok(health_status)
     }
 
     /// 列出所有构建器
@@ -444,164 +95,12 @@ impl BuilderManager {
         self.builders.get(name)
     }
 
-    /// 格式化输出构建器列表
-    pub fn format_builders_table(&self) -> String {
-        let builders = self.list_builders();
-        self.format_filtered_builders_table(&builders)
-    }
-
-    /// 计算字符串的显示宽度（中文字符占2个位置，ASCII字符占1个位置）
-    fn display_width(s: &str) -> usize {
-        s.chars().map(|c| if c.is_ascii() { 1 } else { 2 }).sum()
-    }
-
-    /// 右边填充空格使字符串达到指定的显示宽度
-    fn pad_to_width(s: &str, width: usize) -> String {
-        let current_width = Self::display_width(s);
-        if current_width >= width {
-            s.to_string()
+    /// 检查镜像是否存在
+    pub async fn image_exists(&self, name: &str) -> Result<bool> {
+        if let Some(builder) = self.builders.get(name) {
+            ImageBuilder::image_exists(&builder.config.image).await
         } else {
-            format!("{}{}", s, " ".repeat(width - current_width))
+            Ok(false)
         }
-    }
-
-    /// 获取构建器统计信息
-    pub fn get_stats(&self) -> HashMap<&str, usize> {
-        let mut stats = HashMap::new();
-
-        for builder in self.builders.values() {
-            let status_key = match builder.status {
-                BuilderStatus::NotCreated => "not_created",
-                BuilderStatus::Created => "created",
-                BuilderStatus::Running => "running",
-                BuilderStatus::Stopped => "stopped",
-                BuilderStatus::Error => "error",
-            };
-            *stats.entry(status_key).or_insert(0) += 1;
-        }
-
-        stats.insert("total", self.builders.len());
-        stats
-    }
-
-    /// 为过滤后的构建器列表生成格式化表格
-    pub fn format_filtered_builders_table(&self, builders: &[&BuilderInfo]) -> String {
-        if builders.is_empty() {
-            return "没有找到任何构建器".to_string();
-        }
-
-        // 准备所有数据行
-        let mut rows = Vec::new();
-        for builder in builders {
-            let container_id = builder
-                .container_id
-                .as_ref()
-                .map(|id| id.as_str())
-                .unwrap_or("N/A");
-
-            let health_status = if let Some(health) = &builder.last_health_check {
-                if health.healthy {
-                    "健康"
-                } else {
-                    "异常"
-                }
-            } else {
-                "未知"
-            };
-
-            let status_display = match builder.status {
-                BuilderStatus::NotCreated => "未创建",
-                BuilderStatus::Created => "已创建",
-                BuilderStatus::Running => "运行中",
-                BuilderStatus::Stopped => "已停止",
-                BuilderStatus::Error => "错误",
-            };
-
-            rows.push((
-                &builder.name,
-                &builder.config.image,
-                status_display,
-                container_id,
-                health_status,
-            ));
-        }
-
-        // 计算每列的最大显示宽度
-        let headers = ("名称", "镜像", "状态", "容器ID", "健康状态");
-
-        let mut max_widths = (
-            Self::display_width(headers.0), // 名称
-            Self::display_width(headers.1), // 镜像
-            Self::display_width(headers.2), // 状态
-            Self::display_width(headers.3), // 容器ID
-            Self::display_width(headers.4), // 健康状态
-        );
-
-        // 计算数据行的最大宽度
-        for (name, image, status, container_id, health) in &rows {
-            max_widths.0 = max_widths.0.max(Self::display_width(name));
-            max_widths.1 = max_widths.1.max(Self::display_width(image));
-            max_widths.2 = max_widths.2.max(Self::display_width(status));
-            max_widths.3 = max_widths.3.max(Self::display_width(container_id));
-            max_widths.4 = max_widths.4.max(Self::display_width(health));
-        }
-
-        // 添加一些padding让表格更好看
-        max_widths.0 += 2;
-        max_widths.1 += 2;
-        max_widths.2 += 2;
-        max_widths.3 += 2;
-        max_widths.4 += 2;
-
-        let mut output = String::new();
-
-        // 表头
-        output.push_str(&format!(
-            "{} {} {} {} {}\n",
-            Self::pad_to_width(headers.0, max_widths.0),
-            Self::pad_to_width(headers.1, max_widths.1),
-            Self::pad_to_width(headers.2, max_widths.2),
-            Self::pad_to_width(headers.3, max_widths.3),
-            Self::pad_to_width(headers.4, max_widths.4),
-        ));
-
-        // 分隔线
-        let total_width =
-            max_widths.0 + max_widths.1 + max_widths.2 + max_widths.3 + max_widths.4 + 4; // +4 for spaces
-        output.push_str(&"-".repeat(total_width));
-        output.push('\n');
-
-        // 数据行
-        for (name, image, status, container_id, health) in rows {
-            output.push_str(&format!(
-                "{} {} {} {} {}\n",
-                Self::pad_to_width(name, max_widths.0),
-                Self::pad_to_width(image, max_widths.1),
-                Self::pad_to_width(status, max_widths.2),
-                Self::pad_to_width(container_id, max_widths.3),
-                Self::pad_to_width(health, max_widths.4),
-            ));
-        }
-
-        output
-    }
-
-    /// 获取过滤后构建器列表的统计信息
-    pub fn get_filtered_stats(&self, builders: &[&BuilderInfo]) -> HashMap<&str, usize> {
-        let mut stats = HashMap::new();
-
-        for builder in builders {
-            let status_key = match builder.status {
-                BuilderStatus::NotCreated => "not_created",
-                BuilderStatus::Created => "created",
-                BuilderStatus::Running => "running",
-                BuilderStatus::Stopped => "stopped",
-                BuilderStatus::Error => "error",
-            };
-            *stats.entry(status_key).or_insert(0) += 1;
-        }
-
-        stats.insert("total", builders.len());
-        stats
     }
 }
