@@ -106,10 +106,7 @@ pub struct UrlValidator {
 
 impl Default for UrlValidator {
     fn default() -> Self {
-        Self {
-            schemes: vec!["http".to_string(), "https".to_string()],
-            required: true,
-        }
+        Self { schemes: vec!["http".to_string(), "https".to_string()], required: true }
     }
 }
 
@@ -174,9 +171,7 @@ impl Validator<String> for ProjectNameValidator {
         // 项目名称只能包含字母、数字、连字符和下划线
         let pattern = Regex::new(r"^[a-zA-Z0-9_-]+$")?;
         if !pattern.is_match(value) {
-            return Err(anyhow::anyhow!(
-                "项目名称只能包含字母、数字、连字符和下划线"
-            ));
+            return Err(anyhow::anyhow!("项目名称只能包含字母、数字、连字符和下划线"));
         }
 
         // 长度限制
@@ -226,12 +221,7 @@ pub struct PathValidator {
 
 impl Default for PathValidator {
     fn default() -> Self {
-        Self {
-            must_exist: false,
-            must_be_file: false,
-            must_be_dir: false,
-            required: true,
-        }
+        Self { must_exist: false, must_be_file: false, must_be_dir: false, required: true }
     }
 }
 
@@ -321,17 +311,11 @@ pub fn validate_config_file(config: &crate::core::config::ProjectConfig) -> Resu
         .validate(&config.source.git_repo)?;
 
     // 验证分支名称
-    StringValidator::new()
-        .min_length(1)
-        .max_length(100)
-        .validate(&config.source.git_branch)?;
+    StringValidator::new().min_length(1).max_length(100).validate(&config.source.git_branch)?;
 
     // 验证步骤名称
     for step in &config.steps {
-        StringValidator::new()
-            .min_length(1)
-            .max_length(100)
-            .validate(&step.name)?;
+        StringValidator::new().min_length(1).max_length(100).validate(&step.name)?;
 
         // 验证命令不为空
         if step.commands.is_empty() {
@@ -381,15 +365,9 @@ mod tests {
     fn test_url_validator() {
         let validator = UrlValidator::new();
 
-        assert!(validator
-            .validate(&"https://github.com/user/repo.git".to_string())
-            .is_ok());
-        assert!(validator
-            .validate(&"http://example.com".to_string())
-            .is_ok());
+        assert!(validator.validate(&"https://github.com/user/repo.git".to_string()).is_ok());
+        assert!(validator.validate(&"http://example.com".to_string()).is_ok());
         assert!(validator.validate(&"invalid-url".to_string()).is_err());
-        assert!(validator
-            .validate(&"ftp://example.com".to_string())
-            .is_err());
+        assert!(validator.validate(&"ftp://example.com".to_string()).is_err());
     }
 }

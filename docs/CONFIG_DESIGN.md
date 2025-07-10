@@ -15,6 +15,8 @@
 ### 基本结构
 
 ```
+builder.yml
+docker-compose.yml
 .confkit/
 ├──builders/
 │   ├── golang
@@ -530,6 +532,7 @@ steps:
 
 ```
 project-repo/
+├── builder.yml/           # builders 镜像构建配置文件
 ├── docker-compose.yml/    # builders compose 配置文件
 ├── .confkit/              # confkit 文件管理目录
 ├── volumes/               # 临时存储目录

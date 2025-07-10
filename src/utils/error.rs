@@ -5,43 +5,21 @@ use std::fmt;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ConfkitError {
     /// 配置错误
-    ConfigError {
-        message: String,
-        file_path: Option<String>,
-    },
+    ConfigError { message: String, file_path: Option<String> },
     /// 任务错误
-    TaskError {
-        task_id: String,
-        step_name: Option<String>,
-        message: String,
-    },
+    TaskError { task_id: String, step_name: Option<String>, message: String },
     /// Docker错误
-    DockerError {
-        message: String,
-        container_id: Option<String>,
-    },
+    DockerError { message: String, container_id: Option<String> },
     /// Git错误
-    GitError {
-        message: String,
-        repo_url: Option<String>,
-    },
+    GitError { message: String, repo_url: Option<String> },
     /// 网络错误
-    NetworkError {
-        message: String,
-        url: Option<String>,
-    },
+    NetworkError { message: String, url: Option<String> },
     /// 存储错误
-    StorageError {
-        message: String,
-        path: Option<String>,
-    },
+    StorageError { message: String, path: Option<String> },
     /// 验证错误
     ValidationError { field: String, message: String },
     /// 系统错误
-    SystemError {
-        message: String,
-        source: Option<String>,
-    },
+    SystemError { message: String, source: Option<String> },
 }
 
 impl fmt::Display for ConfkitError {
@@ -54,21 +32,14 @@ impl fmt::Display for ConfkitError {
                     write!(f, "配置错误: {}", message)
                 }
             }
-            ConfkitError::TaskError {
-                task_id,
-                step_name,
-                message,
-            } => {
+            ConfkitError::TaskError { task_id, step_name, message } => {
                 if let Some(step) = step_name {
                     write!(f, "任务错误 [{}::{}]: {}", task_id, step, message)
                 } else {
                     write!(f, "任务错误 [{}]: {}", task_id, message)
                 }
             }
-            ConfkitError::DockerError {
-                message,
-                container_id,
-            } => {
+            ConfkitError::DockerError { message, container_id } => {
                 if let Some(id) = container_id {
                     write!(f, "Docker错误 [{}]: {}", id, message)
                 } else {
@@ -169,10 +140,7 @@ pub trait IntoConfkitError {
 impl IntoConfkitError for std::io::Error {
     fn into_confkit_error(self, context: ErrorContext) -> ConfkitError {
         if let Some(path) = context.file_path {
-            ConfkitError::StorageError {
-                message: self.to_string(),
-                path: Some(path),
-            }
+            ConfkitError::StorageError { message: self.to_string(), path: Some(path) }
         } else {
             ConfkitError::SystemError {
                 message: self.to_string(),
@@ -195,16 +163,10 @@ impl IntoConfkitError for serde_yaml::Error {
 #[macro_export]
 macro_rules! config_error {
     ($msg:expr) => {
-        ConfkitError::ConfigError {
-            message: $msg.to_string(),
-            file_path: None,
-        }
+        ConfkitError::ConfigError { message: $msg.to_string(), file_path: None }
     };
     ($msg:expr, $path:expr) => {
-        ConfkitError::ConfigError {
-            message: $msg.to_string(),
-            file_path: Some($path.to_string()),
-        }
+        ConfkitError::ConfigError { message: $msg.to_string(), file_path: Some($path.to_string()) }
     };
 }
 
@@ -231,9 +193,6 @@ macro_rules! task_error {
 #[macro_export]
 macro_rules! validation_error {
     ($field:expr, $msg:expr) => {
-        ConfkitError::ValidationError {
-            field: $field.to_string(),
-            message: $msg.to_string(),
-        }
+        ConfkitError::ValidationError { field: $field.to_string(), message: $msg.to_string() }
     };
 }

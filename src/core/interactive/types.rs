@@ -16,12 +16,7 @@ pub struct InteractiveConfig {
 
 impl Default for InteractiveConfig {
     fn default() -> Self {
-        Self {
-            workspace: ".".to_string(),
-            config: None,
-            max_history: 100,
-            enable_colors: true,
-        }
+        Self { workspace: ".".to_string(), config: None, max_history: 100, enable_colors: true }
     }
 }
 
@@ -51,11 +46,7 @@ pub struct CommandContext {
 
 impl CommandContext {
     pub fn new(config: InteractiveConfig) -> Self {
-        Self {
-            config,
-            history: Vec::new(),
-            session_data: HashMap::new(),
-        }
+        Self { config, history: Vec::new(), session_data: HashMap::new() }
     }
 
     pub fn add_to_history(&mut self, command: String) {
@@ -74,10 +65,9 @@ pub enum InteractiveMode {
     /// Builder 菜单
     BuilderMenu,
     /// Builder List 参数选择
-    BuilderListParams {
-        verbose: bool,
-        status_filter: Option<String>,
-    },
+    BuilderListParams { verbose: bool, status_filter: Option<String> },
+    /// Builder Create 参数选择
+    BuilderCreateParams,
 }
 
 /// 菜单项
@@ -169,10 +159,7 @@ pub enum Command {
     /// 清屏命令
     Clear,
     /// Builder 列表命令
-    BuilderList {
-        verbose: bool,
-        status_filter: Option<String>,
-    },
+    BuilderList { verbose: bool, status_filter: Option<String> },
 }
 
 impl Command {
@@ -222,10 +209,7 @@ impl Command {
                     i += 1;
                 }
 
-                Ok(Command::BuilderList {
-                    verbose,
-                    status_filter,
-                })
+                Ok(Command::BuilderList { verbose, status_filter })
             }
             _ => Err(anyhow::anyhow!("未知 builder 子命令: {}", args[0])),
         }

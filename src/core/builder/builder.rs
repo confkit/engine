@@ -1,7 +1,14 @@
 use anyhow::Result;
-use std::process::Command;
+use std::io::BufReader;
+use std::process::{Command, Stdio};
 
-use super::types::{BuilderConfig, BuilderInfo, BuilderStatus};
+use super::{
+    inspector::ImageInspector,
+    output_handler::BuildOutputHandler,
+    puller::ImagePuller,
+    types::{BuilderConfig, BuilderInfo, BuilderStatus},
+    validator::BuildValidator,
+};
 
 /// 镜像构建器
 pub struct ImageBuilder;
@@ -12,12 +19,15 @@ impl ImageBuilder {
         tracing::info!("开始构建 Docker 镜像: {}", config.name);
 
         // 1. 验证构建配置
-        Self::validate_build_config(config)?;
+        BuildValidator::validate_build_config(config)?;
 
-        // 2. 执行 Docker 构建
+        // 2. 检查并拉取基础镜像
+        ImagePuller::ensure_base_image_available(&config.base_image).await?;
+
+        // 3. 执行 Docker 构建
         let (image_id, build_logs) = Self::execute_docker_build(config).await?;
 
-        // 3. 创建构建器信息
+        // 4. 创建构建器信息
         let builder_info = BuilderInfo {
             name: config.name.clone(),
             status: BuilderStatus::Created,
@@ -29,27 +39,6 @@ impl ImageBuilder {
 
         tracing::info!("Docker 镜像构建成功: {} -> {}", config.name, config.image);
         Ok(builder_info)
-    }
-
-    /// 验证构建配置
-    fn validate_build_config(config: &BuilderConfig) -> Result<()> {
-        // 检查名称是否为空
-        if config.name.trim().is_empty() {
-            return Err(anyhow::anyhow!("构建器名称不能为空"));
-        }
-
-        // 检查 Dockerfile 是否存在
-        if !std::path::Path::new(&config.dockerfile).exists() {
-            return Err(anyhow::anyhow!("Dockerfile 文件不存在: {}", config.dockerfile));
-        }
-
-        // 检查构建上下文是否存在
-        if !std::path::Path::new(&config.context).exists() {
-            return Err(anyhow::anyhow!("构建上下文目录不存在: {}", config.context));
-        }
-
-        tracing::debug!("构建配置验证通过: {}", config.name);
-        Ok(())
     }
 
     /// 执行 Docker 构建
@@ -68,72 +57,61 @@ impl ImageBuilder {
         // 添加构建上下文
         cmd.arg(&config.context);
 
+        // 设置标准输出和错误输出管道
+        cmd.stdout(Stdio::piped()).stderr(Stdio::piped());
+
         tracing::debug!("Docker 构建命令: {:?}", cmd);
 
-        // 执行命令
-        let output = cmd.output()?;
+        // 启动进程
+        let mut child = cmd.spawn()?;
 
-        if !output.status.success() {
-            let error_msg = String::from_utf8_lossy(&output.stderr);
-            return Err(anyhow::anyhow!("Docker 构建失败: {}", error_msg));
+        // 获取标准输出和错误输出
+        let stdout = child.stdout.take().unwrap();
+        let stderr = child.stderr.take().unwrap();
+
+        // 创建输出缓冲区
+        let mut build_logs = String::new();
+
+        // 实时读取和显示输出
+        let stdout_reader = BufReader::new(stdout);
+        let stderr_reader = BufReader::new(stderr);
+
+        // 启动两个任务来并行读取输出
+        let (stdout_logs, stderr_logs) = tokio::join!(
+            BuildOutputHandler::read_and_display_output(stdout_reader, "OUT"),
+            BuildOutputHandler::read_and_display_build_output(stderr_reader)
+        );
+
+        // 等待进程完成
+        let status = child.wait()?;
+
+        // 合并日志
+        build_logs.push_str(&stdout_logs);
+        build_logs.push_str(&stderr_logs);
+
+        if !status.success() {
+            return Err(anyhow::anyhow!(
+                "Docker 构建失败 (退出代码: {})\n{}",
+                status.code().unwrap_or(-1),
+                stderr_logs
+            ));
         }
 
-        // 获取构建日志
-        let build_logs = String::from_utf8_lossy(&output.stdout).to_string();
-
         // 获取镜像 ID
-        let image_id = Self::get_image_id(&config.image).await?;
+        let image_id = ImageInspector::get_image_id(&config.image).await?;
 
         Ok((image_id, build_logs))
     }
 
-    /// 获取镜像 ID
-    async fn get_image_id(image_name: &str) -> Result<String> {
-        let output = Command::new("docker").args(&["images", "-q", image_name]).output()?;
+    // 为了保持向后兼容性，重新导出一些常用方法
 
-        if !output.status.success() {
-            return Err(anyhow::anyhow!("无法获取镜像 ID"));
-        }
-
-        let image_id = String::from_utf8_lossy(&output.stdout).trim().to_string();
-
-        if image_id.is_empty() {
-            return Err(anyhow::anyhow!("镜像不存在或构建失败"));
-        }
-
-        Ok(image_id)
-    }
-
-    /// 检查镜像是否存在
+    /// 检查镜像是否存在 (委托给 ImageInspector)
     pub async fn image_exists(image_name: &str) -> Result<bool> {
-        let output = Command::new("docker").args(&["images", "-q", image_name]).output()?;
-
-        if !output.status.success() {
-            return Ok(false);
-        }
-
-        let output_str = String::from_utf8_lossy(&output.stdout);
-        let image_id = output_str.trim();
-        Ok(!image_id.is_empty())
+        ImageInspector::image_exists(image_name).await
     }
 
-    /// 删除镜像
+    /// 删除镜像 (委托给 ImageInspector)
     pub async fn remove_image(image_name: &str, force: bool) -> Result<()> {
-        let mut cmd = Command::new("docker");
-        cmd.args(&["rmi", image_name]);
-
-        if force {
-            cmd.arg("--force");
-        }
-
-        let output = cmd.output()?;
-
-        if !output.status.success() {
-            let error_msg = String::from_utf8_lossy(&output.stderr);
-            return Err(anyhow::anyhow!("删除镜像失败: {}", error_msg));
-        }
-
-        tracing::info!("镜像删除成功: {}", image_name);
-        Ok(())
+        ImageInspector::remove_image(image_name, force).await
     }
 }

@@ -28,7 +28,7 @@ impl InteractiveEngine {
 
     /// 启动交互式会话
     pub async fn run(&mut self) -> Result<()> {
-        println!("🚀 欢迎使用 ConfKit 交互式模式!");
+        println!("✓ 欢迎使用 ConfKit 交互式模式!");
         println!("使用 ↑↓ 方向键选择，Enter 确认，Ctrl+C 退出");
         println!();
         loop {
@@ -45,6 +45,11 @@ impl InteractiveEngine {
                 }
                 InteractiveMode::BuilderListParams { verbose, status_filter } => {
                     if !self.show_builder_list_params(*verbose, status_filter.clone()).await? {
+                        break;
+                    }
+                }
+                InteractiveMode::BuilderCreateParams => {
+                    if !self.show_builder_create_params().await? {
                         break;
                     }
                 }
@@ -69,7 +74,7 @@ impl InteractiveEngine {
                         println!("{}", output);
                     }
                     Err(e) => {
-                        println!("❌ 获取构建器列表失败: {}", e);
+                        println!("✗ 获取构建器列表失败: {}", e);
                     }
                 }
             }

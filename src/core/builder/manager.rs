@@ -14,26 +14,26 @@ impl BuilderManager {
         Self { builders: HashMap::new() }
     }
 
-    /// 从当前目录的 docker-compose.yml 文件加载构建器
+    /// 从当前目录的 docker-compose.yml 文件加载构建器（保留向后兼容）
     pub fn from_docker_compose<P: AsRef<Path>>(compose_path: P) -> Result<Self> {
         let builders = BuilderLoader::load_from_docker_compose(compose_path)?;
         Ok(Self { builders })
     }
 
-    /// 从当前工作目录加载 docker-compose.yml
+    /// 从当前工作目录加载 builder.yml
     pub fn from_current_directory() -> Result<Self> {
-        let compose_path = "./docker-compose.yml";
-        Self::from_docker_compose(compose_path)
+        let builders = BuilderLoader::load_builder_infos_from_current_dir()?;
+        Ok(Self { builders })
     }
 
     /// 创建带示例数据的管理器（用于演示和测试）
     pub fn with_demo_data() -> Self {
-        // 首先尝试从当前目录加载 docker-compose.yml
+        // 首先尝试从当前目录加载 builder.yml
         if let Ok(manager) = Self::from_current_directory() {
             return manager;
         }
 
-        // 如果没有 docker-compose.yml 文件，则使用演示数据
+        // 如果没有 builder.yml 文件，则使用演示数据
         let builders = BuilderLoader::create_demo_builders();
         Self { builders }
     }

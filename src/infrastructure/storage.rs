@@ -82,10 +82,8 @@ impl StorageManager {
         // 4. 创建索引文件
 
         self.ensure_directory_exists(&self.config.logs_dir).await?;
-        self.ensure_directory_exists(&self.config.artifacts_dir)
-            .await?;
-        self.ensure_directory_exists(&self.config.workspace_dir)
-            .await?;
+        self.ensure_directory_exists(&self.config.artifacts_dir).await?;
+        self.ensure_directory_exists(&self.config.workspace_dir).await?;
         self.ensure_directory_exists(&self.config.cache_dir).await?;
 
         Ok(())
@@ -192,15 +190,9 @@ impl StorageManager {
         // 4. 生成统计报告
 
         let logs_size = self.calculate_directory_size(&self.config.logs_dir).await?;
-        let artifacts_size = self
-            .calculate_directory_size(&self.config.artifacts_dir)
-            .await?;
-        let workspace_size = self
-            .calculate_directory_size(&self.config.workspace_dir)
-            .await?;
-        let cache_size = self
-            .calculate_directory_size(&self.config.cache_dir)
-            .await?;
+        let artifacts_size = self.calculate_directory_size(&self.config.artifacts_dir).await?;
+        let workspace_size = self.calculate_directory_size(&self.config.workspace_dir).await?;
+        let cache_size = self.calculate_directory_size(&self.config.cache_dir).await?;
 
         Ok(StorageStats {
             total_size: logs_size + artifacts_size + workspace_size + cache_size,
@@ -300,12 +292,7 @@ impl StorageManager {
         // 3. 检查空间警告阈值
         // 4. 返回空间信息
 
-        Ok(DiskSpaceInfo {
-            total: 0,
-            available: 0,
-            used: 0,
-            percentage_used: 0.0,
-        })
+        Ok(DiskSpaceInfo { total: 0, available: 0, used: 0, percentage_used: 0.0 })
     }
 }
 

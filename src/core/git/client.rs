@@ -11,10 +11,7 @@ pub struct GitClient {
 
 impl GitClient {
     pub fn new() -> Self {
-        Self {
-            timeout: std::time::Duration::from_secs(300),
-            retry_count: 3,
-        }
+        Self { timeout: std::time::Duration::from_secs(300), retry_count: 3 }
     }
 
     /// 克隆仓库

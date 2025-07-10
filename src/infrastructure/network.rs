@@ -50,11 +50,7 @@ pub struct NetworkClient {
 
 impl Default for NetworkConfig {
     fn default() -> Self {
-        Self {
-            proxy: None,
-            timeout: TimeoutConfig::default(),
-            retry: RetryConfig::default(),
-        }
+        Self { proxy: None, timeout: TimeoutConfig::default(), retry: RetryConfig::default() }
     }
 }
 
@@ -185,10 +181,7 @@ impl NetworkClient {
         tracing::info!("上传文件: {:?} -> {}", file_path, url);
 
         let file_content = tokio::fs::read(file_path).await?;
-        let file_name = file_path
-            .file_name()
-            .and_then(|name| name.to_str())
-            .unwrap_or("file");
+        let file_name = file_path.file_name().and_then(|name| name.to_str()).unwrap_or("file");
 
         let part = reqwest::multipart::Part::bytes(file_content).file_name(file_name.to_string());
         let form = reqwest::multipart::Form::new().part(field_name.to_string(), part);
@@ -255,11 +248,7 @@ impl NetworkClient {
             .collect();
         let body = response.text().await?;
 
-        Ok(HttpResponse {
-            status,
-            headers,
-            body,
-        })
+        Ok(HttpResponse { status, headers, body })
     }
 
     /// 测试网络连接
@@ -269,11 +258,8 @@ impl NetworkClient {
         let mut results = Vec::new();
 
         // 测试常见的公共服务
-        let test_urls = vec![
-            "https://httpbin.org/get",
-            "https://www.google.com",
-            "https://github.com",
-        ];
+        let test_urls =
+            vec!["https://httpbin.org/get", "https://www.google.com", "https://github.com"];
 
         for url in test_urls {
             let start = std::time::Instant::now();
@@ -289,10 +275,7 @@ impl NetworkClient {
 
         let success_count = results.iter().filter(|r| r.success).count();
 
-        Ok(NetworkTestResult {
-            overall_success: success_count > 0,
-            tests: results,
-        })
+        Ok(NetworkTestResult { overall_success: success_count > 0, tests: results })
     }
 }
 

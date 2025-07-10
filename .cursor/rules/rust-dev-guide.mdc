@@ -1,7 +1,7 @@
 ---
 description: 
 globs: 
-alwaysApply: false
+alwaysApply: true
 ---
 # Rust CLI 开发规范
 
@@ -19,6 +19,7 @@ alwaysApply: false
 - 不要擅自启动项目 (`cargo run`)
 - 不要擅自进行功能测试
 - 不要擅自添加测试用例
+- 不要擅自运行项目构建测试, 已经有了 examples 测试案例
 - 不要运行 `cargo make dev` 等监听任务
 - 不要在日志输出中使用 emoji 图标(👋 除外)，应使用ASCII文本图标（如 •、●、▶、✓、✗、→、※）
 

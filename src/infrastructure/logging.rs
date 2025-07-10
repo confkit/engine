@@ -93,12 +93,7 @@ impl LoggingManager {
         step_name: Option<&str>,
         lines: Option<usize>,
     ) -> Result<Vec<String>> {
-        tracing::debug!(
-            "读取任务日志: {} (step: {:?}, lines: {:?})",
-            task_id,
-            step_name,
-            lines
-        );
+        tracing::debug!("读取任务日志: {} (step: {:?}, lines: {:?})", task_id, step_name, lines);
 
         // TODO: 实现任务日志读取
         // 1. 定位日志文件
@@ -188,12 +183,7 @@ impl LoggingManager {
         start_time: Option<chrono::DateTime<chrono::Utc>>,
         end_time: Option<chrono::DateTime<chrono::Utc>>,
     ) -> Result<Vec<LogEntry>> {
-        tracing::debug!(
-            "搜索日志: task_id={:?}, keyword={}, level={:?}",
-            task_id,
-            keyword,
-            level
-        );
+        tracing::debug!("搜索日志: task_id={:?}, keyword={}, level={:?}", task_id, keyword, level);
 
         // TODO: 实现日志搜索
         // 1. 确定搜索范围

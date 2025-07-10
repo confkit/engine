@@ -6,7 +6,8 @@ use std::collections::HashMap;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BuilderConfig {
     pub name: String,
-    pub image: String,
+    pub image: String,      // 目标镜像名称
+    pub base_image: String, // 基础镜像名称（用于拉取和构建）
     pub dockerfile: String,
     pub context: String,                     // 构建上下文路径
     pub build_args: HashMap<String, String>, // 构建参数
@@ -14,11 +15,11 @@ pub struct BuilderConfig {
 
 impl BuilderConfig {
     /// 从基本参数创建构建器配置
-    pub fn new(name: String, dockerfile: String) -> Self {
+    pub fn new(name: String, dockerfile: String, base_image: String) -> Self {
         // 从 Dockerfile 路径推断镜像名称和构建上下文
         let (image, context) = Self::derive_image_and_context(&name, &dockerfile);
 
-        Self { name, image, dockerfile, context, build_args: HashMap::new() }
+        Self { name, image, base_image, dockerfile, context, build_args: HashMap::new() }
     }
 
     /// 从名称和 Dockerfile 路径推断镜像名称和构建上下文
@@ -173,4 +174,23 @@ impl ComposeService {
             "unknown:latest".to_string()
         }
     }
+}
+
+/// Docker 镜像信息
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ImageInfo {
+    pub id: String,
+    pub repository: String,
+    pub tag: String,
+    pub created_at: String,
+    pub size: String,
+}
+
+/// 镜像检查结果
+#[derive(Debug, Clone)]
+pub enum ImageCheckResult {
+    /// 镜像存在，包含详细信息
+    Exists(ImageInfo),
+    /// 镜像不存在
+    NotExists,
 }

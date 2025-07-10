@@ -15,12 +15,12 @@ impl InteractiveEngine {
         println!("   • 支持多种语言和框架 (Golang, Rust, Node.js, Tauri 等)");
         println!("   • 统一的构建环境配置");
         println!();
-        println!("📋 Task 管理 (即将推出):");
+        println!("※ Task 管理 (即将推出):");
         println!("   • 定义和执行构建任务");
         println!("   • 任务依赖管理");
         println!("   • 并行执行支持");
         println!();
-        println!("⚙️  Config 管理 (即将推出):");
+        println!("※ Config 管理 (即将推出):");
         println!("   • 项目配置管理");
         println!("   • 环境变量配置");
         println!("   • 模板支持");

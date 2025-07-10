@@ -1,0 +1,19 @@
+builders:
+  - name: golang-builder
+    type: golang
+    version: 1.24
+    image: golang
+    tag: 1.24-alpine
+    dockerfile: ./.confkit/builders/golang/Dockerfile.1.24
+  - name: rust-builder
+    type: rust
+    version: 1.88
+    image: rust
+    tag: 1.88-alpine
+    dockerfile: ./.confkit/builders/rust/Dockerfile.1.88
+  - name: node-builder
+    type: node
+    version: 22
+    image: node
+    tag: 22-alpine
+    dockerfile: ./.confkit/builders/node/Dockerfile.22
