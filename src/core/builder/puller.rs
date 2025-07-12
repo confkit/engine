@@ -1,7 +1,6 @@
-use crate::core::builder::{image::inspector::ImageInspector, output_handler::BuildOutputHandler};
+use crate::core::builder::image::inspector::ImageInspector;
+use crate::core::executor::{DockerExecutor, Executor};
 use anyhow::Result;
-use std::io::BufReader;
-use std::process::{Command, Stdio};
 
 /// 镜像拉取器
 pub struct ImagePuller;
@@ -34,41 +33,13 @@ impl ImagePuller {
     async fn pull_base_image(base_image: &str) -> Result<()> {
         println!("▶ 正在拉取基础镜像: {}", base_image);
 
-        let mut cmd = Command::new("docker");
-        cmd.arg("pull").arg(base_image);
+        // 创建 Docker 执行器
+        let executor = DockerExecutor::new();
 
-        // 设置标准输出和错误输出管道
-        cmd.stdout(Stdio::piped()).stderr(Stdio::piped());
+        tracing::debug!("Docker pull 镜像: {}", base_image);
 
-        tracing::debug!("Docker pull 命令: {:?}", cmd);
-
-        // 启动进程
-        let mut child = cmd.spawn()?;
-
-        // 获取标准输出和错误输出
-        let stdout = child.stdout.take().unwrap();
-        let stderr = child.stderr.take().unwrap();
-
-        // 实时读取和显示输出
-        let stdout_reader = BufReader::new(stdout);
-        let stderr_reader = BufReader::new(stderr);
-
-        // 启动两个任务来并行读取输出
-        let (stdout_logs, stderr_logs) = tokio::join!(
-            BuildOutputHandler::read_and_display_pull_output(stdout_reader, "PULL"),
-            BuildOutputHandler::read_and_display_pull_output(stderr_reader, "ERR")
-        );
-
-        // 等待进程完成
-        let status = child.wait()?;
-
-        if !status.success() {
-            return Err(anyhow::anyhow!(
-                "拉取基础镜像失败 (退出代码: {})\n{}",
-                status.code().unwrap_or(-1),
-                stderr_logs
-            ));
-        }
+        // 执行镜像拉取
+        executor.pull_image(base_image).await?;
 
         println!("✓ 基础镜像拉取成功: {}", base_image);
 

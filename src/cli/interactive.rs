@@ -26,7 +26,7 @@ impl InteractiveCommand {
         };
 
         // 创建并运行交互式引擎
-        let mut engine = InteractiveEngine::new(config)?;
+        let mut engine = InteractiveEngine::new(config).await?;
         engine.run().await?;
 
         Ok(())

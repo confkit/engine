@@ -41,7 +41,7 @@ impl ImageCommand {
     pub async fn execute(self) -> Result<()> {
         match self.command {
             ImageSubcommand::List { verbose, status } => {
-                list_builders(verbose, status).await?;
+                list_images(verbose, status).await?;
             }
             ImageSubcommand::Create { image } => {
                 create_image(image).await?;
@@ -55,18 +55,15 @@ impl ImageCommand {
 }
 
 /// 列出构建器镜像
-async fn list_builders(verbose: bool, status_filter: Option<String>) -> Result<()> {
-    tracing::info!("列出构建器镜像 (verbose: {}, status: {:?})", verbose, status_filter);
+async fn list_images(verbose: bool, status_filter: Option<String>) -> Result<()> {
+    use crate::core::builder::{BuilderFormatter, BuilderManager};
 
-    // 创建带示例数据的构建器管理器
-    let manager = BuilderManager::with_demo_data();
+    println!("• 正在加载构建器信息...");
 
-    // 调用 core 层的业务逻辑
+    let manager = BuilderManager::with_demo_data().await;
     let output = manager.list_builders_with_filter(verbose, status_filter)?;
 
-    // 直接输出结果
     println!("{}", output);
-
     Ok(())
 }
 

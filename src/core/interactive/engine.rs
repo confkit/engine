@@ -17,10 +17,12 @@ pub struct InteractiveEngine {
 
 impl InteractiveEngine {
     /// 创建新的交互式引擎
-    pub fn new(config: InteractiveConfig) -> Result<Self> {
+    pub async fn new(config: InteractiveConfig) -> Result<Self> {
         let context = CommandContext::new(config);
-        let builder_manager = BuilderManager::from_current_directory()
-            .unwrap_or_else(|_| BuilderManager::with_demo_data());
+        let builder_manager = match BuilderManager::from_current_directory().await {
+            Ok(manager) => manager,
+            Err(_) => BuilderManager::with_demo_data().await,
+        };
         Ok(Self { context, builder_manager, current_mode: InteractiveMode::MainMenu })
     }
 

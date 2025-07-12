@@ -1,14 +1,13 @@
 use anyhow::Result;
-use std::io::BufReader;
-use std::process::{Command, Stdio};
+use std::collections::HashMap;
 
 use super::inspector::ImageInspector;
 use crate::core::builder::{
-    output_handler::BuildOutputHandler,
     puller::ImagePuller,
     types::{BuilderConfig, BuilderInfo, BuilderStatus},
     validator::BuildValidator,
 };
+use crate::core::executor::{DockerExecutor, Executor, ImageBuildParams};
 
 /// 镜像构建器
 pub struct ImageBuilder;
@@ -45,73 +44,49 @@ impl ImageBuilder {
     async fn execute_docker_build(config: &BuilderConfig) -> Result<(String, String)> {
         tracing::info!("执行 Docker 构建: {}", config.image);
 
-        // 构建 docker build 命令
-        let mut cmd = Command::new("docker");
-        cmd.arg("build").arg("-t").arg(&config.image).arg("-f").arg(&config.dockerfile);
+        // 创建 Docker 执行器
+        let executor = DockerExecutor::new();
 
-        // 添加构建参数
-        for (key, value) in &config.build_args {
-            cmd.arg("--build-arg").arg(format!("{}={}", key, value));
-        }
+        // 构建镜像构建参数
+        let build_params = ImageBuildParams {
+            tag: config.image.clone(),
+            dockerfile: config.dockerfile.clone(),
+            context: config.context.clone(),
+            build_args: config.build_args.clone(),
+            platform: None,  // 可以从配置中获取
+            no_cache: false, // 可以从配置中获取
+        };
 
-        // 添加构建上下文
-        cmd.arg(&config.context);
+        tracing::debug!("Docker 构建参数: {:?}", build_params);
 
-        // 设置标准输出和错误输出管道
-        cmd.stdout(Stdio::piped()).stderr(Stdio::piped());
+        // 执行镜像构建
+        let image_id = executor.build_image(&build_params).await?;
 
-        tracing::debug!("Docker 构建命令: {:?}", cmd);
-
-        // 启动进程
-        let mut child = cmd.spawn()?;
-
-        // 获取标准输出和错误输出
-        let stdout = child.stdout.take().unwrap();
-        let stderr = child.stderr.take().unwrap();
-
-        // 创建输出缓冲区
-        let mut build_logs = String::new();
-
-        // 实时读取和显示输出
-        let stdout_reader = BufReader::new(stdout);
-        let stderr_reader = BufReader::new(stderr);
-
-        // 启动两个任务来并行读取输出
-        let (stdout_logs, stderr_logs) = tokio::join!(
-            BuildOutputHandler::read_and_display_output(stdout_reader, "OUT"),
-            BuildOutputHandler::read_and_display_build_output(stderr_reader)
+        // 构建成功，生成构建日志
+        let build_logs = format!(
+            "Docker 镜像构建成功\n镜像标签: {}\n镜像ID: {}\nDockerfile: {}\n构建上下文: {}",
+            config.image, image_id, config.dockerfile, config.context
         );
-
-        // 等待进程完成
-        let status = child.wait()?;
-
-        // 合并日志
-        build_logs.push_str(&stdout_logs);
-        build_logs.push_str(&stderr_logs);
-
-        if !status.success() {
-            return Err(anyhow::anyhow!(
-                "Docker 构建失败 (退出代码: {})\n{}",
-                status.code().unwrap_or(-1),
-                stderr_logs
-            ));
-        }
-
-        // 获取镜像 ID
-        let image_id = ImageInspector::get_image_id(&config.image).await?;
 
         Ok((image_id, build_logs))
     }
 
     // 为了保持向后兼容性，重新导出一些常用方法
 
-    /// 检查镜像是否存在 (委托给 ImageInspector)
+    /// 检查镜像是否存在
     pub async fn image_exists(image_name: &str) -> Result<bool> {
-        ImageInspector::image_exists(image_name).await
+        let executor = DockerExecutor::new();
+        executor.image_exists(image_name).await
     }
 
-    /// 删除镜像 (委托给 ImageInspector)
+    /// 删除镜像
     pub async fn remove_image(image_name: &str, force: bool) -> Result<()> {
-        ImageInspector::remove_image(image_name, force).await
+        let executor = DockerExecutor::new();
+        let params = crate::core::executor::ImageOperationParams {
+            image: image_name.to_string(),
+            force,
+            extra_args: vec![],
+        };
+        executor.remove_image(&params).await
     }
 }

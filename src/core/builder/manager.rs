@@ -21,15 +21,15 @@ impl BuilderManager {
     }
 
     /// 从当前工作目录加载 builder.yml
-    pub fn from_current_directory() -> Result<Self> {
-        let builders = BuilderLoader::load_builder_infos_from_current_dir()?;
+    pub async fn from_current_directory() -> Result<Self> {
+        let builders = BuilderLoader::load_builder_infos_from_current_dir().await?;
         Ok(Self { builders })
     }
 
     /// 创建带示例数据的管理器（用于演示和测试）
-    pub fn with_demo_data() -> Self {
+    pub async fn with_demo_data() -> Self {
         // 首先尝试从当前目录加载 builder.yml
-        if let Ok(manager) = Self::from_current_directory() {
+        if let Ok(manager) = Self::from_current_directory().await {
             return manager;
         }
 

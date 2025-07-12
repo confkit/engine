@@ -1,4 +1,5 @@
 use crate::core::builder::types::{ImageCheckResult, ImageInfo};
+use crate::core::executor::{DockerExecutor, Executor};
 use anyhow::Result;
 use std::process::Command;
 
@@ -25,15 +26,8 @@ impl ImageInspector {
 
     /// 检查镜像是否存在
     pub async fn image_exists(image_name: &str) -> Result<bool> {
-        let output = Command::new("docker").args(&["images", "-q", image_name]).output()?;
-
-        if !output.status.success() {
-            return Ok(false);
-        }
-
-        let output_str = String::from_utf8_lossy(&output.stdout);
-        let image_id = output_str.trim();
-        Ok(!image_id.is_empty())
+        let executor = DockerExecutor::new();
+        executor.image_exists(image_name).await
     }
 
     /// 获取镜像详细信息
@@ -167,20 +161,14 @@ impl ImageInspector {
 
     /// 删除镜像
     pub async fn remove_image(image_name: &str, force: bool) -> Result<()> {
-        let mut cmd = Command::new("docker");
-        cmd.args(&["rmi", image_name]);
+        let executor = DockerExecutor::new();
+        let params = crate::core::executor::ImageOperationParams {
+            image: image_name.to_string(),
+            force,
+            extra_args: vec![],
+        };
 
-        if force {
-            cmd.arg("--force");
-        }
-
-        let output = cmd.output()?;
-
-        if !output.status.success() {
-            let error_msg = String::from_utf8_lossy(&output.stderr);
-            return Err(anyhow::anyhow!("删除镜像失败: {}", error_msg));
-        }
-
+        executor.remove_image(&params).await?;
         tracing::info!("镜像删除成功: {}", image_name);
         Ok(())
     }

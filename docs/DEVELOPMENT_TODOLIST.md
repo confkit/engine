@@ -134,6 +134,7 @@
   - [ ] image 
     - [x] list 
     - [x] create
+    - [x] remove
 - [ ] 集成 run 命令功能  
 - [ ] 集成 task 命令功能
 - [ ] 集成 logs 命令功能
