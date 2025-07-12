@@ -2,8 +2,8 @@ use anyhow::Result;
 use std::io::BufReader;
 use std::process::{Command, Stdio};
 
-use super::{
-    inspector::ImageInspector,
+use super::inspector::ImageInspector;
+use crate::core::builder::{
     output_handler::BuildOutputHandler,
     puller::ImagePuller,
     types::{BuilderConfig, BuilderInfo, BuilderStatus},

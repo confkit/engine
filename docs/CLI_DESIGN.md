@@ -27,39 +27,57 @@
 ### 核心命令概览
 
 ```bash
-# 构建和管理构建环境
-confkit builder create <builder-name>    # 创建构建镜像
-confkit builder list                     # 列出构建容器
-confkit builder start <builder-name>     # 启动构建容器
-confkit builder stop <builder-name>      # 停止构建容器
+# 镜像管理
+confkit builder image list                   # 列出可用构建器镜像
+confkit builder image create <image>         # 拉取/构建指定镜像
+confkit builder image remove <image>         # 删除本地镜像
 
-# 项目构建流水线
-confkit run <project-config>             # 执行项目构建
-confkit run --interactive               # 交互式构建
-
-# 任务和日志管理
-confkit task list [project]             # 列出任务
-confkit task show <task-id>             # 查看任务详情
-confkit task kill <task-id>             # 终止任务
-confkit logs <project> [date] [task-id] # 查看日志
+# 容器管理
+confkit builder list                         # 列出所有构建器容器及其状态
+confkit builder create <name>                # 基于 docker-compose.yml 的 service 创建容器
+confkit builder start <name>                 # 启动构建器容器
+confkit builder stop <name>                  # 停止构建器容器
+confkit builder restart <name>               # 重启构建器容器
+confkit builder remove <name>                # 删除构建器容器
+confkit builder health <name>                # 检查容器健康状态
+confkit builder logs <name>                  # 查看容器日志
 ```
 
 ### 构建环境管理
 
 ```bash
-# 创建 Golang 构建环境
-confkit builder create golang-1.24 \
-  --dockerfile builders/golang/Dockerfile.1.24 \
-  --name "Golang 1.24 Builder"
+# 镜像管理
+confkit builder image list
+confkit builder image create golang-1.24
+confkit builder image remove golang-1.24
 
-# 交互式创建构建环境
-confkit builder create --interactive
+# 创建构建器容器（自动匹配 docker-compose.yml 中的 service）
+confkit builder create golang-builder
 
-# 启动所有构建环境
-confkit builder start --all
+# 启动/停止/重启/删除/健康检查/日志
+confkit builder start golang-builder
+confkit builder stop golang-builder
+confkit builder restart golang-builder
+confkit builder remove golang-builder
+confkit builder health golang-builder
+confkit builder logs golang-builder
+```
 
-# 查看构建环境状态
-confkit builder list --status
+### 交互式构建器管理（流程建议）
+
+```
+┌─ 构建器管理 ─────────────────────────┐
+│                                     │
+│ 镜像管理:                            │
+│ 1. 列出镜像                          │
+│ 2. 创建镜像                          │
+│ 3. 删除镜像                          │
+│                                     │
+│ 容器管理:                            │
+│ 4. 列出容器                          │
+│ 5. 创建容器（基于 service 名）        │
+│ 6. 启动/停止/重启/删除/健康检查/日志  │
+└─────────────────────────────────────┘
 ```
 
 ### 项目构建流程

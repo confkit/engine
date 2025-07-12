@@ -43,6 +43,22 @@ impl InteractiveEngine {
                         break;
                     }
                 }
+                InteractiveMode::ImageMenu => {
+                    if !self.show_image_menu().await? {
+                        break;
+                    }
+                }
+                InteractiveMode::ImageListParams { verbose, status_filter } => {
+                    if !self.show_image_list_params(*verbose, status_filter.clone()).await? {
+                        break;
+                    }
+                }
+                InteractiveMode::ImageCreateParams => {
+                    if !self.show_image_create_params().await? {
+                        break;
+                    }
+                }
+                // 保留向后兼容的处理
                 InteractiveMode::BuilderListParams { verbose, status_filter } => {
                     if !self.show_builder_list_params(*verbose, status_filter.clone()).await? {
                         break;

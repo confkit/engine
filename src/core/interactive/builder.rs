@@ -3,7 +3,100 @@ use anyhow::Result;
 use inquire::Select;
 
 impl InteractiveEngine {
-    /// 显示Builder List参数选择
+    /// 显示镜像列表参数选择
+    pub(super) async fn show_image_list_params(
+        &mut self,
+        current_verbose: bool,
+        current_status_filter: Option<String>,
+    ) -> Result<bool> {
+        // 显示当前设置
+        println!("• 构建镜像列表参数配置");
+        println!();
+        println!("当前设置:");
+        println!("  详细模式: {}", if current_verbose { "✓ 开启" } else { "✗ 关闭" });
+
+        let status_display = match &current_status_filter {
+            Some(status) => match status.as_str() {
+                "notcreated" => "未创建",
+                "created" => "已创建",
+                "running" => "运行中",
+                "stopped" => "已停止",
+                "error" => "错误",
+                _ => "所有状态",
+            },
+            None => "所有状态",
+        };
+        println!("  状态过滤: {}", status_display);
+        println!();
+
+        let options = vec![
+            "● 执行命令 - 使用当前设置列出构建镜像".to_string(),
+            format!("※ 切换详细模式 - 当前: {}", if current_verbose { "开启" } else { "关闭" }),
+            format!("• 选择状态过滤 - 当前: {}", status_display),
+            "← 返回镜像管理菜单".to_string(),
+        ];
+
+        let selection = Select::new("请选择操作:", options)
+            .with_help_message("配置构建镜像列表显示参数")
+            .prompt();
+
+        match selection {
+            Ok(choice) => {
+                match choice {
+                    choice if choice.starts_with("● 执行命令") => {
+                        // 执行命令 - 直接调用core层能力
+                        println!("• 正在获取构建镜像列表...");
+                        println!();
+
+                        match self.builder_manager.list_builders_with_filter(
+                            current_verbose,
+                            current_status_filter.clone(),
+                        ) {
+                            Ok(output) => {
+                                println!("{}", output);
+                            }
+                            Err(e) => {
+                                println!("✗ 获取构建镜像列表失败: {}", e);
+                            }
+                        }
+
+                        println!();
+                        self.pause_for_user().await?;
+
+                        self.current_mode = InteractiveMode::ImageMenu;
+                        Ok(true)
+                    }
+                    choice if choice.starts_with("※ 切换详细模式") => {
+                        self.current_mode = InteractiveMode::ImageListParams {
+                            verbose: !current_verbose,
+                            status_filter: current_status_filter,
+                        };
+                        Ok(true)
+                    }
+                    choice if choice.starts_with("• 选择状态过滤") => {
+                        let new_status = self.select_status_filter().await?;
+                        self.current_mode = InteractiveMode::ImageListParams {
+                            verbose: current_verbose,
+                            status_filter: new_status,
+                        };
+                        Ok(true)
+                    }
+                    choice if choice.starts_with("← 返回") => {
+                        self.current_mode = InteractiveMode::ImageMenu;
+                        Ok(true)
+                    }
+                    _ => Ok(true),
+                }
+            }
+            Err(_) => {
+                // 用户中断，回到镜像管理菜单
+                self.current_mode = InteractiveMode::ImageMenu;
+                Ok(true)
+            }
+        }
+    }
+
+    /// 显示Builder List参数选择 (保留向后兼容)
     pub(super) async fn show_builder_list_params(
         &mut self,
         current_verbose: bool,

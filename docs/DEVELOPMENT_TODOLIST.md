@@ -18,28 +18,39 @@
 **验证方式**: 能够成功解析 examples 中的配置文件
 
 ## 阶段 2: Builder 命令实现 (P0)
-> 目标：实现构建器管理，为容器化构建做准备
+> 目标：实现构建器镜像与容器的分层管理
 
-### 2.1 Docker 客户端基础
-- [ ] 实现 `DockerClient::new()` 连接检查
-- [ ] 实现 `DockerClient::check_connection()`
-- [ ] 实现镜像拉取 `pull_image()`
+### 2.1 镜像管理
+- [ ] 实现 `BuilderImageManager::list_images()`
+- [ ] 实现 `BuilderImageManager::create_image()`（拉取/构建镜像）
+- [ ] 实现 `BuilderImageManager::remove_image()`
 
-### 2.2 构建器管理
-- [ ] 实现 `BuilderManager::create_builder()`
-- [x] 实现 `BuilderManager::list_builders()`，支持真实 Docker 状态
+### 2.2 构建器容器管理
+- [ ] 实现 `BuilderManager::list_builders()`，支持真实 Docker 状态
+- [ ] 实现 `BuilderManager::create_builder()`（基于 docker-compose.yml 的 service 创建容器）
+- [ ] 实现 `BuilderManager::start_builder()`
+- [ ] 实现 `BuilderManager::stop_builder()`
+- [ ] 实现 `BuilderManager::restart_builder()`
+- [ ] 实现 `BuilderManager::remove_builder()`
 - [ ] 实现 `BuilderManager::health_check()`
-- [ ] 实现 `BuilderManager::start_builder()` / `stop_builder()`
+- [ ] 实现 `BuilderManager::logs()`（查看容器日志）
 
 ### 2.3 Builder 命令
-- [x] 实现 `confkit builder list`，CLI/interactive 均可用
-- [ ] 实现 `confkit builder create <name> <image>`
-- [ ] 实现 `confkit builder start/stop <name>`
-- [ ] 实现 `confkit builder health <name>`
+- [ ] 实现 `confkit builder image list`         # 镜像列表
+- [ ] 实现 `confkit builder image create <image>` # 拉取/构建镜像
+- [ ] 实现 `confkit builder image remove <image>` # 删除镜像
+- [ ] 实现 `confkit builder list`               # 列出所有构建器容器及其状态
+- [ ] 实现 `confkit builder create <name>`      # 基于 docker-compose.yml 的 service 创建容器
+- [ ] 实现 `confkit builder start <name>`       # 启动容器
+- [ ] 实现 `confkit builder stop <name>`        # 停止容器
+- [ ] 实现 `confkit builder restart <name>`     # 重启容器
+- [ ] 实现 `confkit builder remove <name>`      # 删除容器
+- [ ] 实现 `confkit builder health <name>`      # 检查容器健康状态
+- [ ] 实现 `confkit builder logs <name>`        # 查看容器日志
 - [x] 交互式 builder list 支持参数选择、状态过滤、详细模式
 - [x] 交互式 builder list 输出符合 ASCII 图标规范（•、●、▶、✓、✗、→、※ 等，除 👋 保留）
 
-**验证方式**: 能够管理 Docker 容器作为构建器
+**验证方式**: 能够管理 Docker 镜像与容器，命令分层清晰
 
 ## 阶段 3: Run 命令实现 (P0)
 > 目标：实现任务执行的核心功能
@@ -116,7 +127,12 @@
 - [ ] 实现实时状态显示
 
 ### 6.2 命令集成
-- [x] 集成 builder 命令功能（交互式 builder list、参数引导）
+- [x] 集成 builder 命令功能
+  - [x] list 
+  - [x] create
+  - [ ] start
+  - [ ] stop
+  - [ ] remove
 - [ ] 集成 run 命令功能  
 - [ ] 集成 task 命令功能
 - [ ] 集成 logs 命令功能

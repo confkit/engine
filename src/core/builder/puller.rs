@@ -1,4 +1,4 @@
-use super::{inspector::ImageInspector, output_handler::BuildOutputHandler};
+use crate::core::builder::{image::inspector::ImageInspector, output_handler::BuildOutputHandler};
 use anyhow::Result;
 use std::io::BufReader;
 use std::process::{Command, Stdio};

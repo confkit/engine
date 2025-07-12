@@ -64,9 +64,15 @@ pub enum InteractiveMode {
     MainMenu,
     /// Builder 菜单
     BuilderMenu,
-    /// Builder List 参数选择
+    /// 镜像管理菜单
+    ImageMenu,
+    /// 镜像列表参数选择
+    ImageListParams { verbose: bool, status_filter: Option<String> },
+    /// 镜像创建参数选择
+    ImageCreateParams,
+    /// Builder List 参数选择 (保留向后兼容)
     BuilderListParams { verbose: bool, status_filter: Option<String> },
-    /// Builder Create 参数选择
+    /// Builder Create 参数选择 (保留向后兼容)
     BuilderCreateParams,
 }
 

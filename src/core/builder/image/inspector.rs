@@ -1,4 +1,4 @@
-use super::types::{ImageCheckResult, ImageInfo};
+use crate::core::builder::types::{ImageCheckResult, ImageInfo};
 use anyhow::Result;
 use std::process::Command;
 
