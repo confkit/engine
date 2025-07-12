@@ -66,6 +66,8 @@ pub enum InteractiveMode {
     BuilderMenu,
     /// 镜像管理菜单
     ImageMenu,
+    /// 容器管理菜单
+    ContainerMenu,
     /// 镜像列表参数选择
     ImageListParams { verbose: bool, status_filter: Option<String> },
     /// 镜像创建参数选择

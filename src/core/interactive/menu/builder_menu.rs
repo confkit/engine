@@ -7,7 +7,7 @@ impl InteractiveEngine {
     pub async fn show_builder_menu(&mut self) -> Result<bool> {
         let options = vec![
             "[IMAGE] 镜像管理 - 管理构建镜像",
-            "[CONTAINER] 构建器管理 - 管理构建器实例 (即将推出)",
+            "[CONTAINER] 容器管理 - 管理构建器容器",
             "[BACK] 返回主菜单",
         ];
 
@@ -22,9 +22,7 @@ impl InteractiveEngine {
                     Ok(true)
                 }
                 choice if choice.starts_with("[CONTAINER]") => {
-                    println!("※ 该功能即将推出，敬请期待!");
-                    println!();
-                    self.pause_for_user().await?;
+                    self.current_mode = InteractiveMode::ContainerMenu;
                     Ok(true)
                 }
                 choice if choice.starts_with("[BACK]") => {

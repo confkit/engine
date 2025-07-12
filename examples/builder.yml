@@ -1,9 +1,9 @@
 builders:
   - name: hello-builder
     type: hello
-    base_image: hello-world
-    tag: linux
-    dockerfile: ./.confkit/builders/hello/Dockerfile.linux
+    base_image: alpine
+    tag: 3.18
+    dockerfile: ./.confkit/builders/hello/Dockerfile.alpine
   - name: golang-builder
     type: golang
     base_image: golang

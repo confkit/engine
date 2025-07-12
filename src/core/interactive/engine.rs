@@ -45,6 +45,11 @@ impl InteractiveEngine {
                         break;
                     }
                 }
+                InteractiveMode::ContainerMenu => {
+                    if !self.show_container_menu().await? {
+                        break;
+                    }
+                }
                 InteractiveMode::ImageListParams { verbose, status_filter } => {
                     if !self.show_image_list_params(*verbose, status_filter.clone()).await? {
                         break;

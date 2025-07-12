@@ -1,0 +1,66 @@
+# Node.js Web应用构建示例
+project:
+  name: "node-web-app"
+  type: "node"
+  description: "Node.js Web应用构建和部署示例"
+
+source:
+  git_repo: "https://github.com/example/node-web-app.git"
+  git_branch: "main"
+
+environment:
+  NODE_ENV: "production"
+  NPM_CONFIG_REGISTRY: "https://registry.npmmirror.com"
+
+steps:
+  - name: "代码拉取"
+    working_dir: "./volumes/workspace"
+    commands:
+      - "git clone ${GIT_REPO} ${PROJECT_NAME}"
+      - "cd ${PROJECT_NAME}"
+    timeout: "3m"
+
+  - name: "安装依赖"
+    container: "node-builder-22"
+    working_dir: "/workspace/${PROJECT_NAME}"
+    commands:
+      - "npm ci"
+    depends_on: ["代码拉取"]
+
+  - name: "代码检查"
+    container: "node-builder-22"
+    working_dir: "/workspace/${PROJECT_NAME}"
+    commands:
+      - "npm run lint"
+      - "npm run type-check"
+    depends_on: ["安装依赖"]
+    continue_on_error: true
+
+  - name: "运行测试"
+    container: "node-builder-22"
+    working_dir: "/workspace/${PROJECT_NAME}"
+    commands:
+      - "npm run test"
+    depends_on: ["安装依赖"]
+    parallel_group: "quality"
+
+  - name: "构建应用"
+    container: "node-builder-22"
+    working_dir: "/workspace/${PROJECT_NAME}"
+    commands:
+      - "npm run build"
+      - "ls -la dist/"
+    depends_on: ["代码检查", "运行测试"]
+
+  - name: "收集产物"
+    container: "node-builder-22"
+    working_dir: "/workspace/${PROJECT_NAME}"
+    commands:
+      - "mkdir -p /artifacts/${TASK_ID}"
+      - "cp -r dist/* /artifacts/${TASK_ID}/"
+      - "cp package.json /artifacts/${TASK_ID}/"
+    depends_on: ["构建应用"]
+
+step_options:
+  retry: 2
+  timeout: "15m" 

@@ -18,7 +18,7 @@ mod types;
 mod validator;
 
 // 重新导出新模块的功能
-pub use container::ContainerManager;
+pub use container::{BuilderContainer, BuilderHealth, ContainerManager, ContainerStatus};
 pub use image::{ImageBuilder, ImageCheckResult, ImageInspector, ImageManager};
 
 // 重新导出通用功能（保持向后兼容）

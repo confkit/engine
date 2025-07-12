@@ -8,4 +8,4 @@
 pub mod manager;
 
 // 重新导出主要的结构和功能
-pub use manager::ContainerManager;
+pub use manager::{BuilderContainer, BuilderHealth, ContainerManager, ContainerStatus};

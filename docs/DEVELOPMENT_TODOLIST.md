@@ -21,9 +21,9 @@
 > 目标：实现构建器镜像与容器的分层管理
 
 ### 2.1 镜像管理
-- [ ] 实现 `BuilderImageManager::list_images()`
-- [ ] 实现 `BuilderImageManager::create_image()`（拉取/构建镜像）
-- [ ] 实现 `BuilderImageManager::remove_image()`
+- [x] 实现 `ImageManager::list_images()`
+- [x] 实现 `ImageManager::create_image()`（拉取/构建镜像）
+- [x] 实现 `ImageManager::remove_image()`
 
 ### 2.2 构建器容器管理
 - [ ] 实现 `BuilderManager::list_builders()`，支持真实 Docker 状态

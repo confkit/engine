@@ -1,0 +1,17 @@
+# 最小构建器示例 - 基于 Alpine 镜像
+# 这是一个用于演示和测试的最小构建器案例
+FROM alpine:3.18
+
+# 合并所有标签到单个 LABEL 指令以减少镜像层
+LABEL maintainer="confkit-engine" \
+      description="Hello World builder for testing and demonstration" \
+      version="1.0"
+
+# 安装基本工具（可选）
+RUN apk add --no-cache \
+    curl \
+    wget \
+    git
+
+# Alpine 镜像包含基本的 shell 和常用命令，适合作为演示案例
+# 镜像大小约 5MB，比 hello-world 大但仍然很小且实用 

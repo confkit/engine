@@ -11,7 +11,9 @@ pub mod container;
 pub mod image;
 
 // 重新导出主要的命令结构
-pub use container::ContainerCommand;
+pub use container::{
+    BuilderCreateArgs, BuilderLogsArgs, BuilderRemoveArgs, BuilderStartArgs, BuilderStopArgs,
+};
 pub use image::ImageCommand;
 
 #[derive(Args)]
@@ -33,10 +35,19 @@ pub enum BuilderSubcommand {
         #[arg(long)]
         status: Option<String>,
     },
-    /// 创建新的构建器（构建镜像）
+    /// 创建新的构建器容器（基于 docker-compose.yml）
     Create {
-        /// 构建器名称（从 builder.yml 中读取配置）
-        name: String,
+        /// 服务名称列表
+        services: Option<Vec<String>>,
+        /// 创建所有服务
+        #[arg(long)]
+        all: bool,
+        /// 强制重新创建（删除已存在的容器）
+        #[arg(long)]
+        force: bool,
+        /// 创建后自动启动
+        #[arg(long)]
+        start: bool,
     },
     /// 启动构建器
     Start {
@@ -67,37 +78,34 @@ impl BuilderCommand {
     pub async fn execute(self) -> Result<()> {
         match self.command {
             BuilderSubcommand::Image(cmd) => cmd.execute().await,
-            BuilderSubcommand::List { verbose, status } => {
-                let container_cmd = ContainerCommand {
-                    command: container::ContainerSubcommand::List { verbose, status },
-                };
-                container_cmd.execute().await
+            BuilderSubcommand::List { verbose: _, status: _ } => {
+                // 使用新的容器列表函数
+                container::handle_builder_list().await
             }
-            BuilderSubcommand::Create { name } => {
-                let container_cmd =
-                    ContainerCommand { command: container::ContainerSubcommand::Create { name } };
-                container_cmd.execute().await
+            BuilderSubcommand::Create { services, all, force, start } => {
+                // 使用新的容器创建函数
+                let args = BuilderCreateArgs { services, all, force, start };
+                container::handle_builder_create(&args).await
             }
             BuilderSubcommand::Start { name } => {
-                let container_cmd =
-                    ContainerCommand { command: container::ContainerSubcommand::Start { name } };
-                container_cmd.execute().await
+                // 使用新的容器启动函数
+                let args = BuilderStartArgs { service: name };
+                container::handle_builder_start(&args).await
             }
             BuilderSubcommand::Stop { name } => {
-                let container_cmd =
-                    ContainerCommand { command: container::ContainerSubcommand::Stop { name } };
-                container_cmd.execute().await
+                // 使用新的容器停止函数
+                let args = BuilderStopArgs { service: name };
+                container::handle_builder_stop(&args).await
             }
             BuilderSubcommand::Remove { name, force } => {
-                let container_cmd = ContainerCommand {
-                    command: container::ContainerSubcommand::Remove { name, force },
-                };
-                container_cmd.execute().await
+                // 使用新的容器删除函数
+                let args = BuilderRemoveArgs { service: name, force };
+                container::handle_builder_remove(&args).await
             }
-            BuilderSubcommand::Health { name } => {
-                let container_cmd =
-                    ContainerCommand { command: container::ContainerSubcommand::Health { name } };
-                container_cmd.execute().await
+            BuilderSubcommand::Health { name: _ } => {
+                // 健康检查功能暂时使用列表显示
+                println!("• 健康检查功能，显示构建器状态:");
+                container::handle_builder_list().await
             }
         }
     }
