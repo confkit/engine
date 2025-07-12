@@ -31,6 +31,9 @@ pub enum ImageSubcommand {
     Remove {
         /// 镜像名称
         image: String,
+        /// 强制删除（即使正在被使用）
+        #[arg(long)]
+        force: bool,
     },
 }
 
@@ -43,8 +46,8 @@ impl ImageCommand {
             ImageSubcommand::Create { image } => {
                 create_image(image).await?;
             }
-            ImageSubcommand::Remove { image } => {
-                println!("暂未实现 - builder image remove {}", image);
+            ImageSubcommand::Remove { image, force } => {
+                remove_image(image, force).await?;
             }
         }
         Ok(())
@@ -141,6 +144,81 @@ async fn create_image(name: String) -> Result<()> {
         }
         Err(e) => {
             println!("\n✗ 构建器镜像创建失败: {}", e);
+            return Err(e);
+        }
+    }
+
+    Ok(())
+}
+
+/// 删除镜像
+async fn remove_image(name: String, force: bool) -> Result<()> {
+    use crate::core::builder::{BuilderLoader, ImageInspector};
+
+    println!("• 正在删除构建镜像: {}", name);
+
+    // 从 builder.yml 加载构建器配置以获取镜像名称
+    let config = match BuilderLoader::find_builder_config(&name) {
+        Ok(config) => {
+            println!("✓ 找到构建器配置: {}", name);
+            println!("  目标镜像: {}", config.image);
+            config
+        }
+        Err(e) => {
+            println!("✗ 加载构建器配置失败: {}", e);
+            println!("  尝试直接删除镜像名称: {}", name);
+            // 如果找不到配置，尝试直接使用提供的名称作为镜像名
+            use crate::core::builder::BuilderConfig;
+            BuilderConfig {
+                name: name.clone(),
+                image: name.clone(),
+                base_image: String::new(),
+                dockerfile: String::new(),
+                context: String::new(),
+                build_args: std::collections::HashMap::new(),
+            }
+        }
+    };
+
+    // 检查镜像是否存在
+    println!();
+    match ImageInspector::check_target_image(&config.image).await {
+        Ok(ImageCheckResult::Exists(info)) => {
+            println!("✓ 找到镜像:");
+            println!("  镜像ID: {}", info.id);
+            println!("  仓库: {}", info.repository);
+            println!("  标签: {}", info.tag);
+            println!("  创建时间: {}", info.created_at);
+            println!("  大小: {}", info.size);
+        }
+        Ok(ImageCheckResult::NotExists) => {
+            println!("! 镜像不存在: {}", config.image);
+            return Ok(());
+        }
+        Err(e) => {
+            println!("✗ 检查镜像时出错: {}", e);
+            return Err(e);
+        }
+    }
+
+    // 执行删除操作
+    println!("\n▶ 正在删除 Docker 镜像...");
+    println!("→ 镜像: {}", config.image);
+
+    match ImageInspector::remove_image(&config.image, force).await {
+        Ok(()) => {
+            println!("\n✓ 镜像 '{}' 删除成功！", name);
+            println!("→ 已删除镜像: {}", config.image);
+            if force {
+                println!("→ 使用强制删除模式");
+            }
+        }
+        Err(e) => {
+            println!("\n✗ 构建镜像删除失败: {}", e);
+            if !force {
+                println!("提示: 如果镜像正在被使用，请先停止相关容器");
+                println!("      或者使用 --force 参数强制删除");
+            }
             return Err(e);
         }
     }

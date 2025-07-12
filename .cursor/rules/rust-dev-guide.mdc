@@ -13,6 +13,7 @@ alwaysApply: true
 - **mod.rs 规范**：仅负责模块导出，不放置业务代码
 - 使用 `anyhow::Result` 处理错误，参考 [error.rs](mdc:src/utils/error.rs)
 - 模块职责单一，避免循环依赖
+- 单个文件长度超过 800 行时, 考虑拆分文件
 
 ## 开发约束
 ❌ **禁止行为：**

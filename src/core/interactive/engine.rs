@@ -1,9 +1,7 @@
 use super::builder::*;
 use super::help::*;
 use super::menu::*;
-use super::types::{
-    BuilderStatusOption, Command, CommandContext, InteractiveConfig, InteractiveMode, MenuItem,
-};
+use super::types::{Command, CommandContext, InteractiveConfig, InteractiveMode};
 use crate::core::builder::BuilderManager;
 use anyhow::Result;
 
@@ -55,6 +53,11 @@ impl InteractiveEngine {
                 }
                 InteractiveMode::ImageCreateParams => {
                     if !self.show_image_create_params().await? {
+                        break;
+                    }
+                }
+                InteractiveMode::ImageRemoveParams => {
+                    if !self.show_image_remove_params().await? {
                         break;
                     }
                 }

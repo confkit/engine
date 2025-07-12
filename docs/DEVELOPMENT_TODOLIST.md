@@ -36,8 +36,8 @@
 - [ ] 实现 `BuilderManager::logs()`（查看容器日志）
 
 ### 2.3 Builder 命令
-- [ ] 实现 `confkit builder image list`         # 镜像列表
-- [ ] 实现 `confkit builder image create <image>` # 拉取/构建镜像
+- [x] 实现 `confkit builder image list`         # 镜像列表
+- [x] 实现 `confkit builder image create <image>` # 拉取/构建镜像
 - [ ] 实现 `confkit builder image remove <image>` # 删除镜像
 - [ ] 实现 `confkit builder list`               # 列出所有构建器容器及其状态
 - [ ] 实现 `confkit builder create <name>`      # 基于 docker-compose.yml 的 service 创建容器
@@ -128,11 +128,12 @@
 
 ### 6.2 命令集成
 - [x] 集成 builder 命令功能
-  - [x] list 
-  - [x] create
   - [ ] start
   - [ ] stop
   - [ ] remove
+  - [ ] image 
+    - [x] list 
+    - [x] create
 - [ ] 集成 run 命令功能  
 - [ ] 集成 task 命令功能
 - [ ] 集成 logs 命令功能

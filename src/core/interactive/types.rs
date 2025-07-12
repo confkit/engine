@@ -70,6 +70,8 @@ pub enum InteractiveMode {
     ImageListParams { verbose: bool, status_filter: Option<String> },
     /// 镜像创建参数选择
     ImageCreateParams,
+    /// 镜像删除参数选择
+    ImageRemoveParams,
     /// Builder List 参数选择 (保留向后兼容)
     BuilderListParams { verbose: bool, status_filter: Option<String> },
     /// Builder Create 参数选择 (保留向后兼容)
