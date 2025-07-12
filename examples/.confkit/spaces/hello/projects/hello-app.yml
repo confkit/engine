@@ -1,11 +1,10 @@
-# Node.js Web应用构建示例
 project:
-  name: "node-web-app"
-  type: "node"
-  description: "Node.js Web应用构建和部署示例"
+  name: "hello-app"
+  type: "hello"
+  description: "hello world 部署示例"
 
 source:
-  git_repo: "https://github.com/example/node-web-app.git"
+  git_repo: "https://github.com/confkit/engine.git"
   git_branch: "main"
 
 environment:
@@ -16,49 +15,48 @@ steps:
   - name: "代码拉取"
     working_dir: "./volumes/workspace"
     commands:
-      - "git clone ${GIT_REPO} ${PROJECT_NAME}"
-      - "cd ${PROJECT_NAME}"
+      - "git clone ${GIT_REPO} ${PROJECT_NAME}-${TASK_ID}"
+      - "cd ${PROJECT_NAME}-${TASK_ID}"
     timeout: "3m"
 
   - name: "安装依赖"
-    container: "node-builder-22"
-    working_dir: "/workspace/${PROJECT_NAME}"
+    container: "hello-builder"
+    working_dir: "/workspace/${PROJECT_NAME}-${TASK_ID}"
     commands:
-      - "npm ci"
+      - "echo 'hello world'"
     depends_on: ["代码拉取"]
 
   - name: "代码检查"
     container: "node-builder-22"
-    working_dir: "/workspace/${PROJECT_NAME}"
+    working_dir: "/workspace/${PROJECT_NAME}-${TASK_ID}"
     commands:
-      - "npm run lint"
-      - "npm run type-check"
+      - "echo 'check hello world'"
     depends_on: ["安装依赖"]
     continue_on_error: true
 
   - name: "运行测试"
     container: "node-builder-22"
-    working_dir: "/workspace/${PROJECT_NAME}"
+    working_dir: "/workspace/${PROJECT_NAME}-${TASK_ID}"
     commands:
-      - "npm run test"
+      - "echo 'test hello world'"
     depends_on: ["安装依赖"]
     parallel_group: "quality"
 
   - name: "构建应用"
     container: "node-builder-22"
-    working_dir: "/workspace/${PROJECT_NAME}"
+    working_dir: "/workspace/${PROJECT_NAME}-${TASK_ID}"
     commands:
-      - "npm run build"
-      - "ls -la dist/"
+      - "echo 'build hello world'"
+      - "echo \"{\\\"project\\\":\\\"${PROJECT_NAME}\\\",\\\"version\\\":\\\"${GIT_BRANCH:-main}\\\",\\\"git_hash\\\":\\\"${GIT_HASH}\\\",\\\"build_time\\\":\\\"$(date -Iseconds)\\\",\\\"task_id\\\":\\\"${TASK_ID}\\\"}\" > /artifacts/${PROJECT_NAME}-${TASK_ID}/build-info.json"
     depends_on: ["代码检查", "运行测试"]
 
   - name: "收集产物"
     container: "node-builder-22"
     working_dir: "/workspace/${PROJECT_NAME}"
     commands:
-      - "mkdir -p /artifacts/${TASK_ID}"
-      - "cp -r dist/* /artifacts/${TASK_ID}/"
-      - "cp package.json /artifacts/${TASK_ID}/"
+      - "mkdir -p /artifacts/${PROJECT_NAME}-${TASK_ID}"
+      - "cp -r dist/* /artifacts/${PROJECT_NAME}-${TASK_ID}/"
+      - "cp hello-app.yml /artifacts/${PROJECT_NAME}-${TASK_ID}/"
     depends_on: ["构建应用"]
 
 step_options:

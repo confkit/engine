@@ -7,10 +7,12 @@ pub mod logs;
 pub mod run;
 pub mod task;
 
+// 重新导出主要的命令结构
+
 use builder::BuilderCommand;
 use interactive::InteractiveCommand;
 use logs::LogsCommand;
-use run::RunCommand;
+use run::RunArgs;
 use task::TaskCommand;
 
 #[derive(Parser)]
@@ -25,7 +27,7 @@ pub struct Cli {
 #[derive(Subcommand)]
 pub enum Commands {
     /// 运行构建任务
-    Run(RunCommand),
+    Run(RunArgs),
     /// 管理构建器
     Builder(BuilderCommand),
     /// 管理任务
@@ -39,7 +41,7 @@ pub enum Commands {
 impl Cli {
     pub async fn execute(self) -> Result<()> {
         match self.command {
-            Commands::Run(cmd) => cmd.execute().await,
+            Commands::Run(args) => run::handle_run(&args).await,
             Commands::Builder(cmd) => cmd.execute().await,
             Commands::Task(cmd) => cmd.execute().await,
             Commands::Logs(cmd) => cmd.execute().await,

@@ -75,17 +75,19 @@ impl StorageManager {
     pub async fn initialize(&self) -> Result<()> {
         tracing::info!("初始化存储目录");
 
-        // TODO: 实现存储初始化
-        // 1. 创建所有必要的目录
-        // 2. 设置权限
-        // 3. 检查磁盘空间
-        // 4. 创建索引文件
-
+        // 创建所有必要的目录
         self.ensure_directory_exists(&self.config.logs_dir).await?;
         self.ensure_directory_exists(&self.config.artifacts_dir).await?;
         self.ensure_directory_exists(&self.config.workspace_dir).await?;
         self.ensure_directory_exists(&self.config.cache_dir).await?;
 
+        // 设置权限
+        self.ensure_directory_permissions(&self.config.logs_dir).await?;
+        self.ensure_directory_permissions(&self.config.artifacts_dir).await?;
+        self.ensure_directory_permissions(&self.config.workspace_dir).await?;
+        self.ensure_directory_permissions(&self.config.cache_dir).await?;
+
+        tracing::info!("存储目录初始化完成");
         Ok(())
     }
 
@@ -95,6 +97,40 @@ impl StorageManager {
             fs::create_dir_all(path).await?;
             tracing::debug!("创建目录: {:?}", path);
         }
+        Ok(())
+    }
+
+    /// 确保目录权限正确
+    async fn ensure_directory_permissions(&self, path: &Path) -> Result<()> {
+        if path.exists() {
+            let mut perms = std::fs::metadata(path)?.permissions();
+
+            // 在Unix系统上设置具体权限
+            #[cfg(unix)]
+            {
+                use std::os::unix::fs::PermissionsExt;
+                // volumes 目录及其子目录设置为 777 权限，确保容器可以访问
+                perms.set_mode(0o777);
+                tracing::debug!("设置目录权限: {:?} -> 777", path);
+            }
+
+            // 在Windows系统上设置基本权限
+            #[cfg(windows)]
+            {
+                perms.set_readonly(false);
+                tracing::debug!("设置目录权限: {:?} -> 可读写", path);
+            }
+
+            // 在其他系统上的基本处理
+            #[cfg(not(any(unix, windows)))]
+            {
+                perms.set_readonly(false);
+                tracing::debug!("设置目录权限: {:?} -> 可读写", path);
+            }
+
+            std::fs::set_permissions(path, perms)?;
+        }
+
         Ok(())
     }
 

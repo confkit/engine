@@ -22,11 +22,11 @@ impl TaskManager {
         }
     }
 
-    /// 生成新的任务ID
-    pub fn generate_task_id(project_name: &str) -> TaskId {
+    /// 生成新的任务ID（只包含时间戳和UUID，不包含项目名）
+    pub fn generate_task_id() -> TaskId {
         let timestamp = chrono::Utc::now().format("%Y%m%d-%H%M%S");
         let short_uuid = Uuid::new_v4().to_string()[..8].to_string();
-        format!("{}-{}-{}", project_name, timestamp, short_uuid)
+        format!("{}-{}", timestamp, short_uuid)
     }
 
     /// 执行任务
@@ -34,7 +34,7 @@ impl TaskManager {
         &self,
         config: crate::core::config::ProjectConfig,
     ) -> Result<TaskResult> {
-        let task_id = Self::generate_task_id(&config.project.name);
+        let task_id = Self::generate_task_id();
         tracing::info!("开始执行任务: {}", task_id);
 
         // TODO: 实现任务执行逻辑

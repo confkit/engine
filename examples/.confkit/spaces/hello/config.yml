@@ -5,7 +5,18 @@ projects:
   - name: "hello"
     description: "hello demo"
     type: "hello"
-    source:
-      git_repo: "https://github.com/confkit/engine.git"
-      git_branch: "main"
-      clone_depth: 1
+    config: ./projects/hello-app.yml
+    # source:
+    #   git_repo: "https://github.com/confkit/engine.git"
+    #   git_branch: "main"
+    #   clone_depth: 1
+
+  - name: "hello-test"
+    description: "权限测试项目"
+    type: "hello"
+    config: ./projects/hello-test.yml
+
+  - name: "hello-permission-test"
+    description: "权限测试 - 只有本地执行"
+    type: "hello"
+    config: ./projects/hello-permission-test.yml

@@ -1,0 +1,19 @@
+project:
+  name: "hello-permission-test"
+  type: "hello"
+  description: "权限测试 - 只有本地执行"
+
+environment:
+  TEST_VAR: "permission-test"
+
+steps:
+  - name: "测试目录创建"
+    commands:
+      - "echo 'Testing directory creation and permissions'"
+      - "ls -la ./volumes/"
+      - "echo 'Permission test completed'"
+    timeout: "30s"
+
+step_options:
+  retry: 1
+  timeout: "2m" 

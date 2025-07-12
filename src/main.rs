@@ -7,11 +7,16 @@ mod infrastructure;
 mod utils;
 
 use cli::Cli;
+use infrastructure::storage::StorageManager;
 
 #[tokio::main]
 async fn main() -> Result<()> {
     // 初始化日志系统
     tracing_subscriber::fmt::init();
+
+    // 初始化存储目录结构
+    let storage_manager = StorageManager::with_default();
+    storage_manager.initialize().await?;
 
     // 解析命令行参数
     let cli = Cli::parse();

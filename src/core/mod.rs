@@ -3,6 +3,7 @@ pub mod config;
 pub mod executor;
 pub mod git;
 pub mod interactive;
+pub mod project;
 pub mod step;
 pub mod task;
 
