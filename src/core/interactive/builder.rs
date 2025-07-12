@@ -44,21 +44,54 @@ impl InteractiveEngine {
             Ok(choice) => {
                 match choice {
                     choice if choice.starts_with("● 执行命令") => {
-                        // 执行命令 - 直接调用core层能力
+                        // 执行命令 - 使用 ImageManager 获取镜像列表
                         println!("• 正在获取构建镜像列表...");
                         println!();
 
-                        match self.builder_manager.list_builders_with_filter(
+                        // 获取构建器列表
+                        let builders = self.image_manager.list_builders();
+
+                        // 应用状态过滤
+                        let filtered_builders: Vec<_> =
+                            if let Some(status_filter) = &current_status_filter {
+                                builders
+                                    .into_iter()
+                                    .filter(|builder| match status_filter.as_str() {
+                                        "notcreated" => matches!(
+                                            builder.status,
+                                            crate::core::builder::BuilderStatus::NotCreated
+                                        ),
+                                        "created" => matches!(
+                                            builder.status,
+                                            crate::core::builder::BuilderStatus::Created
+                                        ),
+                                        "running" => matches!(
+                                            builder.status,
+                                            crate::core::builder::BuilderStatus::Running
+                                        ),
+                                        "stopped" => matches!(
+                                            builder.status,
+                                            crate::core::builder::BuilderStatus::Stopped
+                                        ),
+                                        "error" => matches!(
+                                            builder.status,
+                                            crate::core::builder::BuilderStatus::Error
+                                        ),
+                                        _ => true,
+                                    })
+                                    .collect()
+                            } else {
+                                builders
+                            };
+
+                        // 显示结果
+                        use crate::core::builder::BuilderFormatter;
+                        let output = BuilderFormatter::format_builders_list(
+                            &filtered_builders,
                             current_verbose,
                             current_status_filter.clone(),
-                        ) {
-                            Ok(output) => {
-                                println!("{}", output);
-                            }
-                            Err(e) => {
-                                println!("✗ 获取构建镜像列表失败: {}", e);
-                            }
-                        }
+                        );
+                        println!("{}", output);
 
                         println!();
                         self.pause_for_user().await?;
@@ -137,21 +170,21 @@ impl InteractiveEngine {
             Ok(choice) => {
                 match choice {
                     choice if choice.starts_with("● 执行命令") => {
-                        // 执行命令 - 直接调用core层能力
+                        // 执行命令 - 使用 ImageManager 获取构建器列表
                         println!("• 正在获取构建器列表...");
                         println!();
 
-                        match self.builder_manager.list_builders_with_filter(
+                        // 获取构建器列表
+                        let builders = self.image_manager.list_builders();
+
+                        // 显示结果
+                        use crate::core::builder::BuilderFormatter;
+                        let output = BuilderFormatter::format_builders_list(
+                            &builders,
                             current_verbose,
                             current_status_filter.clone(),
-                        ) {
-                            Ok(output) => {
-                                println!("{}", output);
-                            }
-                            Err(e) => {
-                                println!("✗ 获取构建器列表失败: {}", e);
-                            }
-                        }
+                        );
+                        println!("{}", output);
 
                         println!();
                         self.pause_for_user().await?;

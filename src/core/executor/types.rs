@@ -21,11 +21,11 @@ pub struct ExecutionContext {
     pub working_dir: Option<String>,
     /// 环境变量
     pub environment: HashMap<String, String>,
-    /// 用户ID（容器执行时使用）
+    /// 用户（格式：uid:gid 或 username）
     pub user: Option<String>,
     /// 网络模式
     pub network: Option<String>,
-    /// 挂载卷
+    /// 卷挂载
     pub volumes: Vec<VolumeMount>,
     /// 端口映射
     pub ports: Vec<PortMapping>,
@@ -33,12 +33,26 @@ pub struct ExecutionContext {
     pub timeout: Option<u64>,
 }
 
+impl Default for ExecutionContext {
+    fn default() -> Self {
+        Self {
+            working_dir: None,
+            environment: HashMap::new(),
+            user: None,
+            network: None,
+            volumes: Vec::new(),
+            ports: Vec::new(),
+            timeout: None,
+        }
+    }
+}
+
 /// 卷挂载配置
 #[derive(Debug, Clone)]
 pub struct VolumeMount {
     /// 主机路径
     pub host_path: String,
-    /// 容器内路径
+    /// 容器路径
     pub container_path: String,
     /// 是否只读
     pub read_only: bool,
@@ -51,7 +65,7 @@ pub struct PortMapping {
     pub host_port: u16,
     /// 容器端口
     pub container_port: u16,
-    /// 协议类型
+    /// 协议
     pub protocol: String, // tcp, udp
 }
 
@@ -70,7 +84,7 @@ pub struct ExecutionResult {
     pub success: bool,
 }
 
-/// 命令执行参数
+/// 命令执行配置
 #[derive(Debug, Clone)]
 pub struct CommandExecution {
     /// 要执行的命令
@@ -83,6 +97,18 @@ pub struct CommandExecution {
     pub container_name: Option<String>,
     /// 是否自动删除容器（仅Docker执行时使用）
     pub auto_remove: bool,
+}
+
+impl Default for CommandExecution {
+    fn default() -> Self {
+        Self {
+            commands: Vec::new(),
+            context: ExecutionContext::default(),
+            image: None,
+            container_name: None,
+            auto_remove: false,
+        }
+    }
 }
 
 /// 镜像构建参数
@@ -139,32 +165,6 @@ pub trait Executor: Send + Sync {
 
     /// 检查镜像是否存在（仅支持容器执行引擎）
     async fn image_exists(&self, image: &str) -> Result<bool>;
-}
-
-impl Default for ExecutionContext {
-    fn default() -> Self {
-        Self {
-            working_dir: None,
-            environment: HashMap::new(),
-            user: None,
-            network: None,
-            volumes: Vec::new(),
-            ports: Vec::new(),
-            timeout: None,
-        }
-    }
-}
-
-impl Default for CommandExecution {
-    fn default() -> Self {
-        Self {
-            commands: Vec::new(),
-            context: ExecutionContext::default(),
-            image: None,
-            container_name: None,
-            auto_remove: true,
-        }
-    }
 }
 
 impl ExecutionResult {

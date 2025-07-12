@@ -36,20 +36,21 @@ impl ImageBuilder {
             build_logs: Some(build_logs),
         };
 
-        tracing::info!("Docker 镜像构建成功: {} -> {}", config.name, config.image);
+        tracing::info!("Docker 镜像构建成功: {}", config.name);
         Ok(builder_info)
     }
 
     /// 执行 Docker 构建
     async fn execute_docker_build(config: &BuilderConfig) -> Result<(String, String)> {
-        tracing::info!("执行 Docker 构建: {}", config.image);
+        tracing::info!("执行 Docker 构建: {}", config.name);
 
         // 创建 Docker 执行器
         let executor = DockerExecutor::new();
 
-        // 构建镜像构建参数
+        // 构建镜像构建参数 - 目标镜像标签与基础镜像标签保持一致
+        let target_tag = format!("{}:{}", config.name, config.tag);
         let build_params = ImageBuildParams {
-            tag: config.image.clone(),
+            tag: target_tag,
             dockerfile: config.dockerfile.clone(),
             context: config.context.clone(),
             build_args: config.build_args.clone(),
@@ -59,13 +60,17 @@ impl ImageBuilder {
 
         tracing::debug!("Docker 构建参数: {:?}", build_params);
 
+        // 生成命令用于调试和日志记录
+        let build_command = executor.command_builder().build_command(&build_params)?;
+        tracing::info!("即将执行的 Docker 命令: {}", build_command);
+
         // 执行镜像构建
         let image_id = executor.build_image(&build_params).await?;
 
         // 构建成功，生成构建日志
         let build_logs = format!(
-            "Docker 镜像构建成功\n镜像标签: {}\n镜像ID: {}\nDockerfile: {}\n构建上下文: {}",
-            config.image, image_id, config.dockerfile, config.context
+            "Docker 镜像构建成功\n执行命令: {}\n镜像标签: {}\n镜像ID: {}\nDockerfile: {}\n构建上下文: {}",
+            build_command, config.name, image_id, config.dockerfile, config.context
         );
 
         Ok((image_id, build_logs))

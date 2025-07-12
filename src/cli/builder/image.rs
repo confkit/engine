@@ -3,7 +3,7 @@
 use anyhow::Result;
 use clap::{Args, Subcommand};
 
-use crate::core::builder::{BuilderManager, ImageCheckResult, ImageInspector};
+use crate::core::builder::{ImageCheckResult, ImageInspector};
 
 #[derive(Args)]
 pub struct ImageCommand {
@@ -56,12 +56,13 @@ impl ImageCommand {
 
 /// 列出构建器镜像
 async fn list_images(verbose: bool, status_filter: Option<String>) -> Result<()> {
-    use crate::core::builder::{BuilderFormatter, BuilderManager};
+    use crate::core::builder::{BuilderFormatter, ImageManager};
 
     println!("• 正在加载构建器信息...");
 
-    let manager = BuilderManager::with_demo_data().await;
-    let output = manager.list_builders_with_filter(verbose, status_filter)?;
+    let manager = ImageManager::new_auto().await;
+    let builders = manager.list_builders();
+    let output = BuilderFormatter::format_builders_list(&builders, verbose, status_filter);
 
     println!("{}", output);
     Ok(())
@@ -77,7 +78,7 @@ async fn create_image(name: String) -> Result<()> {
     let config = match BuilderLoader::find_builder_config(&name) {
         Ok(config) => {
             println!("✓ 找到构建器配置: {}", name);
-            println!("  目标镜像: {}", config.image);
+            println!("  目标镜像: {}", config.name);
             println!("  基础镜像: {}", config.base_image);
             println!("  Dockerfile: {}", config.dockerfile);
             println!("  构建上下文: {}", config.context);
@@ -97,7 +98,7 @@ async fn create_image(name: String) -> Result<()> {
 
     // 检查目标镜像是否已存在
     println!();
-    match ImageInspector::check_target_image(&config.image).await {
+    match ImageInspector::check_target_image(&config.name).await {
         Ok(ImageCheckResult::Exists(_)) => {
             println!("● 跳过构建，直接使用现有镜像");
             return Ok(());
@@ -118,7 +119,7 @@ async fn create_image(name: String) -> Result<()> {
     match ImageBuilder::build_image(&config).await {
         Ok(builder_info) => {
             println!("\n✓ 构建器镜像 '{}' 创建成功！", name);
-            println!("→ 镜像: {}", config.image);
+            println!("→ 镜像: {}", config.name);
             if let Some(image_id) = &builder_info.image_id {
                 println!("→ 镜像ID: {}", image_id);
             }
@@ -158,7 +159,7 @@ async fn remove_image(name: String, force: bool) -> Result<()> {
     let config = match BuilderLoader::find_builder_config(&name) {
         Ok(config) => {
             println!("✓ 找到构建器配置: {}", name);
-            println!("  目标镜像: {}", config.image);
+            println!("  目标镜像: {}", config.name);
             config
         }
         Err(e) => {
@@ -168,8 +169,8 @@ async fn remove_image(name: String, force: bool) -> Result<()> {
             use crate::core::builder::BuilderConfig;
             BuilderConfig {
                 name: name.clone(),
-                image: name.clone(),
                 base_image: String::new(),
+                tag: "latest".to_string(),
                 dockerfile: String::new(),
                 context: String::new(),
                 build_args: std::collections::HashMap::new(),
@@ -179,7 +180,7 @@ async fn remove_image(name: String, force: bool) -> Result<()> {
 
     // 检查镜像是否存在
     println!();
-    match ImageInspector::check_target_image(&config.image).await {
+    match ImageInspector::check_target_image(&config.name).await {
         Ok(ImageCheckResult::Exists(info)) => {
             println!("✓ 找到镜像:");
             println!("  镜像ID: {}", info.id);
@@ -189,7 +190,7 @@ async fn remove_image(name: String, force: bool) -> Result<()> {
             println!("  大小: {}", info.size);
         }
         Ok(ImageCheckResult::NotExists) => {
-            println!("! 镜像不存在: {}", config.image);
+            println!("! 镜像不存在: {}", config.name);
             return Ok(());
         }
         Err(e) => {
@@ -200,12 +201,12 @@ async fn remove_image(name: String, force: bool) -> Result<()> {
 
     // 执行删除操作
     println!("\n▶ 正在删除 Docker 镜像...");
-    println!("→ 镜像: {}", config.image);
+    println!("→ 镜像: {}", config.name);
 
-    match ImageInspector::remove_image(&config.image, force).await {
+    match ImageInspector::remove_image(&config.name, force).await {
         Ok(()) => {
             println!("\n✓ 镜像 '{}' 删除成功！", name);
-            println!("→ 已删除镜像: {}", config.image);
+            println!("→ 已删除镜像: {}", config.name);
             if force {
                 println!("→ 使用强制删除模式");
             }

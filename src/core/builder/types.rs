@@ -5,9 +5,9 @@ use std::collections::HashMap;
 /// 构建器配置（用于镜像构建）
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BuilderConfig {
-    pub name: String,
-    pub image: String,      // 目标镜像名称
-    pub base_image: String, // 基础镜像名称（用于拉取和构建）
+    pub name: String,       // 目标镜像名称
+    pub base_image: String, // 基础镜像名称（用于 FROM 指令）
+    pub tag: String,        // 镜像标签
     pub dockerfile: String,
     pub context: String,                     // 构建上下文路径
     pub build_args: HashMap<String, String>, // 构建参数
@@ -15,39 +15,28 @@ pub struct BuilderConfig {
 
 impl BuilderConfig {
     /// 从基本参数创建构建器配置
-    pub fn new(name: String, dockerfile: String, base_image: String) -> Self {
-        // 从 Dockerfile 路径推断镜像名称和构建上下文
-        let (image, context) = Self::derive_image_and_context(&name, &dockerfile);
+    pub fn new(name: String, dockerfile: String, base_image: String, tag: String) -> Self {
+        // 从 Dockerfile 路径推断构建上下文
+        let context = Self::derive_context(&dockerfile);
 
-        Self { name, image, base_image, dockerfile, context, build_args: HashMap::new() }
+        Self { name, base_image, tag, dockerfile, context, build_args: HashMap::new() }
     }
 
-    /// 从名称和 Dockerfile 路径推断镜像名称和构建上下文
-    fn derive_image_and_context(name: &str, dockerfile: &str) -> (String, String) {
+    /// 从 Dockerfile 路径推断构建上下文
+    fn derive_context(dockerfile: &str) -> String {
         let path = std::path::Path::new(dockerfile);
 
         // 构建上下文是 Dockerfile 所在目录
-        let context = if let Some(parent) = path.parent() {
+        if let Some(parent) = path.parent() {
             parent.to_string_lossy().to_string()
         } else {
             ".".to_string()
-        };
-
-        // 镜像名称格式: 构建器名:latest
-        let image = format!("{}:latest", name);
-
-        (image, context)
+        }
     }
 
     /// 添加构建参数
     pub fn with_build_arg(mut self, key: String, value: String) -> Self {
         self.build_args.insert(key, value);
-        self
-    }
-
-    /// 设置镜像名称
-    pub fn with_image(mut self, image: String) -> Self {
-        self.image = image;
         self
     }
 
@@ -135,17 +124,6 @@ impl ComposeService {
         self.labels.iter().find_map(|label| {
             if label.starts_with("builder.type=") {
                 Some(label.replace("builder.type=", ""))
-            } else {
-                None
-            }
-        })
-    }
-
-    /// 从 labels 中解析构建器版本
-    pub fn get_builder_version(&self) -> Option<String> {
-        self.labels.iter().find_map(|label| {
-            if label.starts_with("builder.version=") {
-                Some(label.replace("builder.version=", ""))
             } else {
                 None
             }

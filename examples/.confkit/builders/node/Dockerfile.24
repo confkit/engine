@@ -1,0 +1,21 @@
+FROM node:24-alpine
+
+# 安装必要工具
+RUN apk add --no-cache git curl bash make gcc g++ python3
+
+# 设置工作目录
+WORKDIR /workspace
+
+# 配置npm镜像
+RUN npm config set registry https://registry.npmmirror.com/
+
+# 启用和安装pnpm
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
+# 配置pnpm镜像
+RUN pnpm config set registry https://registry.npmmirror.com/
+
+# 创建缓存目录
+RUN mkdir -p /root/.npm /root/.local/share/pnpm /artifacts
+
+CMD ["tail", "-f", "/dev/null"] 

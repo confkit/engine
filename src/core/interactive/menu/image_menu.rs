@@ -1,5 +1,7 @@
 use super::super::{InteractiveEngine, InteractiveMode};
-use crate::core::builder::{BuilderLoader, ImageBuilder, ImageCheckResult, ImageInspector};
+use crate::core::builder::{
+    BuilderInfo, BuilderLoader, BuilderStatus, ImageBuilder, ImageCheckResult, ImageInspector,
+};
 use anyhow::Result;
 use inquire::{Confirm, MultiSelect, Select};
 
@@ -73,10 +75,7 @@ impl InteractiveEngine {
         }
 
         // 准备选项列表
-        let mut options: Vec<String> = configs
-            .keys()
-            .map(|name| format!("{} - {}", name, configs.get(name).unwrap().image))
-            .collect();
+        let mut options: Vec<String> = configs.keys().map(|name| name.clone()).collect();
         options.push("[BACK] 返回镜像管理菜单".to_string());
 
         let selection = Select::new("请选择要创建的构建镜像:", options)
@@ -90,8 +89,8 @@ impl InteractiveEngine {
                     return Ok(true);
                 }
 
-                // 提取构建器名称（在 " - " 之前的部分）
-                let builder_name = choice.split(" - ").next().unwrap_or(&choice).to_string();
+                // 直接使用选择的构建器名称
+                let builder_name = choice.clone();
 
                 println!();
                 println!("▶ 开始创建构建镜像: {}", builder_name);
@@ -125,7 +124,7 @@ impl InteractiveEngine {
         let config = BuilderLoader::find_builder_config(name)?;
 
         println!("✓ 找到构建镜像配置: {}", name);
-        println!("  目标镜像: {}", config.image);
+        println!("  目标镜像: {}:{}", config.name, config.tag);
         println!("  基础镜像: {}", config.base_image);
         println!("  Dockerfile: {}", config.dockerfile);
         println!("  构建上下文: {}", config.context);
@@ -136,9 +135,10 @@ impl InteractiveEngine {
             }
         }
 
-        // 检查目标镜像是否已存在
+        // 检查目标镜像是否已存在 - 使用完整的镜像名称（包含标签）
+        let target_image = format!("{}:{}", config.name, config.tag);
         println!();
-        match ImageInspector::check_target_image(&config.image).await {
+        match ImageInspector::check_target_image(&target_image).await {
             Ok(ImageCheckResult::Exists(_)) => {
                 println!("● 跳过构建，直接使用现有镜像");
                 return Ok(());
@@ -161,7 +161,7 @@ impl InteractiveEngine {
             Ok(builder_info) => {
                 println!();
                 println!("✓ 构建镜像 '{}' 创建成功！", name);
-                println!("→ 镜像: {}", config.image);
+                println!("→ 镜像: {}:{}", config.name, config.tag);
                 if let Some(image_id) = &builder_info.image_id {
                     println!("→ 镜像ID: {}", image_id);
                 }
@@ -194,138 +194,98 @@ impl InteractiveEngine {
 
     /// 显示镜像删除参数选择界面
     pub async fn show_image_remove_params(&mut self) -> Result<bool> {
-        println!("• 正在加载可用的构建镜像配置...");
+        println!("• 正在加载构建器镜像信息...");
 
-        // 加载 builder.yml 中的配置
-        let configs = match BuilderLoader::load_from_current_dir() {
-            Ok(configs) => configs,
-            Err(e) => {
-                println!("✗ 加载构建镜像配置失败: {}", e);
-                println!("   请确保当前目录存在 builder.yml 文件");
-                println!();
-                self.pause_for_user().await?;
-                self.current_mode = InteractiveMode::ImageMenu;
-                return Ok(true);
-            }
-        };
+        // 使用 ImageManager 获取镜像列表
+        let builder_infos = self.image_manager.list_builders();
 
-        if configs.is_empty() {
-            println!("! 未找到任何构建镜像配置");
-            println!("  请在 builder.yml 文件中添加构建镜像配置");
+        if builder_infos.is_empty() {
+            println!("! 未找到任何构建器镜像");
+            println!("  请先创建一些构建器镜像");
             println!();
             self.pause_for_user().await?;
             self.current_mode = InteractiveMode::ImageMenu;
             return Ok(true);
         }
 
-        // 检查每个镜像的状态并收集可用的 tag
-        println!("• 检查镜像状态...");
-        let mut image_tags = Vec::new();
+        // 过滤出已创建的镜像（有实际镜像存在的）
+        let available_images: Vec<&BuilderInfo> = builder_infos
+            .into_iter()
+            .filter(|info| {
+                matches!(
+                    info.status,
+                    BuilderStatus::Created | BuilderStatus::Running | BuilderStatus::Stopped
+                )
+            })
+            .collect();
 
-        for (builder_name, config) in &configs {
-            // 检查镜像是否存在
-            let image_status = match ImageInspector::check_target_image(&config.image).await {
-                Ok(ImageCheckResult::Exists(info)) => {
-                    // 镜像存在，添加其 tag 信息
-                    let status_text = format!("✓ 已构建 - {} ({})", info.size, info.created_at);
-                    (true, status_text, Some(info))
-                }
-                Ok(ImageCheckResult::NotExists) => {
-                    // 镜像不存在
-                    (false, "未构建".to_string(), None)
-                }
-                Err(_) => {
-                    // 检查出错
-                    (false, "状态未知".to_string(), None)
-                }
-            };
-
-            // 解析镜像名称和标签
-            let (repo, tag) = if let Some(colon_pos) = config.image.find(':') {
-                let repo = &config.image[..colon_pos];
-                let tag = &config.image[colon_pos + 1..];
-                (repo.to_string(), tag.to_string())
-            } else {
-                (config.image.clone(), "latest".to_string())
-            };
-
-            image_tags.push((
-                builder_name.clone(),
-                repo,
-                tag,
-                config.image.clone(),
-                image_status.0, // is_built
-                image_status.1, // status_text
-                image_status.2, // image_info
-            ));
+        if available_images.is_empty() {
+            println!("! 未找到任何可删除的镜像");
+            println!("  所有构建器都处于未创建状态");
+            println!();
+            self.pause_for_user().await?;
+            self.current_mode = InteractiveMode::ImageMenu;
+            return Ok(true);
         }
 
-        // 按镜像仓库分组显示
-        let mut repo_groups: std::collections::HashMap<String, Vec<_>> =
-            std::collections::HashMap::new();
-        for item in image_tags {
-            repo_groups.entry(item.1.clone()).or_default().push(item);
-        }
+        println!("✓ 找到 {} 个可删除的镜像", available_images.len());
+        println!();
 
-        // 准备选择选项 - 简化版本
+        // 准备选择选项
         let mut options = Vec::new();
-        let mut image_data = Vec::new();
+        for info in &available_images {
+            let status_icon = match info.status {
+                BuilderStatus::Created => "🟢",
+                BuilderStatus::Running => "🔵",
+                BuilderStatus::Stopped => "🟡",
+                _ => "⚪",
+            };
 
-        for (repo, tags) in repo_groups.iter() {
-            // 只显示已构建的镜像
-            let built_tags: Vec<_> =
-                tags.iter().filter(|(_, _, _, _, is_built, _, _)| *is_built).collect();
+            let status_text = match info.status {
+                BuilderStatus::Created => "已创建",
+                BuilderStatus::Running => "运行中",
+                BuilderStatus::Stopped => "已停止",
+                _ => "未知",
+            };
 
-            if !built_tags.is_empty() {
-                // 添加仓库分组标题
-                options.push(format!("--- {} 镜像 ({} 个) ---", repo, built_tags.len()));
-                image_data.push(None);
-
-                // 添加该仓库下的所有已构建标签
-                for (builder_name, _repo, tag, full_image, _is_built, status_text, _info) in
-                    built_tags
-                {
-                    let display_text = format!("[{}] - {}", tag, status_text);
-                    options.push(display_text);
-                    image_data.push(Some((builder_name.clone(), full_image.clone())));
-                }
-            }
+            let display_text = format!("{} {} ({})", status_icon, info.name, status_text);
+            options.push(display_text);
         }
+        options.push("← 返回镜像管理菜单".to_string());
 
-        if options.is_empty() {
-            println!("! 未找到任何已构建的镜像");
-            println!();
-            self.pause_for_user().await?;
-            self.current_mode = InteractiveMode::ImageMenu;
-            return Ok(true);
-        }
-
-        // 使用标准的多选界面
+        // 使用多选界面让用户选择要删除的镜像
         let selections = MultiSelect::new("请选择要删除的镜像:", options.clone())
-            .with_help_message("空格键选择/取消选择，回车键确认选择")
-            .with_page_size(20)
+            .with_help_message("空格键选择/取消选择，回车键确认选择。注意：删除操作不可恢复！")
+            .with_page_size(15)
             .prompt();
 
-        let selected_images = match selections {
+        let selected_builders = match selections {
             Ok(choices) => {
-                let mut selected_images = Vec::new();
+                let mut selected_builders = Vec::new();
 
-                // 处理选中的选项
                 for choice in &choices {
-                    // 跳过分组标题行
-                    if choice.starts_with("--- ") && choice.ends_with(" ---") {
+                    if choice.starts_with("←") {
                         continue;
                     }
 
-                    // 查找对应的镜像数据
-                    if let Some(index) = options.iter().position(|opt| opt == choice) {
-                        if let Some(Some((builder_name, full_image))) = image_data.get(index) {
-                            selected_images.push((builder_name.clone(), full_image.clone()));
+                    // 从选择中提取构建器名称
+                    // 格式: "🟢 name (status)"
+                    if let Some(name_with_status) = choice.split(" (").next() {
+                        // 去掉状态图标和空格
+                        let name = name_with_status
+                            .split_whitespace()
+                            .skip(1)
+                            .collect::<Vec<_>>()
+                            .join(" ");
+
+                        // 查找对应的构建器信息
+                        if let Some(info) = available_images.iter().find(|info| info.name == name) {
+                            selected_builders.push((*info).clone());
                         }
                     }
                 }
 
-                selected_images
+                selected_builders
             }
             Err(_) => {
                 // 用户中断，回到镜像管理菜单
@@ -334,32 +294,33 @@ impl InteractiveEngine {
             }
         };
 
-        if selected_images.is_empty() {
-            println!("! 未选择任何有效的镜像");
+        if selected_builders.is_empty() {
+            println!("! 未选择任何镜像");
             println!();
             self.pause_for_user().await?;
+            self.current_mode = InteractiveMode::ImageMenu;
             return Ok(true);
         }
 
         // 显示选择的镜像
         println!();
-        println!("▶ 选择的镜像:");
-        for (builder_name, full_image) in &selected_images {
-            println!("  • {} ({})", builder_name, full_image);
+        println!("▶ 选择的镜像 ({} 个):", selected_builders.len());
+        for (i, info) in selected_builders.iter().enumerate() {
+            println!("  {}. {}", i + 1, info.name);
         }
 
         // 询问删除模式
         let force_options = vec![
             "● 普通删除 - 安全删除（如果镜像正在使用会失败）",
-            "※ 强制删除 - 强制删除（即使正在使用）",
+            "⚠️  强制删除 - 强制删除（即使正在使用，谨慎选择）",
         ];
 
         let force_selection = Select::new("请选择删除模式:", force_options)
-            .with_help_message("选择删除模式")
+            .with_help_message("普通删除更安全，强制删除可能影响正在运行的容器")
             .prompt();
 
         let force = match force_selection {
-            Ok(choice) => choice.starts_with("※ 强制删除"),
+            Ok(choice) => choice.starts_with("⚠️"),
             Err(_) => {
                 self.current_mode = InteractiveMode::ImageMenu;
                 return Ok(true);
@@ -368,12 +329,18 @@ impl InteractiveEngine {
 
         // 确认删除
         let confirm_msg = if force {
-            format!("确认强制删除 {} 个镜像？这个操作不可恢复！", selected_images.len())
+            format!(
+                "⚠️  确认强制删除 {} 个镜像？这个操作不可恢复，可能影响正在运行的容器！",
+                selected_builders.len()
+            )
         } else {
-            format!("确认删除 {} 个镜像？", selected_images.len())
+            format!("确认删除 {} 个镜像？这个操作不可恢复！", selected_builders.len())
         };
 
-        let confirm = Confirm::new(&confirm_msg).with_default(false).prompt();
+        let confirm = Confirm::new(&confirm_msg)
+            .with_default(false)
+            .with_help_message("请仔细确认，删除后无法恢复")
+            .prompt();
 
         match confirm {
             Ok(true) => {
@@ -383,17 +350,17 @@ impl InteractiveEngine {
                 if force {
                     println!("⚠️  使用强制删除模式");
                 }
+                println!();
 
                 let mut success_count = 0;
                 let mut failed_count = 0;
 
-                for (builder_name, full_image) in selected_images {
-                    println!();
-                    println!("→ 删除镜像: {} ({})", builder_name, full_image);
+                for (i, info) in selected_builders.iter().enumerate() {
+                    println!("→ [{}/{}] 删除镜像: {}", i + 1, selected_builders.len(), info.name);
 
-                    match self.execute_image_remove(&builder_name, force).await {
+                    // 使用 ImageManager 删除镜像
+                    match self.image_manager.remove_builder(&info.name, force).await {
                         Ok(()) => {
-                            println!("✓ 删除成功");
                             success_count += 1;
                         }
                         Err(e) => {
@@ -401,14 +368,21 @@ impl InteractiveEngine {
                             failed_count += 1;
                         }
                     }
+                    println!();
                 }
 
                 // 显示总结
-                println!();
-                println!("▶ 删除完成:");
-                println!("  成功: {} 个", success_count);
+                println!("▶ 删除操作完成:");
+                println!("  ✓ 成功: {} 个", success_count);
                 if failed_count > 0 {
-                    println!("  失败: {} 个", failed_count);
+                    println!("  ✗ 失败: {} 个", failed_count);
+                    if !force {
+                        println!();
+                        println!("提示: 如果镜像正在被容器使用，请先停止相关容器");
+                        println!("      或者选择强制删除模式（谨慎使用）");
+                    }
+                } else {
+                    println!("  🎉 所有镜像删除成功！");
                 }
             }
             Ok(false) => {
@@ -423,78 +397,5 @@ impl InteractiveEngine {
         self.pause_for_user().await?;
         self.current_mode = InteractiveMode::ImageMenu;
         Ok(true)
-    }
-
-    /// 执行镜像删除的核心逻辑
-    async fn execute_image_remove(&mut self, name: &str, force: bool) -> Result<()> {
-        // 从 builder.yml 加载构建器配置
-        let config = match BuilderLoader::find_builder_config(name) {
-            Ok(config) => {
-                println!("✓ 找到构建镜像配置: {}", name);
-                println!("  目标镜像: {}", config.image);
-                config
-            }
-            Err(e) => {
-                println!("✗ 加载构建镜像配置失败: {}", e);
-                println!("  尝试直接删除镜像名称: {}", name);
-                // 如果找不到配置，尝试直接使用提供的名称作为镜像名
-                use crate::core::builder::BuilderConfig;
-                BuilderConfig {
-                    name: name.to_string(),
-                    image: name.to_string(),
-                    base_image: String::new(),
-                    dockerfile: String::new(),
-                    context: String::new(),
-                    build_args: std::collections::HashMap::new(),
-                }
-            }
-        };
-
-        // 检查镜像是否存在
-        println!();
-        match ImageInspector::check_target_image(&config.image).await {
-            Ok(ImageCheckResult::Exists(info)) => {
-                println!("✓ 找到镜像:");
-                println!("  镜像ID: {}", info.id);
-                println!("  仓库: {}", info.repository);
-                println!("  标签: {}", info.tag);
-                println!("  创建时间: {}", info.created_at);
-                println!("  大小: {}", info.size);
-            }
-            Ok(ImageCheckResult::NotExists) => {
-                println!("! 镜像不存在: {}", config.image);
-                return Ok(());
-            }
-            Err(e) => {
-                println!("✗ 检查镜像时出错: {}", e);
-                return Err(e);
-            }
-        }
-
-        // 执行删除操作
-        println!();
-        println!("▶ 正在删除 Docker 镜像...");
-        println!("→ 镜像: {}", config.image);
-
-        match ImageInspector::remove_image(&config.image, force).await {
-            Ok(()) => {
-                println!();
-                println!("✓ 镜像 '{}' 删除成功！", name);
-                println!("→ 已删除镜像: {}", config.image);
-                if force {
-                    println!("→ 使用强制删除模式");
-                }
-                Ok(())
-            }
-            Err(e) => {
-                println!();
-                println!("✗ 构建镜像删除失败: {}", e);
-                if !force {
-                    println!("提示: 如果镜像正在被使用，请先停止相关容器");
-                    println!("      或者选择强制删除模式");
-                }
-                Err(e)
-            }
-        }
     }
 }

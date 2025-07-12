@@ -97,25 +97,33 @@ impl BuilderFormatter {
                 BuilderStatus::Error => "错误",
             };
 
-            rows.push((&builder.name, &builder.config.image, build_status, image_id));
+            rows.push((
+                &builder.name,
+                &builder.config.base_image,
+                &builder.config.tag,
+                build_status,
+                image_id,
+            ));
         }
 
         // 计算每列的最大显示宽度
-        let headers = ("名称", "镜像", "状态", "镜像ID");
+        let headers = ("名称", "基础镜像", "标签", "状态", "镜像ID");
 
         let mut max_widths = (
             Self::display_width(headers.0), // 名称
-            Self::display_width(headers.1), // 镜像
-            Self::display_width(headers.2), // 状态
-            Self::display_width(headers.3), // 镜像ID
+            Self::display_width(headers.1), // 基础镜像
+            Self::display_width(headers.2), // 标签
+            Self::display_width(headers.3), // 状态
+            Self::display_width(headers.4), // 镜像ID
         );
 
         // 计算数据行的最大宽度
-        for (name, image, status, image_id) in &rows {
+        for (name, base_image, tag, status, image_id) in &rows {
             max_widths.0 = max_widths.0.max(Self::display_width(name));
-            max_widths.1 = max_widths.1.max(Self::display_width(image));
-            max_widths.2 = max_widths.2.max(Self::display_width(status));
-            max_widths.3 = max_widths.3.max(Self::display_width(image_id));
+            max_widths.1 = max_widths.1.max(Self::display_width(base_image));
+            max_widths.2 = max_widths.2.max(Self::display_width(tag));
+            max_widths.3 = max_widths.3.max(Self::display_width(status));
+            max_widths.4 = max_widths.4.max(Self::display_width(image_id));
         }
 
         // 构建表格
@@ -123,30 +131,33 @@ impl BuilderFormatter {
 
         // 表头
         table.push_str(&format!(
-            "  {} | {} | {} | {}\n",
+            "  {} | {} | {} | {} | {}\n",
             Self::pad_to_width(headers.0, max_widths.0),
             Self::pad_to_width(headers.1, max_widths.1),
             Self::pad_to_width(headers.2, max_widths.2),
             Self::pad_to_width(headers.3, max_widths.3),
+            Self::pad_to_width(headers.4, max_widths.4),
         ));
 
         // 分隔线
         table.push_str(&format!(
-            "  {} | {} | {} | {}\n",
+            "  {} | {} | {} | {} | {}\n",
             "-".repeat(max_widths.0),
             "-".repeat(max_widths.1),
             "-".repeat(max_widths.2),
             "-".repeat(max_widths.3),
+            "-".repeat(max_widths.4),
         ));
 
         // 数据行
-        for (name, image, status, image_id) in rows {
+        for (name, base_image, tag, status, image_id) in rows {
             table.push_str(&format!(
-                "  {} | {} | {} | {}\n",
+                "  {} | {} | {} | {} | {}\n",
                 Self::pad_to_width(name, max_widths.0),
-                Self::pad_to_width(image, max_widths.1),
-                Self::pad_to_width(status, max_widths.2),
-                Self::pad_to_width(image_id, max_widths.3),
+                Self::pad_to_width(base_image, max_widths.1),
+                Self::pad_to_width(tag, max_widths.2),
+                Self::pad_to_width(status, max_widths.3),
+                Self::pad_to_width(image_id, max_widths.4),
             ));
         }
 
@@ -158,7 +169,9 @@ impl BuilderFormatter {
         let mut details = String::new();
 
         details.push_str(&format!("\n构建器: {}\n", builder.name));
-        details.push_str(&format!("  镜像: {}\n", builder.config.image));
+        details.push_str(&format!("  目标镜像: {}\n", builder.config.name));
+        details.push_str(&format!("  基础镜像: {}\n", builder.config.base_image));
+        details.push_str(&format!("  标签: {}\n", builder.config.tag));
         details.push_str(&format!("  状态: {:?}\n", builder.status));
         details.push_str(&format!("  Dockerfile: {}\n", builder.config.dockerfile));
         details.push_str(&format!("  构建上下文: {}\n", builder.config.context));

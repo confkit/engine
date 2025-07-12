@@ -21,8 +21,7 @@ pub struct BuilderYamlEntry {
     pub name: String,
     #[serde(rename = "type")]
     pub builder_type: String,
-    pub version: String,
-    pub image: String,
+    pub base_image: String,
     pub tag: String,
     pub dockerfile: String,
     #[serde(default)]
@@ -100,15 +99,13 @@ impl BuilderLoader {
         let context = entry.context.unwrap_or_else(|| ".".to_string());
         let build_args = entry.build_args.unwrap_or_default();
 
-        // 组合基础镜像名称
-        let base_image = format!("{}:{}", entry.image, entry.tag);
-        // 生成目标镜像名称
-        let target_image = format!("{}:{}", entry.name, entry.version);
+        // 组合基础镜像名称（用于拉取）
+        let base_image = format!("{}:{}", entry.base_image, entry.tag);
 
         let config = BuilderConfig {
-            name: entry.name,
-            image: target_image,
+            name: entry.name, // name 字段就是构建器名称，不拼接标签
             base_image,
+            tag: entry.tag, // 保存原始标签信息
             dockerfile: entry.dockerfile,
             context,
             build_args,
@@ -149,8 +146,9 @@ impl BuilderLoader {
 
     /// 将 BuilderConfig 转换为 BuilderInfo（用于列表显示）
     async fn config_to_builder_info(config: BuilderConfig) -> Result<BuilderInfo> {
-        // 检查镜像是否存在来推断状态
-        let status = match Self::check_image_status(&config.image).await {
+        // 检查镜像是否存在来推断状态 - 使用完整的镜像名称（包含标签）
+        let target_image = format!("{}:{}", config.name, config.tag);
+        let status = match Self::check_image_status(&target_image).await {
             Ok(true) => BuilderStatus::Created,
             Ok(false) => BuilderStatus::NotCreated,
             Err(_) => BuilderStatus::NotCreated,
@@ -158,7 +156,7 @@ impl BuilderLoader {
 
         // 如果镜像存在，尝试获取镜像ID
         let image_id = if matches!(status, BuilderStatus::Created) {
-            Self::get_image_id(&config.image).await.ok()
+            Self::get_image_id(&target_image).await.ok()
         } else {
             None
         };
@@ -204,9 +202,9 @@ impl BuilderLoader {
         // 从 build 配置创建构建器配置
         let config = if let Some(build) = &service.build {
             BuilderConfig {
-                name: name.to_string(),
-                image: image.clone(),
+                name: name.to_string(), // name 字段就是构建器名称
                 base_image: service.image.clone().unwrap_or_else(|| "alpine:latest".to_string()),
+                tag: "latest".to_string(), // Docker Compose 默认使用 latest 标签
                 dockerfile: build.dockerfile.clone().unwrap_or_else(|| "Dockerfile".to_string()),
                 context: build.context.clone().unwrap_or_else(|| ".".to_string()),
                 build_args: build.args.clone(),
@@ -214,9 +212,9 @@ impl BuilderLoader {
         } else {
             // 如果没有 build 配置，创建基本配置
             BuilderConfig {
-                name: name.to_string(),
-                image: image.clone(),
+                name: name.to_string(), // name 字段就是构建器名称
                 base_image: service.image.clone().unwrap_or_else(|| "alpine:latest".to_string()),
+                tag: "latest".to_string(), // Docker Compose 默认使用 latest 标签
                 dockerfile: "Dockerfile".to_string(),
                 context: ".".to_string(),
                 build_args: HashMap::new(),
@@ -283,41 +281,5 @@ impl BuilderLoader {
 
         tracing::debug!("容器 {} 状态: {} -> {:?}", container_name, status_str, status);
         Ok(status)
-    }
-
-    /// 创建演示数据
-    pub fn create_demo_builders() -> HashMap<String, BuilderInfo> {
-        let mut builders = HashMap::new();
-
-        let demo_configs = vec![
-            ("golang-1.24", "golang:1.24-alpine", BuilderStatus::Running),
-            ("node-22", "node:22-alpine", BuilderStatus::Stopped),
-            ("rust-latest", "rust:1.75-alpine", BuilderStatus::Running),
-            ("tauri-latest", "tauri/tauri:latest", BuilderStatus::Created),
-        ];
-
-        for (name, image, status) in demo_configs {
-            let config = BuilderConfig {
-                name: name.to_string(),
-                image: image.to_string(),
-                base_image: image.to_string(), // 演示数据中使用同样的镜像作为基础镜像
-                dockerfile: format!("Dockerfile.{}", name),
-                context: ".".to_string(),
-                build_args: HashMap::new(),
-            };
-
-            let builder_info = BuilderInfo {
-                name: name.to_string(),
-                status,
-                config,
-                image_id: Some(format!("img_{}", name)),
-                created_at: Some(chrono::Utc::now() - chrono::Duration::hours(1)),
-                build_logs: Some("Build completed successfully".to_string()),
-            };
-
-            builders.insert(name.to_string(), builder_info);
-        }
-
-        builders
     }
 }

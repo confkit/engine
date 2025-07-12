@@ -2,15 +2,15 @@ use super::builder::*;
 use super::help::*;
 use super::menu::*;
 use super::types::{Command, CommandContext, InteractiveConfig, InteractiveMode};
-use crate::core::builder::BuilderManager;
+use crate::core::builder::{BuilderLoader, ImageManager};
 use anyhow::Result;
 
 /// 交互式引擎
 pub struct InteractiveEngine {
     /// 命令上下文
     context: CommandContext,
-    /// 构建器管理器
-    pub(crate) builder_manager: BuilderManager,
+    /// 镜像管理器
+    pub(crate) image_manager: ImageManager,
     /// 当前交互模式
     pub(crate) current_mode: InteractiveMode,
 }
@@ -19,11 +19,8 @@ impl InteractiveEngine {
     /// 创建新的交互式引擎
     pub async fn new(config: InteractiveConfig) -> Result<Self> {
         let context = CommandContext::new(config);
-        let builder_manager = match BuilderManager::from_current_directory().await {
-            Ok(manager) => manager,
-            Err(_) => BuilderManager::with_demo_data().await,
-        };
-        Ok(Self { context, builder_manager, current_mode: InteractiveMode::MainMenu })
+        let image_manager = ImageManager::new_auto().await;
+        Ok(Self { context, image_manager, current_mode: InteractiveMode::MainMenu })
     }
 
     /// 启动交互式会话
@@ -90,14 +87,8 @@ impl InteractiveEngine {
                 print!("\x1B[2J\x1B[1;1H");
             }
             Command::BuilderList { verbose, status_filter } => {
-                match self.builder_manager.list_builders_with_filter(verbose, status_filter) {
-                    Ok(output) => {
-                        println!("{}", output);
-                    }
-                    Err(e) => {
-                        println!("✗ 获取构建器列表失败: {}", e);
-                    }
-                }
+                // TODO: 重构为使用 ImageManager
+                println!("✗ 构建器列表功能需要重构");
             }
             Command::Exit => {}
         }

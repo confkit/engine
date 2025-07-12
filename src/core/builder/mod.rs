@@ -12,7 +12,6 @@ pub mod image;
 // 保留的通用模块
 mod formatter;
 mod loader;
-mod manager;
 mod output_handler;
 mod puller;
 mod types;
@@ -25,7 +24,6 @@ pub use image::{ImageBuilder, ImageCheckResult, ImageInspector, ImageManager};
 // 重新导出通用功能（保持向后兼容）
 pub use formatter::*;
 pub use loader::*;
-pub use manager::*;
 pub use output_handler::*;
 pub use puller::*;
 pub use types::*;

@@ -1,0 +1,12 @@
+# 最小构建器示例 - 基于 hello-world 镜像
+# 这是一个用于演示和测试的最小构建器案例
+FROM hello-world:linux
+
+# 合并所有标签到单个 LABEL 指令以减少镜像层
+LABEL maintainer="confkit-engine" \
+      description="Hello World builder for testing and demonstration" \
+      version="1.0"
+
+# hello-world 镜像已经包含了一个简单的可执行文件
+# 不需要额外的安装或配置
+# 这个镜像非常小（约1.84KB），适合作为演示案例
