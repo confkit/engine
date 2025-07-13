@@ -1,8 +1,0 @@
-name: "space_01"
-description: "space_01"
-
-projects:
-  - name: "project_01"
-    description: "project_01"
-    type: "golang"
-    config: ./projects/node-web-app.yml

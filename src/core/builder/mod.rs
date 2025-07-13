@@ -5,26 +5,17 @@
 //! - 容器管理 (container)
 //! - 通用工具和类型定义
 
-// 新的子模块
 pub mod container;
 pub mod image;
 
 // 保留的通用模块
-mod formatter;
-mod loader;
-mod output_handler;
-mod puller;
-mod types;
-mod validator;
+// mod formatter;
+// mod loader;
+// mod output_handler;
+// mod puller;
+// mod types;
+// mod validator;
 
 // 重新导出新模块的功能
-pub use container::{BuilderContainer, BuilderHealth, ContainerManager, ContainerStatus};
-pub use image::{ImageBuilder, ImageCheckResult, ImageInspector, ImageManager};
-
-// 重新导出通用功能（保持向后兼容）
-pub use formatter::*;
-pub use loader::*;
-pub use output_handler::*;
-pub use puller::*;
-pub use types::*;
-pub use validator::*;
+// pub use container::{BuilderContainer, ContainerManager, ContainerStatus};
+// pub use image::{ImageBuilder, ImageCheckResult, ImageInspector, ImageManager};

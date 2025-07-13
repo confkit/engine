@@ -1,0 +1,28 @@
+version: 1.0.0
+
+engine: docker
+
+engine_compose:
+  # engine group name(default: confkit)
+  # project: confkit
+  file: ./confkit-compose.yml
+
+spaces:
+  - name: confkit
+    description: "ConfKit 工具链发布空间"
+    path: .confkit/spaces/confkit
+  - name: hello
+    description: "Hello ConfKit"
+    path: .confkit/spaces/hello
+
+images:
+  - name: hello-builder
+    base_image: alpine
+    tag: 3.18
+    context: volumes/context
+    engine_file: ./.confkit/images/Dockerfile.alpine:3.18
+  - name: rust-builder
+    base_image: rust
+    tag: 1.88-alpine
+    context: volumes/context
+    engine_file: ./.confkit/images/Dockerfile.rust.1.88-alpine

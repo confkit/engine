@@ -1,33 +1,16 @@
 use anyhow::Result;
-use clap::Args;
 
-use crate::core::interactive::{InteractiveConfig, InteractiveEngine};
+use crate::core::interactive::menu::InteractiveMenu;
 
-#[derive(Args)]
-pub struct InteractiveCommand {
-    /// 工作空间目录
-    #[arg(long, default_value = ".")]
-    pub workspace: String,
-
-    /// 默认配置文件
-    #[arg(long)]
-    pub config: Option<String>,
-}
+pub struct InteractiveCommand;
 
 impl InteractiveCommand {
-    pub async fn execute(self) -> Result<()> {
-        tracing::info!("启动交互式模式 (workspace: {})", self.workspace);
+    pub async fn execute() -> Result<()> {
+        tracing::info!("Starting interactive mode...");
 
-        // 创建交互式配置
-        let config = InteractiveConfig {
-            workspace: self.workspace,
-            config: self.config,
-            ..Default::default()
-        };
+        let mut menu = InteractiveMenu::new();
 
-        // 创建并运行交互式引擎
-        let mut engine = InteractiveEngine::new(config).await?;
-        engine.run().await?;
+        menu.execute().await?;
 
         Ok(())
     }

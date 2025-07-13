@@ -1,8 +1,0 @@
-name: "hello"
-description: "hello"
-
-projects:
-  - name: "hello-app"
-    description: "hello demo"
-    type: "hello"
-    config: ./projects/hello-01.yml
