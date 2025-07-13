@@ -148,13 +148,34 @@ confkit interactive
 
 ## 🎯 Key Features
 
-### Automatic Git Environment Variable Injection
+### Automatic Environment Variable Injection
 
-Git information is automatically injected into environment variables when executing tasks:
+ConfKit automatically injects the following environment variables when executing tasks:
+
+#### System Variables
+- `TASK_ID` - Unique task identifier (e.g., `api-20250113-143022-a1b2c3`)
+- `PROJECT_NAME` - Project name from configuration file
+- `SPACE_NAME` - Space name
+
+#### Git Variables
+- `GIT_REPO` - Git repository URL from configuration
+- `GIT_BRANCH` - Git branch name (from config or current branch)
 - `GIT_HASH` - Complete commit hash
 - `GIT_COMMIT_HASH` - Complete commit hash (alias)
-- `GIT_COMMIT_SHORT` - Short commit hash
+- `GIT_COMMIT_SHORT` - Short commit hash (first 8 characters)
 - `GIT_TAG` - Current tag (if available)
+
+#### Custom Variables
+You can also define custom environment variables in your project configuration:
+
+```yaml
+environment:
+  APP_NAME: "my-app"
+  BUILD_VERSION: "1.0.0"
+  CUSTOM_VAR: "${PROJECT_NAME}-${GIT_COMMIT_SHORT}"
+```
+
+All environment variables support variable substitution using `${VARIABLE_NAME}` syntax.
 
 ### Smart Log Matching
 
@@ -176,14 +197,41 @@ Support multiple log file matching methods:
 examples/                # Example configurations
 ├── builder.yml         # Builder configuration
 ├── docker-compose.yml  # Container service definition
+├── release.sh          # Self-release script
+├── release-docker-compose.yml  # Release environment
+├── RELEASE_README.md   # Release documentation
 └── .confkit/           # ConfKit workspace
     └── spaces/         # Space management
-        └── hello/      # Example space
+        ├── hello/      # Example space
+        └── release/    # Release space (self-release)
 volumes/                # Runtime data
 ├── logs/              # Task logs
 ├── workspace/         # Build workspace  
 └── artifacts/         # Build artifacts
 ```
+
+## 🔄 Self-Release with ConfKit
+
+ConfKit can release itself using its own build system! This demonstrates the power of configuration-driven builds:
+
+```bash
+# Navigate to examples directory
+cd examples
+
+# Set required environment variables
+export CARGO_REGISTRY_TOKEN="your-crates-token"
+export DOCKER_USERNAME="your-docker-username"
+export DOCKER_PASSWORD="your-docker-password"
+export GITHUB_TOKEN="your-github-token"
+
+# Release version 1.0.0
+./release.sh 1.0.0
+
+# Or test the release process
+./release.sh 1.0.0 --dry-run
+```
+
+For detailed information about the self-release process, see [examples/RELEASE_README.md](examples/RELEASE_README.md).
 
 ## 🛠 Development Status
 

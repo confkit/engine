@@ -148,13 +148,34 @@ confkit interactive
 
 ## 🎯 特色功能
 
-### Git环境变量自动注入
+### 自动环境变量注入
 
-执行任务时自动注入Git信息到环境变量：
+ConfKit 在执行任务时会自动注入以下环境变量：
+
+#### 系统变量
+- `TASK_ID` - 任务唯一标识符（如 `api-20250113-143022-a1b2c3`）
+- `PROJECT_NAME` - 配置文件中的项目名称
+- `SPACE_NAME` - 空间名称
+
+#### Git 变量
+- `GIT_REPO` - 配置文件中的 Git 仓库地址
+- `GIT_BRANCH` - Git 分支名（来自配置或当前分支）
 - `GIT_HASH` - 完整commit hash
 - `GIT_COMMIT_HASH` - 完整commit hash（别名）
-- `GIT_COMMIT_SHORT` - 短commit hash
+- `GIT_COMMIT_SHORT` - 短commit hash（前8个字符）
 - `GIT_TAG` - 当前tag（如果有）
+
+#### 自定义变量
+您还可以在项目配置中定义自定义环境变量：
+
+```yaml
+environment:
+  APP_NAME: "my-app"
+  BUILD_VERSION: "1.0.0"
+  CUSTOM_VAR: "${PROJECT_NAME}-${GIT_COMMIT_SHORT}"
+```
+
+所有环境变量都支持使用 `${变量名}` 语法进行变量替换。
 
 ### 智能日志匹配
 
@@ -176,14 +197,41 @@ confkit interactive
 examples/                # 示例配置
 ├── builder.yml         # 构建器配置
 ├── docker-compose.yml  # 容器服务定义
+├── release.sh          # 自发布脚本
+├── release-docker-compose.yml  # 发布环境
+├── RELEASE_README.md   # 发布流程文档
 └── .confkit/           # ConfKit工作空间
     └── spaces/         # 空间管理
-        └── hello/      # 示例空间
+        ├── hello/      # 示例空间
+        └── release/    # 发布空间（自发布）
 volumes/                # 运行时数据
 ├── logs/              # 任务日志
 ├── workspace/         # 构建工作空间  
 └── artifacts/         # 构建产物
 ```
+
+## 🔄 ConfKit 自发布
+
+ConfKit 可以使用自己的构建系统来发布自己！这展示了配置驱动构建的强大能力：
+
+```bash
+# 进入 examples 目录
+cd examples
+
+# 设置必要的环境变量
+export CARGO_REGISTRY_TOKEN="your-crates-token"
+export DOCKER_USERNAME="your-docker-username"
+export DOCKER_PASSWORD="your-docker-password"
+export GITHUB_TOKEN="your-github-token"
+
+# 发布版本 1.0.0
+./release.sh 1.0.0
+
+# 或者测试发布流程
+./release.sh 1.0.0 --dry-run
+```
+
+有关自发布流程的详细信息，请参见 [examples/RELEASE_README.md](examples/RELEASE_README.md)。
 
 ## 🛠 开发状态
 

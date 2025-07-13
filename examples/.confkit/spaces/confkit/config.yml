@@ -1,0 +1,8 @@
+name: "confkit"
+description: "ConfKit 工具链发布空间"
+
+projects:
+  - name: "confkit-engine"
+    description: "ConfKit 引擎"
+    type: "confkit"
+    config: ./projects/engine.yml
