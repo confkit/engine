@@ -10,9 +10,9 @@
 > 目标：能够解析和验证配置文件（所有命令的基础）
 
 ### 1.1 配置文件解析
-- [ ] 完善 `ProjectConfig::from_file()` 实现
-- [ ] 实现配置文件验证 `ProjectConfig::validate()`
-- [ ] 支持环境变量替换 (`${GIT_REPO}`, `${PROJECT_NAME}`)
+- [x] 完善 `ProjectConfig::from_file()` 实现
+- [x] 实现配置文件验证 `ProjectConfig::validate()`
+- [x] 支持环境变量替换 (`${GIT_REPO}`, `${PROJECT_NAME}`)
 - [ ] 添加配置解析错误处理
 
 **验证方式**: 能够成功解析 examples 中的配置文件
@@ -26,26 +26,26 @@
 - [x] 实现 `ImageManager::remove_image()`
 
 ### 2.2 构建器容器管理
-- [ ] 实现 `BuilderManager::list_builders()`，支持真实 Docker 状态
-- [ ] 实现 `BuilderManager::create_builder()`（基于 docker-compose.yml 的 service 创建容器）
-- [ ] 实现 `BuilderManager::start_builder()`
-- [ ] 实现 `BuilderManager::stop_builder()`
-- [ ] 实现 `BuilderManager::restart_builder()`
-- [ ] 实现 `BuilderManager::remove_builder()`
+- [x] 实现 `BuilderManager::list_builders()`，支持真实 Docker 状态
+- [x] 实现 `BuilderManager::create_builder()`（基于 docker-compose.yml 的 service 创建容器）
+- [x] 实现 `BuilderManager::start_builder()`
+- [x] 实现 `BuilderManager::stop_builder()`
+- [x] 实现 `BuilderManager::restart_builder()`
+- [x] 实现 `BuilderManager::remove_builder()`
 - [ ] 实现 `BuilderManager::health_check()`
 - [ ] 实现 `BuilderManager::logs()`（查看容器日志）
 
 ### 2.3 Builder 命令
 - [x] 实现 `confkit builder image list`         # 镜像列表
 - [x] 实现 `confkit builder image create <image>` # 拉取/构建镜像
-- [ ] 实现 `confkit builder image remove <image>` # 删除镜像
-- [ ] 实现 `confkit builder list`               # 列出所有构建器容器及其状态
-- [ ] 实现 `confkit builder create <name>`      # 基于 docker-compose.yml 的 service 创建容器
-- [ ] 实现 `confkit builder start <name>`       # 启动容器
-- [ ] 实现 `confkit builder stop <name>`        # 停止容器
-- [ ] 实现 `confkit builder restart <name>`     # 重启容器
-- [ ] 实现 `confkit builder remove <name>`      # 删除容器
-- [ ] 实现 `confkit builder health <name>`      # 检查容器健康状态
+- [x] 实现 `confkit builder image remove <image>` # 删除镜像
+- [x] 实现 `confkit builder list`               # 列出所有构建器容器及其状态
+- [x] 实现 `confkit builder create <name>`      # 基于 docker-compose.yml 的 service 创建容器
+- [x] 实现 `confkit builder start <name>`       # 启动容器
+- [x] 实现 `confkit builder stop <name>`        # 停止容器
+- [x] 实现 `confkit builder restart <name>`     # 重启容器
+- [x] 实现 `confkit builder remove <name>`      # 删除容器
+- [x] 实现 `confkit builder health <name>`      # 检查容器健康状态
 - [ ] 实现 `confkit builder logs <name>`        # 查看容器日志
 - [x] 交互式 builder list 支持参数选择、状态过滤、详细模式
 - [x] 交互式 builder list 输出符合 ASCII 图标规范（•、●、▶、✓、✗、→、※ 等，除 👋 保留）
@@ -128,14 +128,14 @@
 
 ### 6.2 命令集成
 - [x] 集成 builder 命令功能
-  - [ ] start
-  - [ ] stop
-  - [ ] remove
-  - [ ] image 
+  - [x] start
+  - [x] stop
+  - [x] remove
+  - [x] image 
     - [x] list 
     - [x] create
     - [x] remove
-- [ ] 集成 run 命令功能  
+- [x] 集成 run 命令功能  
 - [ ] 集成 task 命令功能
 - [ ] 集成 logs 命令功能
 

@@ -50,6 +50,38 @@ impl InteractiveEngine {
                         break;
                     }
                 }
+                InteractiveMode::RunMenu => {
+                    if !self.show_run_menu().await? {
+                        break;
+                    }
+                }
+                InteractiveMode::RunProjectParams => {
+                    if !self.show_run_project_params().await? {
+                        break;
+                    }
+                }
+                InteractiveMode::RunProjectExecution {
+                    space,
+                    project,
+                    verbose,
+                    dry_run,
+                    git_branch,
+                    force,
+                } => {
+                    if !self
+                        .show_run_project_execution(
+                            space.clone(),
+                            project.clone(),
+                            *verbose,
+                            *dry_run,
+                            git_branch.clone(),
+                            *force,
+                        )
+                        .await?
+                    {
+                        break;
+                    }
+                }
                 InteractiveMode::ImageListParams { verbose, status_filter } => {
                     if !self.show_image_list_params(*verbose, status_filter.clone()).await? {
                         break;

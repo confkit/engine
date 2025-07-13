@@ -68,12 +68,25 @@ pub enum InteractiveMode {
     ImageMenu,
     /// 容器管理菜单
     ContainerMenu,
+    /// 运行菜单
+    RunMenu,
     /// 镜像列表参数选择
     ImageListParams { verbose: bool, status_filter: Option<String> },
     /// 镜像创建参数选择
     ImageCreateParams,
     /// 镜像删除参数选择
     ImageRemoveParams,
+    /// 运行项目参数选择
+    RunProjectParams,
+    /// 运行项目执行
+    RunProjectExecution {
+        space: String,
+        project: String,
+        verbose: bool,
+        dry_run: bool,
+        git_branch: Option<String>,
+        force: bool,
+    },
     /// Builder List 参数选择 (保留向后兼容)
     BuilderListParams { verbose: bool, status_filter: Option<String> },
     /// Builder Create 参数选择 (保留向后兼容)
@@ -224,4 +237,15 @@ impl Command {
             _ => Err(anyhow::anyhow!("未知 builder 子命令: {}", args[0])),
         }
     }
+}
+
+/// 运行子命令
+#[derive(Debug, Clone)]
+pub enum RunSubCommand {
+    /// 列出可用项目
+    List,
+    /// 运行项目
+    Run,
+    /// 查看项目详情
+    Show,
 }

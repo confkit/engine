@@ -237,13 +237,13 @@ impl ProjectRunner {
     ) -> Result<ExecutionResult> {
         let container_name = step.container.as_ref().unwrap();
         // 确保容器正在运行
-        self.log_info(&format!("检查容器 '{}' 状态", container_name)).await?;
+        self.log_info(&format!("执行容器: '{}'", container_name)).await?;
 
         let containers = self.container_manager.list_builders().await?;
         let container = containers
             .iter()
             .find(|c| c.service_name == *container_name)
-            .ok_or_else(|| anyhow::anyhow!("容器 '{}' 不存在", container_name))?;
+            .ok_or_else(|| anyhow::anyhow!("容器 {} 不存在", container_name))?;
 
         // 如果容器未运行，尝试启动
         if !matches!(container.status, crate::core::builder::ContainerStatus::Running) {

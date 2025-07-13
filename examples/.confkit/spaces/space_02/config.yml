@@ -1,11 +1,8 @@
-name: "space_01"
-description: "space_01"
+name: "space_02"
+description: "space_02"
 
 projects:
   - name: "project_01"
     description: "project_01"
     type: "golang"
-    source:
-      git_repo: "https://github.com/confkit/engine.git"
-      git_branch: "main"
-      clone_depth: 1
+    config: ./projects/node-web-app.yml
