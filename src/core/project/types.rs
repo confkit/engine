@@ -4,6 +4,7 @@ use anyhow::Result;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::path::Path;
 
 /// 空间配置
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -82,6 +83,7 @@ pub struct TaskContext {
     pub environment: HashMap<String, String>,
     pub workspace_dir: String,
     pub artifacts_dir: String,
+    pub log_file_path: String,
     pub started_at: DateTime<Utc>,
 }
 
@@ -120,7 +122,7 @@ pub struct TaskResult {
 
 impl TaskContext {
     /// 创建新的任务上下文
-    pub fn new(
+    pub async fn new(
         task_id: String,
         space_name: String,
         project_name: String,
@@ -151,8 +153,40 @@ impl TaskContext {
             }
         }
 
+        // 尝试获取 Git commit 信息
+        let git_client = crate::core::git::GitClient::new();
+        let current_dir = std::env::current_dir().unwrap_or_else(|_| Path::new(".").to_path_buf());
+
+        // 尝试从当前目录获取 git 信息
+        if let Ok(git_info) = git_client.get_current_commit(&current_dir).await {
+            if git_info.commit_hash != "unknown" {
+                environment.insert("GIT_HASH".to_string(), git_info.commit_hash.clone());
+                environment.insert("GIT_COMMIT_HASH".to_string(), git_info.commit_hash.clone());
+                environment.insert("GIT_COMMIT_SHORT".to_string(), git_info.commit_short.clone());
+            }
+
+            if git_info.branch != "unknown" {
+                // 只有在配置文件中没有指定分支时才使用当前分支
+                if !environment.contains_key("GIT_BRANCH") {
+                    environment.insert("GIT_BRANCH".to_string(), git_info.branch.clone());
+                }
+            }
+
+            if let Some(tag) = &git_info.tag {
+                environment.insert("GIT_TAG".to_string(), tag.clone());
+            }
+        }
+
         let workspace_dir = "./volumes/workspace".to_string();
-        let artifacts_dir = format!("./volumes/artifacts/{}", task_id);
+        let artifacts_dir = "./volumes/artifacts".to_string();
+
+        // 生成日志文件路径: volumes/logs/<space>/<project_name>/<time>_<task_id>.txt
+        let started_at = Utc::now();
+        let time_str = started_at.format("%Y.%m.%d[%H:%M:%S]");
+        let log_file_path = format!(
+            "./volumes/logs/{}/{}/{}{}.txt",
+            space_name, actual_project_name, time_str, task_id
+        );
 
         Self {
             task_id,
@@ -163,7 +197,8 @@ impl TaskContext {
             environment,
             workspace_dir,
             artifacts_dir,
-            started_at: Utc::now(),
+            log_file_path,
+            started_at,
         }
     }
 

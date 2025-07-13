@@ -95,23 +95,78 @@ impl GitClient {
     pub async fn get_current_commit(&self, repo_dir: &Path) -> Result<GitInfo> {
         tracing::debug!("获取当前commit信息: {:?}", repo_dir);
 
-        // TODO: 实现获取commit信息逻辑
-        // 1. 执行git rev-parse HEAD
-        // 2. 获取分支名称
-        // 3. 获取远程仓库URL
-        // 4. 检查是否有tag
+        // 获取完整的 commit hash
+        let commit_hash = match std::process::Command::new("git")
+            .args(["rev-parse", "HEAD"])
+            .current_dir(repo_dir)
+            .output()
+        {
+            Ok(output) => {
+                if output.status.success() {
+                    String::from_utf8_lossy(&output.stdout).trim().to_string()
+                } else {
+                    "unknown".to_string()
+                }
+            }
+            Err(_) => "unknown".to_string(),
+        };
 
-        let commit_hash = "2373442e2de493b9f97ad6aa5e0f2845811a5e3e".to_string();
-        let commit_short = commit_hash[..8].to_string();
+        // 获取短 commit hash（前8位）
+        let commit_short = if commit_hash.len() >= 8 && commit_hash != "unknown" {
+            commit_hash[..8].to_string()
+        } else {
+            "unknown".to_string()
+        };
 
-        Ok(GitInfo {
-            repo_url: "unknown".to_string(),
-            branch: "main".to_string(),
-            tag: None,
-            commit_hash,
-            commit_short,
-            clone_depth: None,
-        })
+        // 获取当前分支名
+        let branch = match std::process::Command::new("git")
+            .args(["rev-parse", "--abbrev-ref", "HEAD"])
+            .current_dir(repo_dir)
+            .output()
+        {
+            Ok(output) => {
+                if output.status.success() {
+                    String::from_utf8_lossy(&output.stdout).trim().to_string()
+                } else {
+                    "unknown".to_string()
+                }
+            }
+            Err(_) => "unknown".to_string(),
+        };
+
+        // 获取远程仓库 URL
+        let repo_url = match std::process::Command::new("git")
+            .args(["config", "--get", "remote.origin.url"])
+            .current_dir(repo_dir)
+            .output()
+        {
+            Ok(output) => {
+                if output.status.success() {
+                    String::from_utf8_lossy(&output.stdout).trim().to_string()
+                } else {
+                    "unknown".to_string()
+                }
+            }
+            Err(_) => "unknown".to_string(),
+        };
+
+        // 检查是否有标签
+        let tag = match std::process::Command::new("git")
+            .args(["describe", "--tags", "--exact-match", "HEAD"])
+            .current_dir(repo_dir)
+            .output()
+        {
+            Ok(output) => {
+                if output.status.success() {
+                    Some(String::from_utf8_lossy(&output.stdout).trim().to_string())
+                } else {
+                    None
+                }
+            }
+            Err(_) => None,
+        };
+
+        Ok(GitInfo { repo_url, branch, tag, commit_hash, commit_short, clone_depth: None })
     }
 
     /// 验证仓库URL

@@ -67,6 +67,41 @@ impl LoggingManager {
         Ok(())
     }
 
+    /// 写入任务日志到指定路径
+    pub async fn write_task_log_to_file(
+        &self,
+        log_file_path: &str,
+        level: Level,
+        message: &str,
+    ) -> Result<()> {
+        use std::fs::OpenOptions;
+        use std::io::Write;
+
+        // 确保日志目录存在
+        if let Some(parent) = std::path::Path::new(log_file_path).parent() {
+            std::fs::create_dir_all(parent)?;
+        }
+
+        // 格式化日志消息
+        let timestamp = chrono::Utc::now().format("%Y-%m-%d %H:%M:%S%.3f UTC");
+        let level_str = match level {
+            Level::ERROR => "ERROR",
+            Level::WARN => "WARN ",
+            Level::INFO => "INFO ",
+            Level::DEBUG => "DEBUG",
+            Level::TRACE => "TRACE",
+        };
+        let formatted_message = format!("[{}] [{}] {}\n", timestamp, level_str, message);
+
+        // 写入日志文件
+        let mut file = OpenOptions::new().create(true).append(true).open(log_file_path)?;
+
+        file.write_all(formatted_message.as_bytes())?;
+        file.flush()?;
+
+        Ok(())
+    }
+
     /// 写入任务日志
     pub async fn write_task_log(
         &self,

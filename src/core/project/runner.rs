@@ -53,7 +53,8 @@ impl ProjectRunner {
             project_name,
             project_config,
             space_config,
-        );
+        )
+        .await;
 
         // 处理命令行选项
         if let Some(git_branch) = options.git_branch {
@@ -68,13 +69,16 @@ impl ProjectRunner {
         self.logging_manager.initialize()?;
 
         // 记录任务开始
-        self.log_info(&format!(
-            "开始执行项目: {}/{} ({})",
-            context.space_name, context.project_name, context.task_id
-        ))
+        self.log_info_to_file(
+            &context,
+            &format!(
+                "开始执行项目: {}/{} ({})",
+                context.space_name, context.project_name, context.task_id
+            ),
+        )
         .await?;
 
-        self.log_info("========================================").await?;
+        self.log_info_to_file(&context, "========================================").await?;
 
         // 预检查模式
         if options.dry_run {
@@ -91,10 +95,10 @@ impl ProjectRunner {
             let step_number = index + 1;
 
             // 绿色打印
-            self.log_info(&format!(
-                "\x1b[32m[{}/{}]\x1b[0m {}",
-                step_number, total_steps, step.name
-            ))
+            self.log_info_to_file(
+                &context,
+                &format!("\x1b[32m[{}/{}]\x1b[0m {}", step_number, total_steps, step.name),
+            )
             .await?;
 
             let step_result = self.execute_step(&context, step, step_number).await;
@@ -102,20 +106,27 @@ impl ProjectRunner {
             match &step_result {
                 Ok(result) => {
                     if result.status == TaskStatus::Success {
-                        self.log_info(&format!(
-                            "执行成功 (耗时: {:.1}s)",
-                            result.duration_ms().unwrap_or(0) as f64 / 1000.0
-                        ))
+                        self.log_info_to_file(
+                            &context,
+                            &format!(
+                                "执行成功 (耗时: {:.1}s)",
+                                result.duration_ms().unwrap_or(0) as f64 / 1000.0
+                            ),
+                        )
                         .await?;
                     } else {
-                        self.log_error(&format!(
-                            "执行失败 (耗时: {:.1}s)",
-                            result.duration_ms().unwrap_or(0) as f64 / 1000.0
-                        ))
+                        self.log_error_to_file(
+                            &context,
+                            &format!(
+                                "执行失败 (耗时: {:.1}s)",
+                                result.duration_ms().unwrap_or(0) as f64 / 1000.0
+                            ),
+                        )
                         .await?;
 
                         if let Some(error) = &result.error {
-                            self.log_error(&format!("错误信息: {}", error)).await?;
+                            self.log_error_to_file(&context, &format!("错误信息: {}", error))
+                                .await?;
                         }
                     }
 
@@ -126,15 +137,15 @@ impl ProjectRunner {
                         let continue_on_error = step.continue_on_error.unwrap_or(false);
                         if !continue_on_error {
                             task_result.finish(TaskStatus::Failed);
-                            self.log_error("任务执行失败，停止后续步骤").await?;
+                            self.log_error_to_file(&context, "任务执行失败，停止后续步骤").await?;
                             return Ok(task_result);
                         } else {
-                            self.log_info("步骤失败但配置为继续执行").await?;
+                            self.log_info_to_file(&context, "步骤失败但配置为继续执行").await?;
                         }
                     }
                 }
                 Err(e) => {
-                    self.log_error(&format!("步骤执行出错: {}", e)).await?;
+                    self.log_error_to_file(&context, &format!("步骤执行出错: {}", e)).await?;
 
                     let mut failed_result = StepResult::new(step.name.clone());
                     failed_result.failure(-1, String::new(), e.to_string());
@@ -145,19 +156,22 @@ impl ProjectRunner {
                 }
             }
 
-            self.log_info("").await?; // 空行分隔
+            self.log_info_to_file(&context, "").await?; // 空行分隔
         }
 
         // 任务完成
         task_result.finish(TaskStatus::Success);
 
-        self.log_info(&format!(
-            "项目执行完成! 总耗时: {:.1}s",
-            task_result.total_duration_ms.unwrap_or(0) as f64 / 1000.0
-        ))
+        self.log_info_to_file(
+            &context,
+            &format!(
+                "项目执行完成! 总耗时: {:.1}s",
+                task_result.total_duration_ms.unwrap_or(0) as f64 / 1000.0
+            ),
+        )
         .await?;
 
-        self.log_info(&format!("产物保存在: {}", context.artifacts_dir)).await?;
+        self.log_info_to_file(&context, &format!("产物保存在: {}", context.artifacts_dir)).await?;
 
         Ok(task_result)
     }
@@ -176,16 +190,16 @@ impl ProjectRunner {
 
         // 记录步骤详情
         if let Some(container) = &step.container {
-            self.log_info(&format!("容器: {}", container)).await?;
+            self.log_info_to_file(context, &format!("容器: {}", container)).await?;
             let working_dir = context.get_container_working_dir(step);
-            self.log_info(&format!("工作目录: {}", working_dir)).await?;
+            self.log_info_to_file(context, &format!("工作目录: {}", working_dir)).await?;
         } else {
             let working_dir = context.get_working_dir(step);
-            self.log_info(&format!("工作目录: {}", working_dir)).await?;
+            self.log_info_to_file(context, &format!("工作目录: {}", working_dir)).await?;
         }
 
         if let Some(timeout) = &step.timeout {
-            self.log_info(&format!("超时: {}", timeout)).await?;
+            self.log_info_to_file(context, &format!("超时: {}", timeout)).await?;
         }
 
         // 执行命令
@@ -202,16 +216,16 @@ impl ProjectRunner {
 
         // 记录执行输出
         if !execution_result.stdout.is_empty() {
-            self.log_info("输出:").await?;
+            self.log_info_to_file(context, "输出:").await?;
             for line in execution_result.stdout.lines() {
-                self.log_info(&format!("  {}", line)).await?;
+                self.log_info_to_file(context, &format!("  {}", line)).await?;
             }
         }
 
         if !execution_result.stderr.is_empty() {
-            self.log_info("错误输出:").await?;
+            self.log_info_to_file(context, "错误输出:").await?;
             for line in execution_result.stderr.lines() {
-                self.log_info(&format!("  {}", line)).await?;
+                self.log_info_to_file(context, &format!("  {}", line)).await?;
             }
         }
 
@@ -237,7 +251,7 @@ impl ProjectRunner {
     ) -> Result<ExecutionResult> {
         let container_name = step.container.as_ref().unwrap();
         // 确保容器正在运行
-        self.log_info(&format!("执行容器: '{}'", container_name)).await?;
+        self.log_info_to_file(context, &format!("执行容器: '{}'", container_name)).await?;
 
         let containers = self.container_manager.list_builders().await?;
         let container = containers
@@ -247,13 +261,13 @@ impl ProjectRunner {
 
         // 如果容器未运行，尝试启动
         if !matches!(container.status, crate::core::builder::ContainerStatus::Running) {
-            self.log_info(&format!("启动容器 '{}'", container_name)).await?;
+            self.log_info_to_file(context, &format!("启动容器 '{}'", container_name)).await?;
             self.container_manager.start_builder(container_name).await?;
         }
 
         // 构建执行命令
         let working_dir = context.get_container_working_dir(step);
-        self.log_info(&format!("工作目录: {}", working_dir)).await?;
+        self.log_info_to_file(context, &format!("工作目录: {}", working_dir)).await?;
         let mut combined_command = String::new();
 
         // 添加所有命令
@@ -453,15 +467,31 @@ impl ProjectRunner {
     /// 记录信息日志
     async fn log_info(&self, message: &str) -> Result<()> {
         println!("{}", message);
-        // TODO: 集成 LoggingManager 的实际日志写入
         Ok(())
     }
 
     /// 记录错误日志
     async fn log_error(&self, message: &str) -> Result<()> {
         eprintln!("{}", message);
-        // TODO: 集成 LoggingManager 的实际日志写入
         Ok(())
+    }
+
+    /// 记录信息日志到文件
+    async fn log_info_to_file(&self, context: &TaskContext, message: &str) -> Result<()> {
+        // 同时输出到控制台和文件
+        println!("{}", message);
+        self.logging_manager
+            .write_task_log_to_file(&context.log_file_path, tracing::Level::INFO, message)
+            .await
+    }
+
+    /// 记录错误日志到文件
+    async fn log_error_to_file(&self, context: &TaskContext, message: &str) -> Result<()> {
+        // 同时输出到控制台和文件
+        eprintln!("{}", message);
+        self.logging_manager
+            .write_task_log_to_file(&context.log_file_path, tracing::Level::ERROR, message)
+            .await
     }
 }
 

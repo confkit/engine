@@ -22,11 +22,9 @@ impl TaskManager {
         }
     }
 
-    /// 生成新的任务ID（只包含时间戳和UUID，不包含项目名）
+    /// 生成新的任务ID（使用完整UUID）
     pub fn generate_task_id() -> TaskId {
-        let timestamp = chrono::Utc::now().format("%Y%m%d-%H%M%S");
-        let short_uuid = Uuid::new_v4().to_string()[..8].to_string();
-        format!("{}-{}", timestamp, short_uuid)
+        Uuid::new_v4().to_string()
     }
 
     /// 执行任务
