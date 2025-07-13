@@ -2,69 +2,84 @@
 default_to_workspace = false
 
 [tasks.dev]
-description = "Development workflow - clean, check, test, and build"
 dependencies = [
-    "clean",
-    "check-format", 
-    "clippy",
-    "test",
-    "build"
+  "clean",
+  "check-format",
+  "clippy",
+  "test",
+  "build",
 ]
+description = "Development workflow - clean, check, test, and build"
 
 [tasks.clean]
-description = "Clean build artifacts"
-command = "cargo"
 args = ["clean"]
+command = "cargo"
+description = "Clean build artifacts"
 
 [tasks.check-format]
-description = "Check code formatting"
-command = "cargo"
 args = ["fmt", "--", "--check"]
+command = "cargo"
+description = "Check code formatting"
 
 [tasks.format]
-description = "Format code"
-command = "cargo"
 args = ["fmt"]
+command = "cargo"
+description = "Format code"
 
 [tasks.clippy]
-description = "Run clippy lints"
+args = [
+  "clippy",
+  "--all-targets",
+  "--all-features",
+  "--",
+  "-W",
+  "clippy::complexity",
+  "-W",
+  "clippy::correctness",
+  "-A",
+  "dead_code",
+  "-A",
+  "unused_imports",
+  "-A",
+  "unused_variables",
+]
 command = "cargo"
-args = ["clippy", "--all-targets", "--all-features", "--", "-W", "clippy::complexity", "-W", "clippy::correctness", "-A", "dead_code", "-A", "unused_imports", "-A", "unused_variables"]
+description = "Run clippy lints"
 
 [tasks.test]
-description = "Run tests"
-command = "cargo"
 args = ["test"]
+command = "cargo"
+description = "Run tests"
 
 [tasks.build]
-description = "Build the project"
-command = "cargo"
 args = ["build"]
+command = "cargo"
+description = "Build the project"
 
 [tasks.run]
-description = "Run the application with help"
-command = "cargo"
 args = ["run", "--", "--help"]
+command = "cargo"
+description = "Run the application with help"
 
 [tasks.release]
-description = "Build release version"
-command = "cargo"
 args = ["build", "--release"]
+command = "cargo"
+description = "Build release version"
 
 [tasks.check]
-description = "Check compilation without building"
-command = "cargo"
 args = ["check"]
+command = "cargo"
+description = "Check compilation without building"
 
 [tasks.watch]
+args = ["watch", "-x", "check", "-x", "test", "-i", "examples/**/*", "-i", "docs/**/*"]
+command = "cargo"
 description = "Watch for changes and rebuild"
 install_crate = "cargo-watch"
-command = "cargo"
-args = ["watch", "-x", "check", "-x", "test"]
 
 [tasks.install-deps]
 description = "Install development dependencies"
 script = [
-    "cargo install cargo-watch",
-    "cargo install cargo-make"
-] 
+  "cargo install cargo-watch",
+  "cargo install cargo-make",
+]

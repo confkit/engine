@@ -5,7 +5,6 @@ services:
     restart: unless-stopped
     volumes:
       - ./volumes/workspace:/workspace
-      - ./volumes/cache/hello-linux:/root/.cache
       - ./volumes/artifacts:/artifacts
     working_dir: /workspace
     command: sleep infinity

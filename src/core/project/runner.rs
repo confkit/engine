@@ -90,7 +90,12 @@ impl ProjectRunner {
         for (index, step) in context.project_config.steps.iter().enumerate() {
             let step_number = index + 1;
 
-            self.log_info(&format!("[{}/{}] {}", step_number, total_steps, step.name)).await?;
+            // 绿色打印
+            self.log_info(&format!(
+                "\x1b[32m[{}/{}]\x1b[0m {}",
+                step_number, total_steps, step.name
+            ))
+            .await?;
 
             let step_result = self.execute_step(&context, step, step_number).await;
 
@@ -186,7 +191,7 @@ impl ProjectRunner {
         // 执行命令
         let execution_result = if let Some(container_name) = &step.container {
             // 容器内执行
-            self.execute_in_container(context, step, container_name).await?
+            self.execute_in_container(context, step).await?
         } else {
             // 本地执行
             self.execute_locally(context, step).await?
@@ -229,15 +234,15 @@ impl ProjectRunner {
         &self,
         context: &TaskContext,
         step: &StepConfig,
-        container_name: &str,
     ) -> Result<ExecutionResult> {
+        let container_name = step.container.as_ref().unwrap();
         // 确保容器正在运行
         self.log_info(&format!("检查容器 '{}' 状态", container_name)).await?;
 
         let containers = self.container_manager.list_builders().await?;
         let container = containers
             .iter()
-            .find(|c| c.service_name == container_name)
+            .find(|c| c.service_name == *container_name)
             .ok_or_else(|| anyhow::anyhow!("容器 '{}' 不存在", container_name))?;
 
         // 如果容器未运行，尝试启动
@@ -248,20 +253,21 @@ impl ProjectRunner {
 
         // 构建执行命令
         let working_dir = context.get_container_working_dir(step);
+        self.log_info(&format!("工作目录: {}", working_dir)).await?;
         let mut combined_command = String::new();
-
-        // 切换到工作目录（如果指定了的话）
-        if !working_dir.is_empty() && working_dir != "." {
-            combined_command.push_str(&format!("cd {} && ", working_dir));
-        }
 
         // 添加所有命令
         for (i, cmd) in step.commands.iter().enumerate() {
-            let resolved_cmd = context.resolve_variables(cmd);
+            let resolved_cmd = format!("{}", context.resolve_variables(cmd));
             if i > 0 {
                 combined_command.push_str(" && ");
             }
-            combined_command.push_str(&resolved_cmd);
+            // 切换到工作目录（如果指定了的话）
+            if !working_dir.is_empty() {
+                combined_command.push_str(&format!("cd {} && {}", working_dir, resolved_cmd));
+            } else {
+                combined_command.push_str(&resolved_cmd);
+            }
         }
 
         // 使用 docker exec 执行命令
@@ -272,6 +278,8 @@ impl ProjectRunner {
             "-c".to_string(),
             combined_command,
         ];
+
+        self.log_info(&format!("执行命令: {:?}", args.join(" "))).await?;
 
         // 使用 docker exec 执行命令
         let full_cmd = self.docker_executor.build_full_command(&args);

@@ -194,7 +194,7 @@ impl TaskContext {
             self.resolve_variables(working_dir)
         } else {
             // 容器内的工作空间路径
-            format!("/workspace/{}", self.task_id)
+            "/workspace".to_string()
         }
     }
 }

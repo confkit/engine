@@ -12,52 +12,51 @@ environment:
   NPM_CONFIG_REGISTRY: "https://registry.npmmirror.com"
 
 steps:
-  - name: "代码拉取"
+  - name: "1. 代码拉取"
     working_dir: "./volumes/workspace"
     commands:
       - "git clone ${GIT_REPO} ${PROJECT_NAME}-${TASK_ID}"
-      - "cd ${PROJECT_NAME}-${TASK_ID}"
+      - "chmod -R 777 ${PROJECT_NAME}-${TASK_ID}"
     timeout: "3m"
 
-  - name: "安装依赖"
+  - name: "2.安装依赖"
     container: "hello-builder"
     working_dir: "/workspace/${PROJECT_NAME}-${TASK_ID}"
     commands:
       - "echo 'hello world'"
-    depends_on: ["代码拉取"]
 
-  - name: "代码检查"
-    container: "node-builder-22"
+  - name: "3.代码检查"
+    container: "hello-builder"
     working_dir: "/workspace/${PROJECT_NAME}-${TASK_ID}"
     commands:
       - "echo 'check hello world'"
-    depends_on: ["安装依赖"]
     continue_on_error: true
 
-  - name: "运行测试"
-    container: "node-builder-22"
+  - name: "4.运行测试"
+    container: "hello-builder"
     working_dir: "/workspace/${PROJECT_NAME}-${TASK_ID}"
     commands:
       - "echo 'test hello world'"
-    depends_on: ["安装依赖"]
     parallel_group: "quality"
 
-  - name: "构建应用"
-    container: "node-builder-22"
+  - name: "5.构建应用"
+    container: "hello-builder"
     working_dir: "/workspace/${PROJECT_NAME}-${TASK_ID}"
     commands:
       - "echo 'build hello world'"
+      - "mkdir /artifacts/${PROJECT_NAME}-${TASK_ID}"
       - "echo \"{\\\"project\\\":\\\"${PROJECT_NAME}\\\",\\\"version\\\":\\\"${GIT_BRANCH:-main}\\\",\\\"git_hash\\\":\\\"${GIT_HASH}\\\",\\\"build_time\\\":\\\"$(date -Iseconds)\\\",\\\"task_id\\\":\\\"${TASK_ID}\\\"}\" > /artifacts/${PROJECT_NAME}-${TASK_ID}/build-info.json"
-    depends_on: ["代码检查", "运行测试"]
 
-  - name: "收集产物"
-    container: "node-builder-22"
-    working_dir: "/workspace/${PROJECT_NAME}"
+  - name: "6.收集产物"
+    container: "hello-builder"
     commands:
-      - "mkdir -p /artifacts/${PROJECT_NAME}-${TASK_ID}"
-      - "cp -r dist/* /artifacts/${PROJECT_NAME}-${TASK_ID}/"
-      - "cp hello-app.yml /artifacts/${PROJECT_NAME}-${TASK_ID}/"
-    depends_on: ["构建应用"]
+      - "echo '生成构建信息: /artifacts/${PROJECT_NAME}-${TASK_ID}/build-info.json'"
+
+  - name: "7.清理临时文件"
+    container: "hello-builder"
+    commands:
+      - "rm -rf /workspace/${PROJECT_NAME}-${TASK_ID}"
+      # - "rm -rf /artifacts/${PROJECT_NAME}-${TASK_ID}"
 
 step_options:
   retry: 2
