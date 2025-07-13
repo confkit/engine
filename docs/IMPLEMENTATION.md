@@ -22,7 +22,7 @@
 ├─────────────────┤
 │  Core Engine    │  核心引擎层
 ├─────────────────┤
-│ Infrastructure  │  基础设施层
+│ infra  │  基础设施层
 └─────────────────┘
 ```
 
@@ -47,7 +47,7 @@ engine/
 │   │   ├── step/                   # 步骤执行
 │   │   ├── builder/                # 构建器管理
 │   │   └── git/                    # Git集成
-│   ├── infrastructure/             # 基础设施层
+│   ├── infra/             # 基础设施层
 │   │   ├── mod.rs
 │   │   ├── docker.rs               # Docker客户端
 │   │   ├── logging.rs              # 日志系统

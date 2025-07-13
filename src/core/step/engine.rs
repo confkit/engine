@@ -7,7 +7,7 @@ use super::types::DependencyGraph;
 
 /// 步骤执行引擎
 pub struct StepEngine {
-    docker_client: Option<crate::infrastructure::docker::DockerClient>,
+    docker_client: Option<crate::infra::docker::DockerClient>,
 }
 
 impl StepEngine {

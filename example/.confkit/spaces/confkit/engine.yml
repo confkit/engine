@@ -1,0 +1,136 @@
+name: "confkit-engine"
+description: "ConfKit 引擎"
+
+source:
+  git_repo: "https://github.com/confkit/engine.git"
+  git_branch: "main"
+
+environment:
+  # 自定义环境变量（基于内置变量）
+  BUILD_TARGET_DIR: "target"
+  ARTIFACTS_DIR: "/artifacts"
+
+steps:
+  # 1. 环境准备和代码检查
+  - name: "准备发布环境"
+    container: "rust-builder-1.88"
+    working_dir: "/workspace"
+    commands:
+      - "echo '🚀 开始 ConfKit v$RELEASE_VERSION 发布流程'"
+      - "echo 'Git Hash: ${GIT_HASH}'"
+      - "echo 'Build Date: $BUILD_DATE'"
+      - "echo 'Task ID: ${TASK_ID}'"
+      - "echo 'Project: ${PROJECT_NAME}'"
+      - "rustc --version"
+      - "cargo --version"
+    timeout: "2m"
+
+  # - name: "代码质量检查"
+  #   container: "rust-builder:1.88"
+  #   working_dir: "/workspace"
+  #   commands:
+  #     - "echo '🔍 执行代码质量检查'"
+  #     - "cargo fmt --check"
+  #     - "cargo clippy --all-targets --all-features -- -D warnings"
+  #   timeout: "5m"
+
+  # - name: "运行测试套件"
+  #   container: "rust-builder:1.88"
+  #   working_dir: "/workspace"
+  #   commands:
+  #     - "echo '🧪 运行测试套件'"
+  #     - "cargo test --all-features"
+  #     - "cargo test --release"
+  #   timeout: "10m"
+
+  - name: "克隆项目"
+    working_dir: "/volumes/workspace"
+    commands:
+      - "echo '🔍 克隆项目'"
+      - "git clone ${GIT_REPO} -b main ${PROJECT_NAME}-${GIT_HASH}"
+
+  - name: "安装依赖"
+    container: "rust-builder:1.88"
+    working_dir: "/workspace/${PROJECT_NAME}-${GIT_HASH}"
+    commands:
+      - "echo '🔍 安装依赖'"
+      - "cargo install --path ."
+
+  # 2. 多平台构建
+  - name: "构建 Linux x86_64"
+    container: "rust-builder:1.88"
+    working_dir: "/workspace/${PROJECT_NAME}-${GIT_HASH}"
+    commands:
+      - "echo '🏗️ 构建 Linux x86_64'"
+      - "cargo build --release --target x86_64-unknown-linux-gnu"
+      # - "strip target/x86_64-unknown-linux-gnu/release/confkit"
+    timeout: "15m"
+
+  - name: "构建 Linux ARM64"
+    container: "rust-builder:1.88"
+    working_dir: "/workspace/${PROJECT_NAME}-${GIT_HASH}"
+    commands:
+      - "echo '🏗️ 构建 Linux ARM64'"
+      - "cargo build --release --target aarch64-unknown-linux-gnu"
+    timeout: "20m"
+
+  - name: "构建 macOS Intel"
+    container: "rust-builder:1.88"
+    working_dir: "/workspace/${PROJECT_NAME}-${GIT_HASH}"
+    commands:
+      - "echo '🍎 构建 macOS Intel'"
+      - "cargo build --release --target x86_64-apple-darwin"
+    timeout: "15m"
+
+  - name: "构建 macOS Apple Silicon"
+    container: "rust-builder:1.88"
+    working_dir: "/workspace/${PROJECT_NAME}-${GIT_HASH}"
+    commands:
+      - "echo '🍎 构建 macOS Apple Silicon'"
+      - "cargo build --release --target aarch64-apple-darwin"
+    timeout: "15m"
+
+  # 3. 构建验证
+  - name: "验证构建产物"
+    container: "rust-builder:1.88"
+    working_dir: "/workspace/${PROJECT_NAME}-${GIT_HASH}"
+    commands:
+      - "echo '✅ 验证构建产物'"
+      - "ls -la target/*/release/confkit"
+      - "target/x86_64-unknown-linux-gnu/release/confkit --version"
+      - "target/aarch64-unknown-linux-gnu/release/confkit --version"
+      - "target/x86_64-apple-darwin/release/confkit --version"
+      - "target/aarch64-apple-darwin/release/confkit --version"
+      - "echo '所有平台构建完成'"
+    timeout: "3m"
+
+  # - name: "打 tag"
+  #   working_dir: "/workspace/${PROJECT_NAME}-${GIT_HASH}"
+  #   commands:
+  #     - "echo '🔍 打 tag'"
+  #     - "git tag v$RELEASE_VERSION"
+  #     - "git push origin v$RELEASE_VERSION"
+  #   timeout: "1m"
+
+  # 5. 发布到各种渠道
+  # - name: "发布到 GitHub Releases"
+  #   working_dir: "volumes/workspace/${PROJECT_NAME}-${GIT_HASH}"
+  #   commands:
+  #     - "echo '📦 发布到 GitHub Releases'"
+  #     - "gh release create v$RELEASE_VERSION --title 'ConfKit v$RELEASE_VERSION' --notes-file CHANGELOG.md"
+  #     - "gh release upload v$RELEASE_VERSION target/x86_64-unknown-linux-gnu/release/confkit"
+  #     - "gh release upload v$RELEASE_VERSION target/aarch64-unknown-linux-gnu/release/confkit"
+  #     - "gh release upload v$RELEASE_VERSION target/x86_64-apple-darwin/release/confkit"
+  #     - "gh release upload v$RELEASE_VERSION target/aarch64-apple-darwin/release/confkit"
+  #     - "echo '✅ GitHub Release 创建完成'"
+  #   timeout: "5m"
+
+  # # 6. 发布后验证
+  # - name: "验证发布结果"
+  #   container: "release-tools"
+  #   working_dir: "/workspace"
+  #   # commands:
+  #   #   - "echo '🔍 验证发布结果'"
+  #   #   - "gh release view v$RELEASE_VERSION"
+  #   #   - "echo '✅ 所有发布渠道验证完成'"
+  #   # timeout: "5m"

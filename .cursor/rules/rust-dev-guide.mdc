@@ -34,7 +34,7 @@ src/
 │   ├── config/   # 配置管理
 │   ├── task/     # 任务执行
 │   └── step/     # 步骤处理
-├── infrastructure/ # 基础设施层
+├── infra/ # 基础设施层
 │   ├── docker.rs   # Docker 集成
 │   ├── logging.rs  # 日志管理
 │   └── storage.rs  # 存储管理

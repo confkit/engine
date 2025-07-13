@@ -8,7 +8,7 @@ use super::types::{
 use crate::core::builder::ContainerManager;
 use crate::core::executor::{DockerExecutor, ExecutionResult, Executor};
 use crate::core::task::TaskManager;
-use crate::infrastructure::logging::LoggingManager;
+use crate::infra::logging::LoggingManager;
 use anyhow::Result;
 use std::fs;
 use std::path::Path;
