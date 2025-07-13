@@ -8,8 +8,7 @@ impl InteractiveEngine {
         let options = vec![
             "[RUN] Run 管理 - 执行项目构建任务",
             "[BUILDER] Builder 管理 - 管理构建镜像和环境",
-            "[CONFIG] Config 管理 - 管理项目配置 (即将推出)",
-            "[GIT] Git 管理 - 管理 Git 仓库 (即将推出)",
+            "[LOG] Log 管理 - 查看和管理日志文件",
             "[HELP] 帮助信息",
             "[QUIT] 退出程序",
         ];
@@ -28,16 +27,8 @@ impl InteractiveEngine {
                     self.current_mode = InteractiveMode::BuilderMenu;
                     Ok(true)
                 }
-                choice if choice.starts_with("[CONFIG]") => {
-                    println!("※ 该功能即将推出，敬请期待!");
-                    println!();
-                    self.pause_for_user().await?;
-                    Ok(true)
-                }
-                choice if choice.starts_with("[GIT]") => {
-                    println!("※ 该功能即将推出，敬请期待!");
-                    println!();
-                    self.pause_for_user().await?;
+                choice if choice.starts_with("[LOG]") => {
+                    self.current_mode = InteractiveMode::LogMenu;
                     Ok(true)
                 }
                 choice if choice.starts_with("[HELP]") => {

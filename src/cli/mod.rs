@@ -3,7 +3,7 @@ use clap::{Parser, Subcommand};
 
 pub mod builder;
 pub mod interactive;
-pub mod logs;
+pub mod log;
 pub mod run;
 pub mod task;
 
@@ -11,9 +11,12 @@ pub mod task;
 
 use builder::BuilderCommand;
 use interactive::InteractiveCommand;
-use logs::LogsCommand;
+use log::LogCommand;
 use run::RunArgs;
 use task::TaskCommand;
+
+// 重新导出log模块的公开函数
+pub use log::{handle_log_list, handle_log_show};
 
 #[derive(Parser)]
 #[command(name = "confkit")]
@@ -33,7 +36,7 @@ pub enum Commands {
     /// 管理任务
     Task(TaskCommand),
     /// 查看日志
-    Logs(LogsCommand),
+    Log(LogCommand),
     /// 交互式模式
     Interactive(InteractiveCommand),
 }
@@ -44,7 +47,7 @@ impl Cli {
             Commands::Run(args) => run::handle_run(&args).await,
             Commands::Builder(cmd) => cmd.execute().await,
             Commands::Task(cmd) => cmd.execute().await,
-            Commands::Logs(cmd) => cmd.execute().await,
+            Commands::Log(cmd) => cmd.execute().await,
             Commands::Interactive(cmd) => cmd.execute().await,
         }
     }

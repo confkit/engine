@@ -55,6 +55,11 @@ impl InteractiveEngine {
                         break;
                     }
                 }
+                InteractiveMode::LogMenu => {
+                    if !self.show_log_menu().await? {
+                        break;
+                    }
+                }
                 InteractiveMode::RunProjectParams => {
                     if !self.show_run_project_params().await? {
                         break;
@@ -97,14 +102,8 @@ impl InteractiveEngine {
                         break;
                     }
                 }
-                // 保留向后兼容的处理
-                InteractiveMode::BuilderListParams { verbose, status_filter } => {
-                    if !self.show_builder_list_params(*verbose, status_filter.clone()).await? {
-                        break;
-                    }
-                }
-                InteractiveMode::BuilderCreateParams => {
-                    if !self.show_builder_create_params().await? {
+                InteractiveMode::LogFileSelection { space, project } => {
+                    if !self.show_log_file_selection(space.clone(), project.clone()).await? {
                         break;
                     }
                 }

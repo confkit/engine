@@ -193,7 +193,7 @@ impl InteractiveEngine {
                         Ok(true)
                     }
                     choice if choice.starts_with("※ 切换详细模式") => {
-                        self.current_mode = InteractiveMode::BuilderListParams {
+                        self.current_mode = InteractiveMode::ImageListParams {
                             verbose: !current_verbose,
                             status_filter: current_status_filter,
                         };
@@ -201,7 +201,7 @@ impl InteractiveEngine {
                     }
                     choice if choice.starts_with("• 选择状态过滤") => {
                         let new_status = self.select_status_filter().await?;
-                        self.current_mode = InteractiveMode::BuilderListParams {
+                        self.current_mode = InteractiveMode::ImageListParams {
                             verbose: current_verbose,
                             status_filter: new_status,
                         };

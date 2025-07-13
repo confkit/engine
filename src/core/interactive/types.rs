@@ -70,6 +70,8 @@ pub enum InteractiveMode {
     ContainerMenu,
     /// 运行菜单
     RunMenu,
+    /// 日志菜单
+    LogMenu,
     /// 镜像列表参数选择
     ImageListParams { verbose: bool, status_filter: Option<String> },
     /// 镜像创建参数选择
@@ -87,10 +89,8 @@ pub enum InteractiveMode {
         git_branch: Option<String>,
         force: bool,
     },
-    /// Builder List 参数选择 (保留向后兼容)
-    BuilderListParams { verbose: bool, status_filter: Option<String> },
-    /// Builder Create 参数选择 (保留向后兼容)
-    BuilderCreateParams,
+    /// 日志文件选择（选择完space和project后）
+    LogFileSelection { space: String, project: String },
 }
 
 /// 菜单项
