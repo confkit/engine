@@ -12,6 +12,12 @@ use crate::types::config::{ContainerStatus, EngineContainerInfo};
 pub struct ContainerBuilder;
 
 impl ContainerBuilder {
+    // 获取容器信息
+    pub async fn get_info(name: &str) -> Result<EngineContainerInfo> {
+        let container_info = ConfKitEngine::get_container_info(name).await?;
+        Ok(container_info)
+    }
+
     // 创建容器
     pub async fn create(name: &str, force: bool) -> Result<()> {
         if force {
@@ -33,46 +39,23 @@ impl ContainerBuilder {
         let image_name = service_config.image.split(':').next().unwrap();
         let image_tag = service_config.image.split(':').nth(1).unwrap();
 
-        let image_info = ImageBuilder::get_image_info(image_name, image_tag).await?;
+        let image_info = ImageBuilder::get_info(image_name, image_tag).await?;
 
         if image_info.is_none() {
             tracing::error!("Image \"{}\" not found", service_config.image);
             return Ok(());
         }
 
-        let image_info = image_info.unwrap();
-
-        // 如果镜像不存在，则构建镜像
-        if !ConfKitEngine::check_image_exists(image_name, image_tag).await? {
-            ConfKitEngine::build_image(image_name, image_tag, &image_info.engine_file, None)
-                .await?;
-        }
+        // 尝试构建镜像
+        ImageBuilder::build(image_name, image_tag, false).await?;
 
         // 创建容器
         ConfKitEngine::create_container(name).await?;
 
-        let container_info = ConfKitEngine::get_container_info(name).await?;
+        let container_info = Self::get_info(name).await?;
 
         BuilderContainerFormatter::print_container_info(Some(&container_info));
 
-        Ok(())
-    }
-
-    // 创建所有容器
-    pub async fn create_all(force: bool) -> Result<()> {
-        let services = ConfKitEngine::get_compose_services().await?;
-
-        for service in services {
-            Self::create(service.container_name.as_str(), force).await?;
-        }
-
-        Ok(())
-    }
-
-    // 打印容器列表
-    pub async fn print_list() -> Result<()> {
-        let containers = Self::get_container_list().await?;
-        BuilderContainerFormatter::print_container_list(&containers);
         Ok(())
     }
 
@@ -100,7 +83,7 @@ impl ContainerBuilder {
     // 重启容器
     pub async fn restart(name: Option<String>, all: bool) -> Result<()> {
         if all {
-            let containers = Self::get_container_list().await?;
+            let containers = Self::get_list().await?;
 
             for container in containers {
                 let can_restart = match container.status {
@@ -140,7 +123,7 @@ impl ContainerBuilder {
             return Ok(());
         }
 
-        let container_info = ConfKitEngine::get_container_info(name).await?;
+        let container_info = Self::get_info(name).await?;
 
         if !force && container_info.status == ContainerStatus::Up {
             tracing::info!("Container {} is running, use --force to remove", name);
@@ -158,19 +141,18 @@ impl ContainerBuilder {
         Ok(())
     }
 
-    pub async fn get_container_list() -> Result<Vec<EngineContainerInfo>> {
+    pub async fn get_list() -> Result<Vec<EngineContainerInfo>> {
         let services = ConfKitEngine::get_compose_services().await?;
         let mut containers = vec![];
 
         for service in services {
-            let container_info =
-                match ConfKitEngine::get_container_info(service.container_name.as_str()).await {
-                    Ok(info) => info,
-                    Err(e) => {
-                        tracing::error!("Failed to get container info: {}", e);
-                        continue;
-                    }
-                };
+            let container_info = match Self::get_info(service.container_name.as_str()).await {
+                Ok(info) => info,
+                Err(e) => {
+                    tracing::error!("Failed to get container info: {}", e);
+                    continue;
+                }
+            };
 
             containers.push(EngineContainerInfo {
                 id: container_info.id.clone(),
@@ -186,5 +168,67 @@ impl ContainerBuilder {
         containers.sort_by(|a, b| a.name.cmp(&b.name));
 
         Ok(containers)
+    }
+
+    // 创建所有容器
+    pub async fn create_all(force: bool) -> Result<()> {
+        let services = ConfKitEngine::get_compose_services().await?;
+
+        for service in services {
+            Self::create(service.container_name.as_str(), force).await?;
+        }
+
+        Ok(())
+    }
+
+    // 移除所有容器
+    pub async fn remove_all(force: bool) -> Result<()> {
+        let services = ConfKitEngine::get_compose_services().await?;
+
+        for service in services {
+            Self::remove(service.container_name.as_str(), force).await?;
+        }
+
+        Ok(())
+    }
+
+    // 启动所有容器
+    pub async fn start_all() -> Result<()> {
+        let services = ConfKitEngine::get_compose_services().await?;
+
+        for service in services {
+            Self::start(service.container_name.as_str()).await?;
+        }
+
+        Ok(())
+    }
+
+    // 停止所有容器
+    pub async fn stop_all() -> Result<()> {
+        let services = ConfKitEngine::get_compose_services().await?;
+
+        for service in services {
+            Self::stop(service.container_name.as_str()).await?;
+        }
+
+        Ok(())
+    }
+
+    // 重启所有容器
+    pub async fn restart_all(force: bool) -> Result<()> {
+        let services = ConfKitEngine::get_compose_services().await?;
+
+        for service in services {
+            Self::restart(Some(service.container_name.clone()), force).await?;
+        }
+
+        Ok(())
+    }
+
+    // 打印容器列表
+    pub async fn print_list() -> Result<()> {
+        let containers = Self::get_list().await?;
+        BuilderContainerFormatter::print_container_list(&containers);
+        Ok(())
     }
 }

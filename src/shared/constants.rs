@@ -1,3 +1,7 @@
+//! Author: xiaoYown
+//! Created: 2025-07-21
+//! Description: Constants
+
 /// 配置文件名
 pub const CONFKIT_CONFIG_FILE: &str = ".confkit.yml";
 

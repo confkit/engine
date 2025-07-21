@@ -68,13 +68,13 @@ confkit log show --space hello --project hello-app <filename>
 
 ```bash
 # 列出镜像
-confkit builder image list
+confkit image list
 
 # 拉取/构建镜像
-confkit builder image create golang:1.24
+confkit image create golang:1.24
 
 # 删除镜像
-confkit builder image remove golang:1.24
+confkit image remove golang:1.24
 ```
 
 ### 容器管理

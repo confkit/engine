@@ -1,13 +1,19 @@
+//! Author: xiaoYown
+//! Created: 2025-07-21
+//! Description: CLI implementation
+
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 
-pub mod builder;
-pub mod clean;
-pub mod interactive;
-pub mod run;
+mod builder;
+mod clean;
+mod image;
+mod interactive;
+mod run;
 
 use builder::BuilderCommand;
 use clean::CleanArgs;
+use image::ImageCommand;
 use interactive::InteractiveCommand;
 use run::RunArgs;
 
@@ -24,6 +30,8 @@ pub struct Cli {
 pub enum Commands {
     /// Builder management.
     Builder(BuilderCommand),
+    /// Image management.
+    Image(ImageCommand),
     /// Run build task
     Run(RunArgs),
     /// Clean logs
@@ -45,6 +53,7 @@ impl Cli {
     pub async fn execute(self) -> Result<()> {
         match self.command {
             Some(Commands::Builder(cmd)) => cmd.execute().await,
+            Some(Commands::Image(cmd)) => cmd.execute().await,
             Some(Commands::Run(args)) => run::handle_run(&args).await,
             Some(Commands::Clean(args)) => clean::handle_clean(&args).await,
             None => InteractiveCommand::execute().await,

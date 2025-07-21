@@ -1,3 +1,7 @@
+//! Author: xiaoYown
+//! Created: 2025-07-21
+//! Description: Command executor implementation
+
 use anyhow::Result;
 use tokio::process::Command;
 use tracing;

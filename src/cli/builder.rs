@@ -1,13 +1,9 @@
+//! Author: xiaoYown
+//! Created: 2025-07-21
+//! Description: Builder management subcommand implementation
+
 use anyhow::Result;
 use clap::{Args, Subcommand};
-
-pub mod image;
-
-// // 重新导出主要的命令结构
-// pub use container::{
-//     BuilderCreateArgs, BuilderLogsArgs, BuilderRemoveArgs, BuilderStartArgs, BuilderStopArgs,
-// };
-pub use image::ImageCommand;
 
 use crate::core::builder::container::ContainerBuilder;
 
@@ -19,8 +15,6 @@ pub struct BuilderCommand {
 
 #[derive(Subcommand)]
 pub enum BuilderSubcommand {
-    /// Image management.
-    Image(ImageCommand),
     /// List all builder containers.
     List {},
     /// Create and start builder container(based on docker-compose.yml)
@@ -76,7 +70,6 @@ pub enum BuilderSubcommand {
 impl BuilderCommand {
     pub async fn execute(self) -> Result<()> {
         match self.command {
-            BuilderSubcommand::Image(cmd) => cmd.execute().await,
             BuilderSubcommand::List {} => {
                 ContainerBuilder::print_list().await?;
                 Ok(())

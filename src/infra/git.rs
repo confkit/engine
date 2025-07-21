@@ -1,3 +1,7 @@
+//! Author: xiaoYown
+//! Created: 2025-07-21
+//! Description: Git client implementation
+
 use anyhow::Result;
 use std::{path::Path, process::Command};
 

@@ -1,3 +1,7 @@
+//! Author: xiaoYown
+//! Created: 2025-07-21
+//! Description: Main menu implementation
+
 use anyhow::Result;
 use inquire::Select;
 
@@ -26,7 +30,10 @@ impl InteractiveMenu {
                     self.ui = InteractiveUI::Run;
                     Ok(true)
                 }
-                InteractiveMainUI::Builder => Ok(true),
+                InteractiveMainUI::Builder => {
+                    self.ui = InteractiveUI::Builder;
+                    Ok(true)
+                }
                 InteractiveMainUI::Image => {
                     self.ui = InteractiveUI::Image;
                     Ok(true)

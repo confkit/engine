@@ -1,10 +1,11 @@
-//! 镜像管理子命令实现
+//! Author: xiaoYown
+//! Created: 2025-07-21
+//! Description: Image management subcommand implementation
 
 use anyhow::Result;
 use clap::{Args, Subcommand};
 
 use crate::core::builder::image::ImageBuilder;
-use crate::formatter::builder_image::BuilderImageFormatter;
 
 #[derive(Args)]
 pub struct ImageCommand {
@@ -54,13 +55,13 @@ impl ImageCommand {
     pub async fn execute(self) -> Result<()> {
         match self.command {
             ImageSubcommand::List { status } => {
-                list_images(status).await?;
+                ImageBuilder::print_list().await?;
             }
             ImageSubcommand::Create { all, name, tag, force } => {
                 create_image(all, name, tag, force).await?;
             }
             ImageSubcommand::Remove { name, tag, force } => {
-                remove_image(name, tag, force).await?;
+                ImageBuilder::remove(&name, &tag, force).await?;
             }
         }
 
@@ -68,28 +69,13 @@ impl ImageCommand {
     }
 }
 
-/// 列出构建器镜像
-async fn list_images(_status: Option<String>) -> Result<()> {
-    ImageBuilder::print_image_list().await?;
-    Ok(())
-}
-
 /// 创建镜像（从 builder.yml 配置构建镜像）
 async fn create_image(all: bool, name: String, tag: String, force: bool) -> Result<()> {
     if all {
-        ImageBuilder::build_image_all(force).await?;
+        ImageBuilder::build_all(force).await?;
     } else {
-        ImageBuilder::build_image(&name, &tag, force).await?;
+        ImageBuilder::build(&name, &tag, force).await?;
     }
-
-    ImageBuilder::build_image(&name, &tag, force).await?;
-
-    Ok(())
-}
-
-/// 删除镜像
-async fn remove_image(name: String, tag: String, force: bool) -> Result<()> {
-    ImageBuilder::remove_image(&name, &tag, force).await?;
 
     Ok(())
 }

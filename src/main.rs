@@ -1,6 +1,6 @@
 //! Author: xiaoYown
 //! Created: 2025-07-13
-//! Description: ConfKit CLI
+//! Description: ConfKit Engine CLI
 
 use std::{fs, path::Path};
 

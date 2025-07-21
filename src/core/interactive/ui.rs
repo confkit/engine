@@ -5,6 +5,11 @@ pub enum InteractiveUI {
     Main,
     Run,
     Builder,
+    BuilderStart,
+    BuilderStop,
+    BuilderRestart,
+    BuilderCreate,
+    BuilderRemove,
     Image,
     ImageRemove,
     ImageCreate,
@@ -57,6 +62,9 @@ impl fmt::Display for InteractiveImageUI {
 // builder 管理菜单 UI
 pub enum InteractiveBuilderUI {
     List,
+    Start,
+    Stop,
+    Restart,
     Create,
     Remove,
     Back,
@@ -66,9 +74,28 @@ impl fmt::Display for InteractiveBuilderUI {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             InteractiveBuilderUI::List => write!(f, "[LIST] List all builder containers"),
+            InteractiveBuilderUI::Start => write!(f, "[START] Start a builder container"),
+            InteractiveBuilderUI::Stop => write!(f, "[STOP] Stop a builder container"),
+            InteractiveBuilderUI::Restart => write!(f, "[RESTART] Restart a builder container"),
             InteractiveBuilderUI::Create => write!(f, "[CREATE] Create a new builder container"),
             InteractiveBuilderUI::Remove => write!(f, "[REMOVE] Remove a builder container"),
             InteractiveBuilderUI::Back => write!(f, "[BACK] Back to main menu"),
+        }
+    }
+}
+
+// 通用 Yes/No/Back
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum InteractiveYesNoUI {
+    Yes,
+    No,
+}
+
+impl fmt::Display for InteractiveYesNoUI {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            InteractiveYesNoUI::Yes => write!(f, "Yes"),
+            InteractiveYesNoUI::No => write!(f, "No"),
         }
     }
 }

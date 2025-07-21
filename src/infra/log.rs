@@ -1,3 +1,7 @@
+//! Author: xiaoYown
+//! Created: 2025-07-21
+//! Description: Log implementation
+
 use chrono::Local;
 use std::io::Write;
 use std::{fs, path::Path};

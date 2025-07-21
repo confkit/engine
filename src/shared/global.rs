@@ -1,3 +1,7 @@
+//! Author: xiaoYown
+//! Created: 2025-07-21
+//! Description: Global variables
+
 use crate::types::config::ConfKitConfig;
 use crate::types::config::Engine;
 

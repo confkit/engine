@@ -11,7 +11,7 @@ impl BuilderImageFormatter {
     // 获取镜像列表
 
     // 打印镜像列表
-    pub fn print_image_list(images: &[ConfKitImageInfo]) {
+    pub fn print_list(images: &[ConfKitImageInfo]) {
         let mut builder = Builder::new();
 
         builder.push_record(vec![

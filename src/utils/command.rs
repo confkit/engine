@@ -1,3 +1,7 @@
+//! Author: xiaoYown
+//! Created: 2025-07-21
+//! Description: Command utility
+
 use anyhow::Result;
 use std::process::Stdio;
 use std::sync::Arc;

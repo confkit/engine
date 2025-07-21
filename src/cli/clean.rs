@@ -1,3 +1,7 @@
+//! Author: xiaoYown
+//! Created: 2025-07-21
+//! Description: Clean logs subcommand implementation
+
 use crate::core::clean::log::LogCleaner;
 use anyhow::Result;
 use clap::Args;
