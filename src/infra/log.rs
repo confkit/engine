@@ -8,6 +8,7 @@ use std::{fs, path::Path};
 
 use anyhow::Result;
 
+#[derive(Clone)]
 pub struct Log {
     file_path: String,
 }

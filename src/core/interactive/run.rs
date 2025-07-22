@@ -4,8 +4,9 @@
 
 use anyhow::Result;
 use inquire::Select;
+use regex::Regex;
 
-use crate::infra::config::ConfKitConfigLoader;
+use crate::{core::executor::runner::Runner, infra::config::ConfKitConfigLoader};
 
 use super::{
     menu::InteractiveMenu,
@@ -35,12 +36,26 @@ impl InteractiveMenu {
             .prompt()?;
 
         if selection == InteractiveMainUI::Quit.to_string() {
+            self.ui = InteractiveUI::Main;
             return Ok(true);
         }
 
-        tracing::info!("Selected space: {}", selection);
+        // 匹配出 space: 以 < 开头，以 > 结尾
+        let re = Regex::new(r"^<([^>]+)>\s").unwrap();
+        let caps = re.captures(&selection).unwrap();
+        let space_name = caps.get(1).unwrap().as_str();
 
-        self.ui = InteractiveUI::Main;
+        // 匹配出 project: 从 selection 中移除掉 <space_name>
+        let project_name =
+            selection.replace(format!("<{}>", space_name).as_str(), "").trim().to_string();
+
+        tracing::info!("space_name: {}, project_name: {}", space_name, project_name);
+
+        let mut runner = Runner::new(space_name, &project_name).await?;
+
+        runner.start().await?;
+
+        self.ui = InteractiveUI::Run;
 
         Ok(true)
     }

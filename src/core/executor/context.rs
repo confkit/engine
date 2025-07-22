@@ -32,8 +32,9 @@ pub struct ExecutionContext {
     pub container_workspace_dir: String,
     /// 容器产物目录
     pub container_artifacts_dir: String,
-    /// 日志目录
-    pub host_log_dir: String,
+    /// 日志路径
+    pub host_log_path: String,
+    /// Git 信息
     pub git_info: Option<GitInfo>,
 }
 
@@ -53,7 +54,7 @@ impl ExecutionContext {
         let container_artifacts_dir = format!("{}/{}", CONTAINER_ARTIFACTS_DIR, task_path_identify);
 
         let timestamp = Local::now().format("%Y.%m.%d-%H:%M:%S%.3f");
-        let host_log_dir = format!(
+        let host_log_path = format!(
             "{}/<{}>-{}/[{}]{}.log",
             HOST_LOG_DIR, space_name, project_name, timestamp, &task_id
         );
@@ -81,7 +82,7 @@ impl ExecutionContext {
             host_artifacts_dir,
             container_workspace_dir,
             container_artifacts_dir,
-            host_log_dir,
+            host_log_path,
             git_info: git_client.git_info,
         })
     }

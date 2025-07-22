@@ -22,7 +22,9 @@ pub struct RunArgs {
 
 /// 处理 run 命令
 pub async fn handle_run(args: &RunArgs) -> Result<()> {
-    let runner = Runner::new(args.space.as_str(), args.project.as_str());
+    let mut runner = Runner::new(args.space.as_str(), args.project.as_str()).await?;
+
     runner.start().await?;
+
     Ok(())
 }

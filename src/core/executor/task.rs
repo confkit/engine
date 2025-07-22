@@ -2,7 +2,7 @@
 //! Created: 2025-07-21
 //! Description: Task implementation
 
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, Local};
 use uuid::Uuid;
 
 /// 任务ID生成器
@@ -10,8 +10,8 @@ pub struct Task {
     pub id: String,
     pub space_name: String,
     pub project_name: String,
-    pub started_at: DateTime<Utc>,
-    pub finished_at: Option<DateTime<Utc>>,
+    pub started_at: DateTime<Local>,
+    pub finished_at: Option<DateTime<Local>>,
 }
 
 impl Task {
@@ -20,7 +20,7 @@ impl Task {
             id: Self::generate_task_id(),
             space_name: space_name.to_string(),
             project_name: project_name.to_string(),
-            started_at: Utc::now(),
+            started_at: Local::now(),
             finished_at: None,
         }
     }
@@ -30,6 +30,10 @@ impl Task {
         let uuid = Uuid::new_v4();
         let short_uuid = uuid.to_string()[..11].to_string();
         short_uuid
+    }
+
+    pub fn finish(&mut self) {
+        self.finished_at = Some(Local::now());
     }
 }
 
