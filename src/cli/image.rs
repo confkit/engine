@@ -17,11 +17,7 @@ pub struct ImageCommand {
 pub enum ImageSubcommand {
     /// List all builder images.
     /// (eg: confkit builder image list)
-    List {
-        /// Only show builder images with the specified status.
-        #[arg(long)]
-        status: Option<String>,
-    },
+    List {},
     /// Create/pull image.
     Create {
         /// Create all images.
@@ -48,7 +44,7 @@ pub enum ImageSubcommand {
 impl ImageCommand {
     pub async fn execute(self) -> Result<()> {
         match self.command {
-            ImageSubcommand::List { status } => {
+            ImageSubcommand::List {} => {
                 ImageBuilder::print_list().await?;
             }
             ImageSubcommand::Create { all, name, tag } => {

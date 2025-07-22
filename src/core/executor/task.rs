@@ -8,21 +8,13 @@ use uuid::Uuid;
 /// 任务ID生成器
 pub struct Task {
     pub id: String,
-    pub space_name: String,
-    pub project_name: String,
     pub started_at: DateTime<Local>,
     pub finished_at: Option<DateTime<Local>>,
 }
 
 impl Task {
-    pub fn new(space_name: &str, project_name: &str) -> Self {
-        Self {
-            id: Self::generate_task_id(),
-            space_name: space_name.to_string(),
-            project_name: project_name.to_string(),
-            started_at: Local::now(),
-            finished_at: None,
-        }
+    pub fn new() -> Self {
+        Self { id: Self::generate_task_id(), started_at: Local::now(), finished_at: None }
     }
 
     // 生成任务ID

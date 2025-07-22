@@ -10,7 +10,7 @@ use crate::{core::executor::runner::Runner, infra::config::ConfKitConfigLoader};
 
 use super::{
     menu::InteractiveMenu,
-    ui::{InteractiveMainUI, InteractiveUI},
+    ui::{InteractiveOptionUI, InteractiveUI},
 };
 
 impl InteractiveMenu {
@@ -29,13 +29,13 @@ impl InteractiveMenu {
             }
         }
 
-        options.push(InteractiveMainUI::Quit.to_string());
+        options.push(InteractiveOptionUI::Back.to_string());
 
         let selection = Select::new("Please select a space:", options)
             .with_help_message("Use ↑↓ to navigate, Enter to confirm")
             .prompt()?;
 
-        if selection == InteractiveMainUI::Quit.to_string() {
+        if selection == InteractiveOptionUI::Back.to_string() {
             self.ui = InteractiveUI::Main;
             return Ok(true);
         }

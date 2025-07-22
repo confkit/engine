@@ -55,7 +55,7 @@ impl StepExecutor {
         };
 
         // 记录步骤详情
-        self.log_step_details(step, &working_dir, step_number, total_steps).await?;
+        self.log_step_details(step, &working_dir).await?;
 
         // commands 长度为 0 时，直接跳过
         if step.commands.is_empty() {
@@ -101,13 +101,7 @@ impl StepExecutor {
     }
 
     /// 记录步骤详情
-    async fn log_step_details(
-        &self,
-        step: &ConfKitStepConfig,
-        working_dir: &str,
-        step_number: usize,
-        total_steps: usize,
-    ) -> Result<()> {
+    async fn log_step_details(&self, step: &ConfKitStepConfig, working_dir: &str) -> Result<()> {
         self.logger.info("Step Details:")?;
         self.logger
             .info(&format!(" - Container: {}", step.container.as_deref().unwrap_or("Host")))?;

@@ -3,7 +3,7 @@
 //! Description: Git client implementation
 
 use anyhow::Result;
-use std::{path::Path, process::Command};
+use std::process::Command;
 
 use crate::infra::config::ConfKitConfigLoader;
 
@@ -22,8 +22,6 @@ pub struct GitInfo {
 }
 
 pub struct GitClient {
-    pub space_name: String,
-    pub project_name: String,
     pub git_info: Option<GitInfo>,
 }
 
@@ -32,11 +30,7 @@ impl GitClient {
     pub async fn new(space_name: &str, project_name: &str) -> Result<Self> {
         let git_info = Self::get_envs(space_name, project_name).await?;
 
-        Ok(Self {
-            space_name: space_name.to_string(),
-            project_name: project_name.to_string(),
-            git_info,
-        })
+        Ok(Self { git_info })
     }
 
     pub async fn get_envs(space_name: &str, project_name: &str) -> Result<Option<GitInfo>> {

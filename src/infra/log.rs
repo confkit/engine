@@ -25,20 +25,14 @@ impl Log {
         Ok(())
     }
 
-    pub fn warn(&self, message: &str) -> Result<()> {
-        tracing::warn!("{}", message);
-        self.write(message)?;
-        Ok(())
-    }
+    // pub fn warn(&self, message: &str) -> Result<()> {
+    //     tracing::warn!("{}", message);
+    //     self.write(message)?;
+    //     Ok(())
+    // }
 
     pub fn error(&self, message: &str) -> Result<()> {
         tracing::error!("{}", message);
-        self.write(message)?;
-        Ok(())
-    }
-
-    pub fn debug(&self, message: &str) -> Result<()> {
-        tracing::debug!("{}", message);
         self.write(message)?;
         Ok(())
     }

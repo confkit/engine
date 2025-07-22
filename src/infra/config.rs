@@ -23,7 +23,8 @@ impl ConfKitConfigLoader {
     // 设置全局配置文件
     pub async fn set_config() -> Result<()> {
         let config = Self::from_file(CONFKIT_CONFIG_FILE).await?;
-        unsafe { CONFIG = Some(config) };
+        let mut guard = CONFIG.write().unwrap();
+        *guard = Some(config);
         Ok(())
     }
 
@@ -37,11 +38,10 @@ impl ConfKitConfigLoader {
 
     /// 获取配置
     pub fn get_config() -> ConfKitConfig {
-        unsafe {
-            match CONFIG.as_ref() {
-                Some(config) => config.clone(),
-                None => unreachable!("ConfKitConfig should be initialized"),
-            }
+        let guard = CONFIG.read().unwrap();
+        match &*guard {
+            Some(config) => config.clone(),
+            None => unreachable!("ConfKitConfig should be initialized"),
         }
     }
 
@@ -100,12 +100,6 @@ impl ConfKitConfigLoader {
     }
 
     // ================================================ Docker Compose ================================================
-
-    // 获取 Engine Compose 配置文件路径
-    pub async fn get_engine_compose_config_path() -> Result<String> {
-        let config = Self::get_config();
-        Ok(config.engine_compose.file)
-    }
 
     // 获取 Engine Compose 配置文件
     pub async fn get_engine_compose_config() -> Result<EngineComposeConfig> {

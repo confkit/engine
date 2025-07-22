@@ -71,6 +71,11 @@ impl InteractiveMenu {
     pub async fn create_builder(&mut self) -> Result<bool> {
         let container_name = self.select_container().await?;
 
+        if container_name == "Back" {
+            self.ui = InteractiveUI::Builder;
+            return Ok(true);
+        }
+
         if container_name == "All" {
             let force = self.select_force().await?;
             let force = force == InteractiveYesNoUI::Yes;
@@ -89,6 +94,11 @@ impl InteractiveMenu {
     // 移除 builder 容器
     pub async fn remove_builder(&mut self) -> Result<bool> {
         let container_name = self.select_container().await?;
+
+        if container_name == "Back" {
+            self.ui = InteractiveUI::Builder;
+            return Ok(true);
+        }
 
         if container_name == "All" {
             let force = self.select_force().await?;
@@ -109,6 +119,11 @@ impl InteractiveMenu {
     pub async fn start_builder(&mut self) -> Result<bool> {
         let container_name = self.select_container().await?;
 
+        if container_name == "Back" {
+            self.ui = InteractiveUI::Builder;
+            return Ok(true);
+        }
+
         if container_name == "All" {
             ContainerBuilder::start_all().await?;
             return Ok(true);
@@ -122,6 +137,11 @@ impl InteractiveMenu {
     pub async fn stop_builder(&mut self) -> Result<bool> {
         let container_name = self.select_container().await?;
 
+        if container_name == "Back" {
+            self.ui = InteractiveUI::Builder;
+            return Ok(true);
+        }
+
         if container_name == "All" {
             ContainerBuilder::stop_all().await?;
             return Ok(true);
@@ -134,6 +154,11 @@ impl InteractiveMenu {
     // 重启 builder 容器
     pub async fn restart_builder(&mut self) -> Result<bool> {
         let container_name = self.select_container().await?;
+
+        if container_name == "Back" {
+            self.ui = InteractiveUI::Builder;
+            return Ok(true);
+        }
 
         if container_name == "All" {
             let force = self.select_force().await?;
@@ -160,7 +185,10 @@ impl InteractiveMenu {
             .collect();
 
         // 添加全部选项
-        options.push("All".to_string());
+        options.insert(0, "All".to_string());
+
+        // 添加返回选项
+        options.push("Back".to_string());
 
         let selection = Select::new("Please select an container:", options)
             .with_help_message("Use ↑↓ to navigate, Enter to confirm")
@@ -173,6 +201,10 @@ impl InteractiveMenu {
 
         if selection == "All" {
             return Ok(String::from("All"));
+        }
+
+        if selection == "Back" {
+            return Ok(String::from("Back"));
         }
 
         let container_name = selection.split(' ').next().unwrap().to_string();

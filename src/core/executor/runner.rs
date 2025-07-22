@@ -36,7 +36,7 @@ impl Runner {
         };
 
         // 创建任务
-        let task = Task::new(space_name, project_name);
+        let task = Task::new();
 
         let task_id = task.id.clone();
 

@@ -26,15 +26,3 @@ pub enum StepStatus {
     Failed,
     Skipped,
 }
-
-/// 执行摘要
-#[derive(Debug, Clone)]
-pub struct ExecutionSummary {
-    pub total_steps: usize,
-    pub successful_steps: usize,
-    pub failed_steps: usize,
-    pub skipped_steps: usize,
-    pub total_duration_ms: u64,
-    pub task_id: String,
-    pub project_name: String,
-}

@@ -1,3 +1,7 @@
+//! Author: xiaoYown
+//! Created: 2025-07-22
+//! Description: Interactive UI
+
 use std::fmt;
 
 // 所有交互式菜单的 UI
@@ -5,14 +9,7 @@ pub enum InteractiveUI {
     Main,
     Run,
     Builder,
-    BuilderStart,
-    BuilderStop,
-    BuilderRestart,
-    BuilderCreate,
-    BuilderRemove,
     Image,
-    ImageRemove,
-    ImageCreate,
     Log,
 }
 
@@ -95,6 +92,19 @@ impl fmt::Display for InteractiveYesNoUI {
         match self {
             InteractiveYesNoUI::Yes => write!(f, "Yes"),
             InteractiveYesNoUI::No => write!(f, "No"),
+        }
+    }
+}
+
+// 通用选项
+pub enum InteractiveOptionUI {
+    Back,
+}
+
+impl fmt::Display for InteractiveOptionUI {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            InteractiveOptionUI::Back => write!(f, "[BACK] Back to main menu"),
         }
     }
 }

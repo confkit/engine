@@ -5,10 +5,7 @@
 use anyhow::Result;
 use inquire::Select;
 
-use crate::core::{
-    builder::image::ImageBuilder,
-    interactive::ui::{InteractiveUI, InteractiveYesNoUI},
-};
+use crate::core::{builder::image::ImageBuilder, interactive::ui::InteractiveUI};
 
 use super::{menu::InteractiveMenu, ui::InteractiveImageUI};
 
@@ -62,6 +59,11 @@ impl InteractiveMenu {
             return Ok(true);
         }
 
+        if image_name == "Back" {
+            self.ui = InteractiveUI::Image;
+            return Ok(true);
+        }
+
         ImageBuilder::build(&image_name, &image_tag).await?;
 
         Ok(true)
@@ -70,6 +72,11 @@ impl InteractiveMenu {
     // 移除镜像
     pub async fn remove_image(&mut self) -> Result<bool> {
         let (image_name, image_tag) = self.select_image().await?;
+
+        if image_name == "Back" {
+            self.ui = InteractiveUI::Image;
+            return Ok(true);
+        }
 
         if image_name == "All" && image_tag == "" {
             ImageBuilder::remove_all().await?;
@@ -91,7 +98,10 @@ impl InteractiveMenu {
             .collect();
 
         // 添加全部选项
-        options.push("All".to_string());
+        options.insert(0, "All".to_string());
+
+        // 添加返回选项
+        options.push("Back".to_string());
 
         let selection = Select::new("Please select an image:", options)
             .with_help_message("Use ↑↓ to navigate, Enter to confirm")
@@ -104,6 +114,10 @@ impl InteractiveMenu {
 
         if selection == "All" {
             return Ok((String::from("All"), String::from("")));
+        }
+
+        if selection == "Back" {
+            return Ok((String::from("Back"), String::from("")));
         }
 
         // 提取 name 和 tag

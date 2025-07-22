@@ -37,38 +37,8 @@ impl InteractiveMenu {
                         break;
                     }
                 }
-                InteractiveUI::ImageCreate => {
-                    if !self.create_image().await? {
-                        break;
-                    }
-                }
-                InteractiveUI::ImageRemove => {
-                    if !self.remove_image().await? {
-                        break;
-                    }
-                }
                 InteractiveUI::Builder => {
                     if !self.builder().await? {
-                        break;
-                    }
-                }
-                InteractiveUI::BuilderCreate => {
-                    if !self.create_builder().await? {
-                        break;
-                    }
-                }
-                InteractiveUI::BuilderRemove => {
-                    if !self.remove_builder().await? {
-                        break;
-                    }
-                }
-                InteractiveUI::BuilderStart => {
-                    if !self.start_builder().await? {
-                        break;
-                    }
-                }
-                InteractiveUI::BuilderStop => {
-                    if !self.stop_builder().await? {
                         break;
                     }
                 }
