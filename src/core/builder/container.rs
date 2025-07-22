@@ -47,7 +47,7 @@ impl ContainerBuilder {
         }
 
         // 尝试构建镜像
-        ImageBuilder::build(image_name, image_tag, false).await?;
+        ImageBuilder::build(image_name, image_tag).await?;
 
         // 创建容器
         ConfKitEngine::create_container(name).await?;

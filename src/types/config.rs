@@ -171,7 +171,7 @@ pub struct ConfKitEngineComposeConfig {
 #[serde(rename_all = "lowercase")]
 pub enum Engine {
     Docker,
-    // Podman,
+    Podman,
 }
 
 fn default_engine() -> Engine {

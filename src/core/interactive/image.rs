@@ -58,17 +58,11 @@ impl InteractiveMenu {
 
         // 全部创建
         if image_name == "All" && image_tag == "" {
-            let force = self.select_force().await?;
-            let force = force == InteractiveYesNoUI::Yes;
-            ImageBuilder::build_all(force).await?;
+            ImageBuilder::build_all().await?;
             return Ok(true);
         }
 
-        // 选择是否强制
-        let force = self.select_force().await?;
-        let force = force == InteractiveYesNoUI::Yes;
-
-        ImageBuilder::build(&image_name, &image_tag, force).await?;
+        ImageBuilder::build(&image_name, &image_tag).await?;
 
         Ok(true)
     }
@@ -78,16 +72,11 @@ impl InteractiveMenu {
         let (image_name, image_tag) = self.select_image().await?;
 
         if image_name == "All" && image_tag == "" {
-            let force = self.select_force().await?;
-            let force = force == InteractiveYesNoUI::Yes;
-            ImageBuilder::remove_all(force).await?;
+            ImageBuilder::remove_all().await?;
             return Ok(true);
         }
 
-        let force = self.select_force().await?;
-        let force = force == InteractiveYesNoUI::Yes;
-
-        ImageBuilder::remove(&image_name, &image_tag, force).await?;
+        ImageBuilder::remove(&image_name, &image_tag).await?;
         Ok(true)
     }
 

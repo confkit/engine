@@ -56,12 +56,7 @@ impl ImageBuilder {
     }
 
     // 构建镜像
-    pub async fn build(name: &str, tag: &str, force: bool) -> Result<()> {
-        // 如果 force 为 true，则先删除镜像
-        if force {
-            Self::remove(name, tag, force).await?;
-        }
-
+    pub async fn build(name: &str, tag: &str) -> Result<()> {
         // 检查目标镜像是否已经存在
         if ConfKitEngine::check_image_exists(&name, tag).await? {
             tracing::info!("Image {} already exists", name);
@@ -100,29 +95,29 @@ impl ImageBuilder {
     }
 
     // 构建所有镜像
-    pub async fn build_all(force: bool) -> Result<()> {
+    pub async fn build_all() -> Result<()> {
         let config = ConfKitConfigLoader::get_config();
         for image in config.images {
-            Self::build(&image.name, &image.tag, force).await?;
+            Self::build(&image.name, &image.tag).await?;
         }
         Ok(())
     }
 
     // 移除镜像
-    pub async fn remove(name: &str, tag: &str, force: bool) -> Result<()> {
+    pub async fn remove(name: &str, tag: &str) -> Result<()> {
         // TODO: 检查镜像是否被使用，如果被使用，则提示用户是否强制移除
         // TODO: 强制移除, 需要先停止所有使用该镜像的容器, 并删除所有使用该镜像的容器
 
-        ConfKitEngine::remove_image(&name, &tag, force).await?;
+        ConfKitEngine::remove_image(&name, &tag).await?;
 
         Ok(())
     }
 
     // 移除所有镜像
-    pub async fn remove_all(force: bool) -> Result<()> {
+    pub async fn remove_all() -> Result<()> {
         let config = ConfKitConfigLoader::get_config();
         for image in config.images {
-            Self::remove(&image.name, &image.tag, force).await?;
+            Self::remove(&image.name, &image.tag).await?;
         }
         Ok(())
     }

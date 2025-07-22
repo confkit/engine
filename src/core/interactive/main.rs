@@ -39,11 +39,7 @@ impl InteractiveMenu {
                     Ok(true)
                 }
                 InteractiveMainUI::Log => Ok(true),
-                InteractiveMainUI::Quit => {
-                    self.ui = InteractiveUI::Main;
-                    Ok(true)
-                }
-                _ => Ok(true),
+                InteractiveMainUI::Quit => Ok(false),
             },
             Err(_) => Ok(false),
         }

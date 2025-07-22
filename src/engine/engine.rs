@@ -3,6 +3,7 @@
 //! Description: ConfKit Engine 统一引擎调用
 
 use crate::engine::docker::DockerEngine;
+use crate::engine::podman::PodmanEngine;
 use crate::shared::global::ENGINE;
 use crate::types::config::{Engine, EngineContainerInfo, EngineImageInfo, EngineServiceConfig};
 use anyhow::Result;
@@ -10,19 +11,12 @@ use anyhow::Result;
 pub struct ConfKitEngine;
 
 impl ConfKitEngine {
-    // pub async fn run() -> Result<()> {
-    //     Ok(())
-    // }
-
     // 获取当前宿主机使用的引擎
     pub async fn get_engine() -> Result<Engine> {
-        unsafe {
-            let engine = match ENGINE.as_ref() {
-                Some(engine) => engine.clone(),
-                None => unreachable!("Engine should be initialized"),
-            };
-
-            Ok(engine)
+        let guard = ENGINE.read().unwrap();
+        match &*guard {
+            Some(engine) => Ok(engine.clone()),
+            None => unreachable!("Engine should be initialized"),
         }
     }
 
@@ -30,7 +24,7 @@ impl ConfKitEngine {
     pub async fn check_engine(engine: Engine) -> Result<()> {
         match engine {
             Engine::Docker => DockerEngine::check_engine().await,
-            _ => Err(anyhow::anyhow!("ConfKit does not support engine: {:?}", engine)),
+            Engine::Podman => PodmanEngine::check_engine().await,
         }
     }
 
@@ -39,8 +33,8 @@ impl ConfKitEngine {
         // 检测当前宿主机是否支持引擎
         Self::check_engine(engine.clone()).await?;
 
-        unsafe { ENGINE = Some(engine) };
-
+        let mut guard = ENGINE.write().unwrap();
+        *guard = Some(engine);
         Ok(())
     }
 
@@ -51,6 +45,7 @@ impl ConfKitEngine {
         let engine = Self::get_engine().await?;
         match engine {
             Engine::Docker => DockerEngine::check_image_exists(image, tag).await,
+            Engine::Podman => PodmanEngine::check_image_exists(image, tag).await,
         }
     }
 
@@ -59,6 +54,7 @@ impl ConfKitEngine {
         let engine = Self::get_engine().await?;
         match engine {
             Engine::Docker => DockerEngine::get_image_info(image, tag).await,
+            Engine::Podman => PodmanEngine::get_image_info(image, tag).await,
         }
     }
 
@@ -69,6 +65,7 @@ impl ConfKitEngine {
         let engine = Self::get_engine().await?;
         match engine {
             Engine::Docker => DockerEngine::pull_image(image, tag).await,
+            Engine::Podman => PodmanEngine::pull_image(image, tag).await,
         }
     }
 
@@ -84,14 +81,16 @@ impl ConfKitEngine {
         let engine = Self::get_engine().await?;
         match engine {
             Engine::Docker => DockerEngine::build_image(name, tag, dockerfile, context).await,
+            Engine::Podman => PodmanEngine::build_image(name, tag, dockerfile, context).await,
         }
     }
 
     // 移除镜像
-    pub async fn remove_image(image: &str, tag: &str, force: bool) -> Result<()> {
+    pub async fn remove_image(image: &str, tag: &str) -> Result<()> {
         let engine = Self::get_engine().await?;
         match engine {
-            Engine::Docker => DockerEngine::remove_image(image, tag, force).await,
+            Engine::Docker => DockerEngine::remove_image(image, tag).await,
+            Engine::Podman => PodmanEngine::remove_image(image, tag).await,
         }
     }
 
@@ -102,6 +101,7 @@ impl ConfKitEngine {
         let engine = Self::get_engine().await?;
         match engine {
             Engine::Docker => DockerEngine::check_container_exists(name).await,
+            Engine::Podman => PodmanEngine::check_container_exists(name).await,
         }
     }
 
@@ -110,6 +110,7 @@ impl ConfKitEngine {
         let engine = Self::get_engine().await?;
         match engine {
             Engine::Docker => DockerEngine::create_container(name).await,
+            Engine::Podman => PodmanEngine::create_container(name).await,
         }
     }
 
@@ -118,6 +119,7 @@ impl ConfKitEngine {
         let engine = Self::get_engine().await?;
         match engine {
             Engine::Docker => DockerEngine::remove_container(name).await,
+            Engine::Podman => PodmanEngine::remove_container(name).await,
         }
     }
 
@@ -126,6 +128,7 @@ impl ConfKitEngine {
         let engine = Self::get_engine().await?;
         match engine {
             Engine::Docker => DockerEngine::start_container(name).await,
+            Engine::Podman => PodmanEngine::start_container(name).await,
         }
     }
 
@@ -134,6 +137,7 @@ impl ConfKitEngine {
         let engine = Self::get_engine().await?;
         match engine {
             Engine::Docker => DockerEngine::stop_container(name).await,
+            Engine::Podman => PodmanEngine::stop_container(name).await,
         }
     }
 
@@ -142,6 +146,7 @@ impl ConfKitEngine {
         let engine = Self::get_engine().await?;
         match engine {
             Engine::Docker => DockerEngine::restart_container(name).await,
+            Engine::Podman => PodmanEngine::restart_container(name).await,
         }
     }
 
@@ -150,6 +155,7 @@ impl ConfKitEngine {
         let engine = Self::get_engine().await?;
         match engine {
             Engine::Docker => DockerEngine::get_container_info(name).await,
+            Engine::Podman => PodmanEngine::get_container_info(name).await,
         }
     }
 
@@ -160,6 +166,7 @@ impl ConfKitEngine {
         let engine = Self::get_engine().await?;
         match engine {
             Engine::Docker => DockerEngine::get_compose_services().await,
+            Engine::Podman => PodmanEngine::get_compose_services().await,
         }
     }
 
@@ -171,6 +178,9 @@ impl ConfKitEngine {
         match engine {
             Engine::Docker => {
                 DockerEngine::get_compose_service_config_by_container_name(name).await
+            }
+            Engine::Podman => {
+                PodmanEngine::get_compose_service_config_by_container_name(name).await
             }
         }
     }

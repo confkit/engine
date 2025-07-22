@@ -1,6 +1,6 @@
 //! Author: xiaoYown
-//! Created: 2025-07-21
-//! Description: Docker engine implementation
+//! Created: 2025-07-22
+//! Description: Podman engine implementation (mirror Docker API behavior)
 
 use anyhow::Result;
 use std::process::Command;
@@ -13,17 +13,16 @@ use crate::{
     utils::command::CommandUtil,
 };
 
-pub struct DockerEngine;
+pub struct PodmanEngine;
 
-impl DockerEngine {
+impl PodmanEngine {
     // ================================================ Engine Basic ================================================
 
-    // 检测当前宿主机是否安装了 Docker
+    // 检测当前宿主机是否安装了 Podman
     pub async fn check_engine() -> Result<()> {
-        // 检测当前宿主机是否安装了 Docker
-        let output = Command::new("docker").arg("--version").output();
+        let output = Command::new("podman").arg("--version").output();
         if output.is_err() {
-            return Err(anyhow::anyhow!("Docker not installed"));
+            return Err(anyhow::anyhow!("Podman not installed"));
         }
 
         Ok(())
@@ -33,24 +32,19 @@ impl DockerEngine {
 
     // 检查镜像是否存在
     pub async fn check_image_exists(image: &str, tag: &str) -> Result<bool> {
-        let output = Command::new("docker")
+        let output = Command::new("podman")
             .arg("images")
             .arg("-q")
             .arg(format!("{}:{}", image, tag))
             .output()?;
 
-        // 检查输出是否为空，空输出表示镜像不存在
         let output_str = String::from_utf8_lossy(&output.stdout);
-
-        match output_str.trim() {
-            "" => Ok(false),
-            _ => Ok(true),
-        }
+        Ok(!output_str.trim().is_empty())
     }
 
     // 获取镜像信息
     pub async fn get_image_info(image: &str, tag: &str) -> Result<EngineImageInfo> {
-        let output = Command::new("docker")
+        let output = Command::new("podman")
             .arg("images")
             .arg("--format")
             .arg("{{.ID}}\t{{.Tag}}\t{{.CreatedAt}}\t{{.Size}}")
@@ -96,14 +90,13 @@ impl DockerEngine {
 
     // 拉取远程镜像到本地进行缓存
     pub async fn pull_image(image: &str, tag: &str) -> Result<()> {
-        let mut command = tokio::process::Command::new("docker");
+        let mut command = tokio::process::Command::new("podman");
         command.arg("pull").arg(format!("{}:{}", image, tag));
 
         CommandUtil::execute_command_with_output(
             &mut command,
             Some(Box::new(|line| tracing::info!("{}", line))),
             Some(Box::new(|line| {
-                // 根据内容判断是进度还是错误
                 if line.contains("ERROR") || line.contains("FAILED") {
                     tracing::error!("✗ {}", line);
                 } else {
@@ -123,7 +116,7 @@ impl DockerEngine {
         dockerfile: &str,
         context: Option<&str>,
     ) -> Result<()> {
-        let mut command = tokio::process::Command::new("docker");
+        let mut command = tokio::process::Command::new("podman");
         command
             .arg("build")
             .arg("-t")
@@ -136,7 +129,6 @@ impl DockerEngine {
             &mut command,
             Some(Box::new(|line| tracing::info!("{}", line))),
             Some(Box::new(|line| {
-                // 根据内容判断是进度还是错误
                 if line.contains("ERROR") || line.contains("FAILED") {
                     tracing::error!("✗ {}", line);
                 } else {
@@ -151,7 +143,7 @@ impl DockerEngine {
 
     // 移除镜像
     pub async fn remove_image(image: &str, tag: &str) -> Result<()> {
-        let mut command = tokio::process::Command::new("docker");
+        let mut command = tokio::process::Command::new("podman");
         command.arg("rmi").arg(format!("{}:{}", image, tag));
 
         CommandUtil::execute_command_with_output(
@@ -168,7 +160,7 @@ impl DockerEngine {
 
     // 检查容器是否存在
     pub async fn check_container_exists(name: &str) -> Result<bool> {
-        let output = Command::new("docker")
+        let output = Command::new("podman")
             .arg("ps")
             .arg("-a")
             .arg("--filter")
@@ -176,7 +168,6 @@ impl DockerEngine {
             .arg("--quiet")
             .output()?;
 
-        // 如果找到容器，输出不为空；如果没找到，输出为空
         Ok(!output.stdout.is_empty())
     }
 
@@ -186,7 +177,7 @@ impl DockerEngine {
         let engine_compose_file_path = confkit_config.engine_compose.file;
         let project_name = confkit_config.engine_compose.project;
 
-        let mut command = tokio::process::Command::new("docker");
+        let mut command = tokio::process::Command::new("podman");
 
         command
             .arg("compose")
@@ -209,7 +200,7 @@ impl DockerEngine {
 
     // 移除容器
     pub async fn remove_container(name: &str) -> Result<()> {
-        let mut command = tokio::process::Command::new("docker");
+        let mut command = tokio::process::Command::new("podman");
         command.arg("rm").arg(name);
 
         CommandUtil::execute_command_with_output(
@@ -224,7 +215,7 @@ impl DockerEngine {
 
     // 启动容器
     pub async fn start_container(name: &str) -> Result<()> {
-        let mut command = tokio::process::Command::new("docker");
+        let mut command = tokio::process::Command::new("podman");
         command.arg("start").arg(name);
 
         CommandUtil::execute_command_with_output(
@@ -239,7 +230,7 @@ impl DockerEngine {
 
     // 停止容器
     pub async fn stop_container(name: &str) -> Result<()> {
-        let mut command = tokio::process::Command::new("docker");
+        let mut command = tokio::process::Command::new("podman");
         command.arg("stop").arg(name);
 
         CommandUtil::execute_command_with_output(
@@ -254,7 +245,7 @@ impl DockerEngine {
 
     // 重启容器
     pub async fn restart_container(name: &str) -> Result<()> {
-        let mut command = tokio::process::Command::new("docker");
+        let mut command = tokio::process::Command::new("podman");
         command.arg("restart").arg(name);
 
         tracing::info!(" --------- Restarting container: {} ---------", name);
@@ -271,7 +262,6 @@ impl DockerEngine {
 
     // 获取容器信息
     pub async fn get_container_info(name: &str) -> Result<EngineContainerInfo> {
-        // 检查容器是否存在
         if !Self::check_container_exists(name).await? {
             return Ok(EngineContainerInfo {
                 id: "".to_string(),
@@ -289,7 +279,7 @@ impl DockerEngine {
 
         tracing::debug!("name: {}, image: {}", name, service_config.image);
 
-        let output = Command::new("docker")
+        let output = Command::new("podman")
             .arg("ps")
             .arg("-a")
             .arg("--filter")
@@ -311,7 +301,7 @@ impl DockerEngine {
         }
 
         let output_str = String::from_utf8_lossy(&output.stdout);
-        let lines: Vec<&str> = output_str.split('\n').collect();
+        let lines: Vec<&str> = output_str.split('\n').filter(|s| !s.trim().is_empty()).collect();
 
         if lines.is_empty() {
             return Ok(EngineContainerInfo {
@@ -325,13 +315,7 @@ impl DockerEngine {
             });
         }
 
-        let line = lines[0];
-        let mut parts: Vec<&str> = line.split('\t').collect();
-
-        // line 长度补全
-        while parts.clone().len() < 5 {
-            parts.push("");
-        }
+        let parts: Vec<&str> = lines[0].split('\t').collect();
 
         let status = match parts[2] {
             is_up if is_up.contains("Up") => ContainerStatus::Up,

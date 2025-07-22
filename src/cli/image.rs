@@ -33,9 +33,6 @@ pub enum ImageSubcommand {
         /// Image tag.
         #[arg(short, long)]
         tag: String,
-        /// Force create (even if it already exists).
-        #[arg(long)]
-        force: bool,
     },
     /// Remove image.
     Remove {
@@ -45,9 +42,6 @@ pub enum ImageSubcommand {
         /// Image tag.
         #[arg(short, long)]
         tag: String,
-        /// Force remove (even if it is being used).
-        #[arg(long)]
-        force: bool,
     },
 }
 
@@ -57,11 +51,11 @@ impl ImageCommand {
             ImageSubcommand::List { status } => {
                 ImageBuilder::print_list().await?;
             }
-            ImageSubcommand::Create { all, name, tag, force } => {
-                create_image(all, name, tag, force).await?;
+            ImageSubcommand::Create { all, name, tag } => {
+                create_image(all, name, tag).await?;
             }
-            ImageSubcommand::Remove { name, tag, force } => {
-                ImageBuilder::remove(&name, &tag, force).await?;
+            ImageSubcommand::Remove { name, tag } => {
+                ImageBuilder::remove(&name, &tag).await?;
             }
         }
 
@@ -70,11 +64,11 @@ impl ImageCommand {
 }
 
 /// 创建镜像（从 builder.yml 配置构建镜像）
-async fn create_image(all: bool, name: String, tag: String, force: bool) -> Result<()> {
+async fn create_image(all: bool, name: String, tag: String) -> Result<()> {
     if all {
-        ImageBuilder::build_all(force).await?;
+        ImageBuilder::build_all().await?;
     } else {
-        ImageBuilder::build(&name, &tag, force).await?;
+        ImageBuilder::build(&name, &tag).await?;
     }
 
     Ok(())

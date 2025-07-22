@@ -14,7 +14,6 @@ pub enum InteractiveUI {
     ImageRemove,
     ImageCreate,
     Log,
-    Quit,
 }
 
 // 主菜单 UI
@@ -35,7 +34,7 @@ impl fmt::Display for InteractiveMainUI {
             }
             InteractiveMainUI::Image => write!(f, "[IMAGE] Manage build images"),
             InteractiveMainUI::Log => write!(f, "[LOG] Manage log files"),
-            InteractiveMainUI::Quit => write!(f, "[QUIT] Exit program"),
+            InteractiveMainUI::Quit => write!(f, "[QUIT] Exit"),
         }
     }
 }
