@@ -6,6 +6,7 @@ use super::step_executor::StepExecutor;
 use super::task::Task;
 use super::types::{StepResult, StepStatus};
 use crate::core::clean::volumes::VolumesCleaner;
+use crate::formatter::log::LogFormatter;
 use crate::infra::config::ConfKitConfigLoader;
 use crate::infra::log::Log;
 use crate::types::config::ConfKitProjectConfig;
@@ -98,8 +99,7 @@ impl Runner {
         let mut results = Vec::new();
         let total_steps = project_config.steps.len();
 
-        self.logger
-            .info("============================[ Execution Steps ]============================")?;
+        self.logger.info(&LogFormatter::header("Execution Steps"))?;
 
         self.logger.info(&format!(
             "Start to execute project: {} (total {} steps)",
@@ -128,8 +128,7 @@ impl Runner {
 
     /// 打印任务信息
     fn print_task_info(&self) -> Result<()> {
-        self.logger
-            .info("============================[ Task Info ]============================")?;
+        self.logger.info(&LogFormatter::header("Task Info"))?;
         // 打印任务信息
         self.logger.info(&format!("Task: {}", self.context.task_id))?;
         self.logger.info(&format!("Space: {}", self.context.space_name))?;
@@ -142,7 +141,7 @@ impl Runner {
             .info(&format!("Container artifacts dir: {}", self.context.container_artifacts_dir))?;
 
         // 打印 Git 信息
-        self.logger.info("============================[ Git Info ]============================")?;
+        self.logger.info(&LogFormatter::header("Git Info"))?;
         self.logger
             .info(&format!("Repository: {}", self.context.git_info.as_ref().unwrap().repo_url))?;
         self.logger.info(&format!("Branch: {}", self.context.git_info.as_ref().unwrap().branch))?;
@@ -150,8 +149,7 @@ impl Runner {
             .info(&format!("Commit: {}", self.context.git_info.as_ref().unwrap().commit_hash))?;
 
         // 环境变量
-        self.logger
-            .info("============================[ Environment ]============================")?;
+        self.logger.info(&LogFormatter::header("Environment"))?;
         for (key, value) in &self.context.environment {
             self.logger.info(&format!("{}: {}", key, value))?;
         }
@@ -161,9 +159,7 @@ impl Runner {
 
     /// 打印执行摘要
     fn print_execution_summary(&self, results: &[StepResult]) -> Result<()> {
-        self.logger.info(
-            "============================[ Execution Summary ]============================",
-        )?;
+        self.logger.info(&LogFormatter::header("Execution Summary"))?;
         self.logger.info(&format!("Total steps: {}", results.len()))?;
 
         let successful = results.iter().filter(|r| r.status == StepStatus::Success).count();
