@@ -1,0 +1,25 @@
+# Release.toml
+
+# 不自动发布（仅修改版本号）
+publish = false
+
+# 不推送到远程仓库
+push = false
+
+# 创建 Git tag
+tag = true
+
+# 不签名提交和 tag
+sign-commit = false
+sign-tag = false
+
+# 跳过验证（比如 workspace 检查）
+# 如果你遇到 workspace 错误也可以设置
+allow-branch = ["main"]  # 可选：限制只能在 main 分支操作
+
+# 使用工作目录而不是 Git tracked files
+# 避免一些未跟踪文件的问题
+package = true
+
+[changelog]
+path = "CHANGELOG.md"

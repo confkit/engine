@@ -1,12 +1,21 @@
 [package]
 name = "confkit-engine"
-version = "1.0.0"
+version = "0.0.0"
 edition = "2021"
 authors = ["confkit team"]
 description = "confkit CLI - 配置驱动的构建和部署工具"
 license = "MIT"
 repository = "https://github.com/confkit/engine"
 keywords = ["cli", "build", "deploy", "docker", "ci-cd"]
+exclude = [
+  "example/**",
+  "docs/**/*",
+  "tests/**/*",
+  ".cursor/**/*",
+  ".vscode/**/*",
+  ".git/**/*",
+  ".gitignore"
+]
 
 [[bin]]
 name = "confkit"

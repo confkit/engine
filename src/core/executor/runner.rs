@@ -170,7 +170,10 @@ impl Runner {
             .info(&format!("Success: {}, Failed: {}, Skipped: {}", successful, failed, skipped))?;
 
         self.logger.info(&format!("Started at: {}", self.task.started_at))?;
-        self.logger.info(&format!("Finished at: {:?}", self.task.finished_at))?;
+        self.logger.info(&format!(
+            "Finished at: {}",
+            self.task.finished_at.as_ref().map(|t| t.to_string()).as_deref().unwrap_or("-")
+        ))?;
 
         let total_duration: u64 = results.iter().filter_map(|r| r.duration_ms).sum();
 

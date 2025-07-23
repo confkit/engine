@@ -4,12 +4,12 @@ ConfKit is a configuration-driven build and deployment tool designed for modern 
 
 ## 📋 Core Features
 
-- **Builder Management**: Complete lifecycle management of Docker images and containers
-- **Configuration-Driven**: Define build processes through YAML configuration files
-- **Task Execution**: Support for both local and containerized command execution
+- **Builder Management**: Full lifecycle management of Docker images and containers
+- **Configuration Driven**: Define build processes via YAML configuration files
+- **Task Execution**: Support for local and containerized command execution
 - **Log Management**: Complete build log recording, viewing, and management
-- **Git Integration**: Native Git repository operations and environment variable injection
-- **Interactive Interface**: Friendly command-line interactive experience
+- **Git Integration**: Native support for Git repository operations and environment variable injection
+- **Interactive Interface**: User-friendly command-line interactive experience
 
 ## 🚀 Quick Start
 
@@ -19,6 +19,25 @@ ConfKit is a configuration-driven build and deployment tool designed for modern 
 git clone <repository-url>
 cd confkit/engine
 cargo build --release
+```
+
+### Example Configuration Structure
+
+```
+examples/
+├── docker-compose.yml
+├── .confkit.yml
+└── .confkit/
+    ├── spaces/
+    │   ├── hello/
+    │   │   └── hello-confkit.yml
+    │   └── confkit/
+    │       └── engine.yml
+    └── volumes/
+        ├── logs/
+        ├── context/
+        ├── workspace/
+        └── artifacts/
 ```
 
 ### Basic Usage
@@ -46,20 +65,22 @@ confkit log show --space hello --project hello-app <filename>
 ## 🏗 Builder Management
 
 ### Image Management
+
 ```bash
 # List images
-confkit builder image list
+confkit image list
 
-# Pull/build images
-confkit builder image create golang:1.24
+# Pull/build image
+confkit image create golang:1.24
 
-# Remove images
-confkit builder image remove golang:1.24
+# Remove image
+confkit image remove golang:1.24
 ```
 
 ### Container Management
+
 ```bash
-# List all builder status
+# List all builder statuses
 confkit builder list
 
 # Create builder (based on docker-compose.yml)
@@ -76,33 +97,26 @@ confkit builder remove golang-builder
 confkit builder health golang-builder
 ```
 
-## 📝 Configuration File Examples
-
-Complete configuration examples are available in the `examples/` directory:
+### Execute Build
 
 ```bash
-examples/
-├── builder.yml           # Builder configuration
-├── docker-compose.yml    # Container service definition
-└── .confkit/
-    └── spaces/
-        └── hello/
-            ├── config.yml          # Space configuration
-            └── projects/
-                └── hello-app.yml   # Project configuration
+# Build project
+confkit exec --space <space_name> --project-name <project_name>
 ```
 
 ### Project Configuration Example
 
 ```yaml
-# examples/.confkit/spaces/hello/projects/hello-app.yml
-name: "hello-app"
-type: "golang"
-description: "Hello World Go Application"
+name: "hello-confkit"
+description: "Hello Confkit"
 
 source:
   git_repo: "https://github.com/example/hello-go.git"
   git_branch: "main"
+
+environment_files:
+  - format: "yaml"
+    path: "./volumes/environment.yml"
 
 environment:
   APP_NAME: "hello-app"
@@ -135,38 +149,44 @@ confkit log show --space hello --project hello-app complete-filename.txt
 
 ## 🖥 Interactive Mode
 
-Launch interactive mode for the best user experience:
+Start interactive mode for the best user experience:
 
 ```bash
 confkit interactive
 ```
 
 **Navigation Paths**:
+
 - `[BUILDER] Builder Management` → Image and container management
-- `[RUN] Run Management` → Execute project build tasks  
+- `[RUN] Run Management` → Execute project build tasks
 - `[LOG] Log Management` → View project logs
 
-## 🎯 Key Features
+## 🎯 Featured Functions
 
 ### Automatic Environment Variable Injection
 
 ConfKit automatically injects the following environment variables when executing tasks:
 
 #### System Variables
-- `TASK_ID` - Unique task identifier (e.g., `api-20250113-143022-a1b2c3`)
-- `PROJECT_NAME` - Project name from configuration file
+
+- `TASK_ID` - Unique task identifier (e.g., `20250113-143022-a1b2c3`)
+- `PROJECT_NAME` - Project name from the configuration file
 - `SPACE_NAME` - Space name
+- `HOST_WORKSPACE_DIR` - Host task workspace directory
+- `HOST_ARTIFACTS_DIR` - Host task artifacts directory
+- `CONTAINER_WORKSPACE_DIR` - Container task workspace directory
+- `CONTAINER_ARTIFACTS_DIR` - Container task artifacts directory
 
 #### Git Variables
-- `GIT_REPO` - Git repository URL from configuration
+
+- `GIT_REPO` - Git repository address from the configuration file
 - `GIT_BRANCH` - Git branch name (from config or current branch)
-- `GIT_HASH` - Complete commit hash
-- `GIT_COMMIT_HASH` - Complete commit hash (alias)
-- `GIT_COMMIT_SHORT` - Short commit hash (first 8 characters)
-- `GIT_TAG` - Current tag (if available)
+- `GIT_HASH` - Full commit hash
+- `GIT_HASH_SHORT` - Short commit hash (first 8 characters)
 
 #### Custom Variables
-You can also define custom environment variables in your project configuration:
+
+You can also define custom environment variables in the project configuration:
 
 ```yaml
 environment:
@@ -175,79 +195,23 @@ environment:
   CUSTOM_VAR: "${PROJECT_NAME}-${GIT_COMMIT_SHORT}"
 ```
 
-All environment variables support variable substitution using `${VARIABLE_NAME}` syntax.
+All environment variables support variable substitution using the `${variable_name}` syntax.
 
 ### Smart Log Matching
 
-Support multiple log file matching methods:
-- Complete filename
+Supports multiple log file matching methods:
+
+- Full filename
 - Filename fragment
 - Task ID fragment
 - Timestamp matching
 
 ### Layered Builder Management
 
-- **Image Layer**: Manage Docker image pulling, building, and deletion
+- **Image Layer**: Manage Docker image pulling, building, and removal
 - **Container Layer**: Create named builder containers based on docker-compose.yml
 - **Lifecycle**: Complete start, stop, and health check processes
 
-## 📂 Project Structure
-
-```
-examples/                # Example configurations
-├── builder.yml         # Builder configuration
-├── docker-compose.yml  # Container service definition
-├── release.sh          # Self-release script
-├── release-docker-compose.yml  # Release environment
-├── RELEASE_README.md   # Release documentation
-└── .confkit/           # ConfKit workspace
-    └── spaces/         # Space management
-        ├── hello/      # Example space
-        └── release/    # Release space (self-release)
-volumes/                # Runtime data
-├── logs/              # Task logs
-├── workspace/         # Build workspace  
-└── artifacts/         # Build artifacts
-```
-
-## 🔄 Self-Release with ConfKit
-
-ConfKit can release itself using its own build system! This demonstrates the power of configuration-driven builds:
-
-```bash
-# Navigate to examples directory
-cd examples
-
-# Set required environment variables
-export CARGO_REGISTRY_TOKEN="your-crates-token"
-export DOCKER_USERNAME="your-docker-username"
-export DOCKER_PASSWORD="your-docker-password"
-export GITHUB_TOKEN="your-github-token"
-
-# Release version 1.0.0
-./release.sh 1.0.0
-
-# Or test the release process
-./release.sh 1.0.0 --dry-run
-```
-
-For detailed information about the self-release process, see [examples/RELEASE_README.md](examples/RELEASE_README.md).
-
-## 🛠 Development Status
-
-### ✅ Completed
-- Builder management (image + container)
-- Configuration file parsing and validation
-- Task execution engine (basic)
-- Log system (complete)
-- Git integration and environment variable injection
-- Interactive interface (Builder + Log)
-
-### 🚧 In Development
-- Task management commands
-- Advanced parallel execution
-- Notification system
-
 ## 📄 License
 
-MIT License 
+MIT License
