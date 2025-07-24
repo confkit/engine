@@ -3,16 +3,15 @@
 //! Description: Execution context implementation
 
 use anyhow::Result;
-use chrono::Local;
 use std::{collections::HashMap, fs, path::Path};
 use tokio::process::Command;
 
 use crate::{
     core::executor::task::Task,
+    formatter::log::LogFormatter,
     infra::git::{GitClient, GitInfo},
     shared::constants::{
-        CONTAINER_ARTIFACTS_DIR, CONTAINER_WORKSPACE_DIR, HOST_ARTIFACTS_DIR, HOST_LOG_DIR,
-        HOST_WORKSPACE_DIR,
+        CONTAINER_ARTIFACTS_DIR, CONTAINER_WORKSPACE_DIR, HOST_ARTIFACTS_DIR, HOST_WORKSPACE_DIR,
     },
     types::config::ConfKitProjectConfig,
 };
@@ -53,11 +52,7 @@ impl ExecutionContext {
         let container_workspace_dir = format!("{}/{}", CONTAINER_WORKSPACE_DIR, task_path_identify);
         let container_artifacts_dir = format!("{}/{}", CONTAINER_ARTIFACTS_DIR, task_path_identify);
 
-        let timestamp = Local::now().format("%Y.%m.%d-%H:%M:%S%.3f");
-        let host_log_path = format!(
-            "{}/<{}>-{}/[{}]{}.log",
-            HOST_LOG_DIR, space_name, project_name, timestamp, &task_id
-        );
+        let host_log_path = LogFormatter::get_task_log_path(&space_name, &project_name, &task_id);
 
         let git_client = GitClient::new(&space_name, &project_name).await?;
 

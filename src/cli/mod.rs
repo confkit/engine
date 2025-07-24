@@ -9,12 +9,14 @@ mod builder;
 mod clean;
 mod image;
 mod interactive;
+mod log;
 mod run;
 
 use builder::BuilderCommand;
 use clean::CleanArgs;
 use image::ImageCommand;
 use interactive::InteractiveCommand;
+use log::LogArgs;
 use run::RunArgs;
 
 #[derive(Parser)]
@@ -36,18 +38,17 @@ pub enum Commands {
     Run(RunArgs),
     /// Clean logs
     Clean(CleanArgs),
+    /// Log management.
+    Log(LogArgs),
 }
-
-// /// 查看空间
+/// Space management.
 // Space(SpaceCommand),
-// /// 查看项目
+/// Project management.
 // Project(ProjectCommand),
-// /// 管理任务
+/// Task management.
 // Task(TaskCommand),
-// /// 查看日志
+/// Log management.
 // Log(LogCommand),
-// /// 交互 式模式
-// Interactive(InteractiveCommand),
 
 impl Cli {
     pub async fn execute(self) -> Result<()> {
@@ -56,6 +57,7 @@ impl Cli {
             Some(Commands::Image(cmd)) => cmd.execute().await,
             Some(Commands::Run(args)) => run::handle_run(&args).await,
             Some(Commands::Clean(args)) => clean::handle_clean(&args).await,
+            Some(Commands::Log(args)) => log::handle_log(&args).await,
             None => InteractiveCommand::execute().await,
         }
     }

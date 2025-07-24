@@ -80,6 +80,7 @@ impl Runner {
         // 执行所有步骤
         let results = self.execute_all_steps(&self.project_config, &executor).await?;
 
+        self.logger.info(&LogFormatter::header("Cleaning workspace"))?;
         VolumesCleaner::clean(&self.space_name, &self.project_name, &self.task.id).await?;
 
         self.task.finish();
