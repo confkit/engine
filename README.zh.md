@@ -25,7 +25,7 @@ cargo build --release
 
 ```
 examples/
-├── docker-compose.yml
+├── confkit-compose.yml
 ├── .confkit.yml
 └── .confkit/
     ├── spaces/
@@ -40,6 +40,49 @@ examples/
         └── artifacts/
 ```
 
+### 基础配置文件
+```yml
+# .confkit.yml
+version: 1.0.0
+
+# 容器引擎: docker/podman
+engine: docker
+
+engine_compose:
+  # 容器分组(default: confkit)
+  # project: confkit
+  # docker compose file
+  file: ./confkit-compose.yml
+
+# 空间列表
+spaces:
+  - name: confkit
+    description: "ConfKit 工具链发布空间"
+    # 项目执行配置文件
+    path: .confkit/spaces/confkit
+  - name: hello
+    description: "Hello ConfKit"
+    path: .confkit/spaces/hello
+
+# 镜像管理列表
+images:
+    # 构建目标镜像名称
+  - name: hello-builder
+    # 基础镜像(自动拉取)
+    base_image: alpine
+    # 基础镜像标签(目标镜像共用)
+    tag: 3.18
+    context: volumes/context
+    # Dockerfile 路径
+    engine_file: ./.confkit/images/Dockerfile.alpine:3.18
+  - name: rust-builder
+    base_image: rust
+    tag: 1.88-alpine
+    context: volumes/context
+    engine_file: ./.confkit/images/Dockerfile.rust.1.88-alpine
+
+```
+
 ### 基本使用
 
 ```bash
@@ -47,7 +90,7 @@ examples/
 confkit --help
 
 # 交互式模式（推荐新手使用）
-confkit interactive
+confkit
 
 # 管理构建器
 confkit builder list

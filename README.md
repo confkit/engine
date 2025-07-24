@@ -6,7 +6,7 @@ ConfKit is a configuration-driven build and deployment tool designed for modern 
 
 - **Builder Management**: Full lifecycle management of Docker images and containers
 - **Configuration Driven**: Define build processes via YAML configuration files
-- **Task Execution**: Support for local and containerized command execution
+- **Task Execution**: Supports both local and containerized command execution
 - **Log Management**: Complete build log recording, viewing, and management
 - **Git Integration**: Native support for Git repository operations and environment variable injection
 - **Interactive Interface**: User-friendly command-line interactive experience
@@ -25,7 +25,7 @@ cargo build --release
 
 ```
 examples/
-├── docker-compose.yml
+├── confkit-compose.yml
 ├── .confkit.yml
 └── .confkit/
     ├── spaces/
@@ -40,14 +40,56 @@ examples/
         └── artifacts/
 ```
 
+### Basic Configuration File
+```yml
+# .confkit.yml
+version: 1.0.0
+
+# Container engine: docker/podman
+engine: docker
+
+engine_compose:
+  # Container group (default: confkit)
+  # project: confkit
+  # docker compose file
+  file: ./confkit-compose.yml
+
+# Space list
+spaces:
+  - name: confkit
+    description: "ConfKit toolchain release space"
+    # Project execution config file
+    path: .confkit/spaces/confkit
+  - name: hello
+    description: "Hello ConfKit"
+    path: .confkit/spaces/hello
+
+# Image management list
+images:
+    # Target image name
+  - name: hello-builder
+    # Base image (auto pull)
+    base_image: alpine
+    # Base image tag (shared by target image)
+    tag: 3.18
+    context: volumes/context
+    # Dockerfile path
+    engine_file: ./.confkit/images/Dockerfile.alpine:3.18
+  - name: rust-builder
+    base_image: rust
+    tag: 1.88-alpine
+    context: volumes/context
+    engine_file: ./.confkit/images/Dockerfile.rust.1.88-alpine
+```
+
 ### Basic Usage
 
 ```bash
-# Show help
+# View help
 confkit --help
 
 # Interactive mode (recommended for beginners)
-confkit interactive
+confkit
 
 # Manage builders
 confkit builder list
@@ -142,7 +184,7 @@ confkit log list --space hello --project hello-app
 # View specific log
 confkit log show --space hello --project hello-app abc123
 
-# Support multiple matching methods
+# Supports multiple matching methods
 confkit log show --space hello --project hello-app "2025-01-13_12-00-00"
 confkit log show --space hello --project hello-app complete-filename.txt
 ```
@@ -155,7 +197,7 @@ Start interactive mode for the best user experience:
 confkit interactive
 ```
 
-**Navigation Paths**:
+**Navigation Path**:
 
 - `[BUILDER] Builder Management` → Image and container management
 - `[RUN] Run Management` → Execute project build tasks
@@ -169,8 +211,8 @@ ConfKit automatically injects the following environment variables when executing
 
 #### System Variables
 
-- `TASK_ID` - Unique task identifier (e.g., `20250113-143022-a1b2c3`)
-- `PROJECT_NAME` - Project name from the configuration file
+- `TASK_ID` - Unique task identifier (e.g. `20250113-143022-a1b2c3`)
+- `PROJECT_NAME` - Project name from config file
 - `SPACE_NAME` - Space name
 - `HOST_WORKSPACE_DIR` - Host task workspace directory
 - `HOST_ARTIFACTS_DIR` - Host task artifacts directory
@@ -179,7 +221,7 @@ ConfKit automatically injects the following environment variables when executing
 
 #### Git Variables
 
-- `GIT_REPO` - Git repository address from the configuration file
+- `GIT_REPO` - Git repository address from config file
 - `GIT_BRANCH` - Git branch name (from config or current branch)
 - `GIT_HASH` - Full commit hash
 - `GIT_HASH_SHORT` - Short commit hash (first 8 characters)
@@ -195,20 +237,20 @@ environment:
   CUSTOM_VAR: "${PROJECT_NAME}-${GIT_COMMIT_SHORT}"
 ```
 
-All environment variables support variable substitution using the `${variable_name}` syntax.
+All environment variables support variable substitution using the `${VAR_NAME}` syntax.
 
 ### Smart Log Matching
 
 Supports multiple log file matching methods:
 
-- Full filename
-- Filename fragment
+- Full file name
+- File name fragment
 - Task ID fragment
 - Timestamp matching
 
 ### Layered Builder Management
 
-- **Image Layer**: Manage Docker image pulling, building, and removal
+- **Image Layer**: Manage pulling, building, and removing Docker images
 - **Container Layer**: Create named builder containers based on docker-compose.yml
 - **Lifecycle**: Complete start, stop, and health check processes
 
