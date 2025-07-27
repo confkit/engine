@@ -23,6 +23,8 @@ pub struct ExecutionContext {
     pub space_name: String,
     pub project_name: String,
     pub environment: HashMap<String, String>,
+    pub clean_workspace: bool,
+    pub clean_artifacts: bool,
     /// 主机工作空间目录
     pub host_workspace_dir: String,
     /// 主机产物目录
@@ -68,6 +70,12 @@ impl ExecutionContext {
             &git_client.git_info,
         );
 
+        let (clean_workspace, clean_artifacts) = if let Some(cleaner) = &project_config.cleaner {
+            (cleaner.workspace.unwrap_or(true), cleaner.artifacts.unwrap_or(true))
+        } else {
+            (true, true)
+        };
+
         Ok(Self {
             task_id: task_id.clone(),
             space_name,
@@ -79,6 +87,8 @@ impl ExecutionContext {
             container_artifacts_dir,
             host_log_path,
             git_info: git_client.git_info,
+            clean_workspace,
+            clean_artifacts,
         })
     }
 
@@ -90,20 +100,6 @@ impl ExecutionContext {
         }
 
         result
-    }
-
-    /// 注入环境变量
-    pub fn resolve_host_variables(&self, command: &mut Command) {
-        for (key, value) in &self.environment {
-            command.env(key, value);
-        }
-    }
-
-    /// 注入容器环境变量
-    pub fn resolve_container_variables(&self, command: &mut Command) {
-        for (key, value) in &self.environment {
-            command.args(&["-e", &format!("{}={}", key, value)]);
-        }
     }
 }
 
@@ -179,5 +175,19 @@ impl ExecutionContext {
         }
 
         env
+    }
+}
+
+/// 注入环境变量
+pub fn resolve_host_variables(command: &mut Command, environment: &HashMap<String, String>) {
+    for (key, value) in environment {
+        command.env(key, value);
+    }
+}
+
+/// 注入容器环境变量
+pub fn resolve_container_variables(command: &mut Command, environment: &HashMap<String, String>) {
+    for (key, value) in environment {
+        command.args(&["-e", &format!("{}={}", key, value)]);
     }
 }

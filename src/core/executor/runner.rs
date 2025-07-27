@@ -81,7 +81,15 @@ impl Runner {
         let results = self.execute_all_steps(&self.project_config, &executor).await?;
 
         self.logger.info(&LogFormatter::header("Cleaning workspace"))?;
-        VolumesCleaner::clean(&self.space_name, &self.project_name, &self.task.id).await?;
+
+        if self.context.clean_workspace {
+            VolumesCleaner::clean_workspace(&self.space_name, &self.project_name, &self.task.id)
+                .await?;
+        }
+        if self.context.clean_artifacts {
+            VolumesCleaner::clean_artifacts(&self.space_name, &self.project_name, &self.task.id)
+                .await?;
+        }
 
         self.task.finish();
 

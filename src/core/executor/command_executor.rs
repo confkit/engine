@@ -7,7 +7,10 @@ use tokio::process::Command;
 use tracing;
 
 use super::context::ExecutionContext;
-use crate::utils::command::CommandUtil;
+use crate::{
+    core::executor::context::resolve_host_variables, engine::engine::ConfKitEngine,
+    utils::command::CommandUtil,
+};
 
 /// 命令执行器
 pub struct CommandExecutor;
@@ -20,30 +23,8 @@ impl CommandExecutor {
         working_dir: &str,
         commands: &[String],
     ) -> Result<i32> {
-        for cmd in commands {
-            let mut command = Command::new("docker");
-
-            command.args(&["exec", "-i"]);
-
-            context.resolve_container_variables(&mut command);
-
-            command.args(&["-w", working_dir]);
-
-            command.args(&[container, "sh", "-c", cmd]);
-
-            let exit_code = CommandUtil::execute_command_with_output(
-                &mut command,
-                Some(Box::new(|line| tracing::info!("{}", line))),
-                Some(Box::new(|line| tracing::info!("{}", line))),
-            )
-            .await?;
-
-            if exit_code != 0 {
-                return Ok(exit_code);
-            }
-        }
-
-        Ok(0)
+        ConfKitEngine::execute_in_container(container, working_dir, commands, &context.environment)
+            .await
     }
 
     /// 在本地执行命令
@@ -59,7 +40,7 @@ impl CommandExecutor {
 
             command.current_dir(working_dir);
 
-            context.resolve_host_variables(&mut command);
+            resolve_host_variables(&mut command, &context.environment);
             let exit_code = CommandUtil::execute_command_with_output(
                 &mut command,
                 Some(Box::new(|line| tracing::info!("{}", line))),

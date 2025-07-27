@@ -3,9 +3,10 @@
 //! Description: Docker engine implementation
 
 use anyhow::Result;
-use std::process::Command;
+use std::{collections::HashMap, process::Command};
 
 use crate::{
+    core::executor::context::resolve_container_variables,
     infra::config::ConfKitConfigLoader,
     types::config::{
         ContainerStatus, EngineContainerInfo, EngineImageInfo, EngineServiceConfig, ImageStatus,
@@ -379,6 +380,58 @@ impl DockerEngine {
             working_dir: service_config.working_dir,
             status,
         })
+    }
+
+    // 在容器中执行命令
+    pub async fn execute_in_container(
+        container: &str,
+        working_dir: &str,
+        commands: &[String],
+        environment: &HashMap<String, String>,
+    ) -> Result<i32> {
+        for cmd in commands {
+            let mut command = tokio::process::Command::new("docker");
+
+            command.args(&["exec", "-i"]);
+
+            resolve_container_variables(&mut command, environment);
+
+            command.args(&["-w", working_dir]);
+
+            command.args(&[container, "sh", "-c", cmd]);
+
+            // // 完整打印命令字符串
+            // let mut command_parts =
+            //     vec!["docker".to_string(), "exec".to_string(), "-i".to_string()];
+
+            // // 添加环境变量参数
+            // for (key, value) in environment {
+            //     command_parts.push("-e".to_string());
+            //     command_parts.push(format!("{}={}", key, value));
+            // }
+
+            // command_parts.push("-w".to_string());
+            // command_parts.push(working_dir.to_string());
+            // command_parts.push(container.to_string());
+            // command_parts.push("sh".to_string());
+            // command_parts.push("-c".to_string());
+            // command_parts.push(cmd.to_string());
+
+            // tracing::debug!("command: {}", command_parts.join(" "));
+
+            let exit_code = CommandUtil::execute_command_with_output(
+                &mut command,
+                Some(Box::new(|line| tracing::info!("{}", line))),
+                Some(Box::new(|line| tracing::info!("{}", line))),
+            )
+            .await?;
+
+            if exit_code != 0 {
+                return Ok(exit_code);
+            }
+        }
+
+        Ok(0)
     }
 
     // ================================================ Docker Compose ================================================

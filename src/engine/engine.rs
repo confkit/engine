@@ -2,6 +2,8 @@
 //! Created: 2025-07-14
 //! Description: ConfKit Engine 统一引擎调用
 
+use std::collections::HashMap;
+
 use crate::engine::docker::DockerEngine;
 use crate::engine::podman::PodmanEngine;
 use crate::shared::global::ENGINE;
@@ -156,6 +158,26 @@ impl ConfKitEngine {
         match engine {
             Engine::Docker => DockerEngine::get_container_info(name).await,
             Engine::Podman => PodmanEngine::get_container_info(name).await,
+        }
+    }
+
+    // 在容器中执行命令
+    pub async fn execute_in_container(
+        container: &str,
+        working_dir: &str,
+        commands: &[String],
+        environment: &HashMap<String, String>,
+    ) -> Result<i32> {
+        let engine = Self::get_engine().await?;
+        match engine {
+            Engine::Docker => {
+                DockerEngine::execute_in_container(container, working_dir, commands, environment)
+                    .await
+            }
+            Engine::Podman => {
+                PodmanEngine::execute_in_container(container, working_dir, commands, environment)
+                    .await
+            }
         }
     }
 

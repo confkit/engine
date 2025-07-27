@@ -105,7 +105,14 @@ pub struct ConfKitProjectConfig {
     pub source: Option<ConfKitSourceConfig>,
     pub environment_files: Option<Vec<ConfKitEnvironmentFileConfig>>,
     pub environment: Option<HashMap<String, String>>,
+    pub cleaner: Option<ConfKitCleanerConfig>,
     pub steps: Vec<ConfKitStepConfig>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ConfKitCleanerConfig {
+    pub workspace: Option<bool>,
+    pub artifacts: Option<bool>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
