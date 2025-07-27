@@ -39,10 +39,19 @@ impl DockerEngine {
             .arg(format!("{}:{}", image, tag))
             .output()?;
 
+        // 检查命令执行是否成功
+        if !output.status.success() {
+            return Err(anyhow::anyhow!(
+                "Failed to check image existence: {}",
+                String::from_utf8_lossy(&output.stderr)
+            ));
+        }
+
         // 检查输出是否为空，空输出表示镜像不存在
         let output_str = String::from_utf8_lossy(&output.stdout);
+        let trimmed_output = output_str.trim();
 
-        match output_str.trim() {
+        match trimmed_output {
             "" => Ok(false),
             _ => Ok(true),
         }
@@ -176,8 +185,20 @@ impl DockerEngine {
             .arg("--quiet")
             .output()?;
 
-        // 如果找到容器，输出不为空；如果没找到，输出为空
-        Ok(!output.stdout.is_empty())
+        // 检查命令执行是否成功
+        if !output.status.success() {
+            return Err(anyhow::anyhow!(
+                "Failed to check container existence: {}",
+                String::from_utf8_lossy(&output.stderr)
+            ));
+        }
+
+        // 将输出转换为字符串并去除空白字符
+        let output_str = String::from_utf8_lossy(&output.stdout);
+        let trimmed_output = output_str.trim();
+
+        // 如果输出不为空且包含有效的容器ID，则认为容器存在
+        Ok(!trimmed_output.is_empty())
     }
 
     // 创建容器
