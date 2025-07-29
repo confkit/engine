@@ -5,3 +5,4 @@
 pub mod builder_container;
 pub mod builder_image;
 pub mod log;
+pub mod path;

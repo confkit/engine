@@ -7,8 +7,7 @@ use std::{collections::HashMap, fs, path::Path};
 use tokio::process::Command;
 
 use crate::{
-    core::executor::task::Task,
-    formatter::log::LogFormatter,
+    formatter::{log::LogFormatter, path::PathFormatter},
     infra::git::{GitClient, GitInfo},
     shared::constants::{
         CONTAINER_ARTIFACTS_DIR, CONTAINER_WORKSPACE_DIR, HOST_ARTIFACTS_DIR, HOST_WORKSPACE_DIR,
@@ -47,14 +46,14 @@ impl ExecutionContext {
         project_name: String,
         project_config: &ConfKitProjectConfig,
     ) -> Result<Self> {
-        let task_path_identify = Task::format_task_path(&space_name, &project_name, &task_id);
+        let task_path_identify = PathFormatter::get_task_path(&space_name, &project_name, &task_id);
 
         let host_workspace_dir = format!("{}/{}", HOST_WORKSPACE_DIR, task_path_identify);
         let host_artifacts_dir = format!("{}/{}", HOST_ARTIFACTS_DIR, task_path_identify);
         let container_workspace_dir = format!("{}/{}", CONTAINER_WORKSPACE_DIR, task_path_identify);
         let container_artifacts_dir = format!("{}/{}", CONTAINER_ARTIFACTS_DIR, task_path_identify);
 
-        let host_log_path = LogFormatter::get_task_log_path(&space_name, &project_name, &task_id);
+        let host_log_path = PathFormatter::get_task_log_path(&space_name, &project_name, &task_id);
 
         let git_client = GitClient::new(&space_name, &project_name).await?;
 

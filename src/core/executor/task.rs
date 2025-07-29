@@ -28,10 +28,3 @@ impl Task {
         self.finished_at = Some(Local::now());
     }
 }
-
-impl Task {
-    // 格式化任务路径
-    pub fn format_task_path(space_name: &str, project_name: &str, task_id: &str) -> String {
-        format!("<{}>-{}-{}", space_name, project_name, task_id)
-    }
-}

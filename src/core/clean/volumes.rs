@@ -6,7 +6,7 @@ use anyhow::Result;
 use std::{fs, path::Path};
 
 use crate::{
-    core::executor::task::Task,
+    formatter::path::PathFormatter,
     shared::constants::{HOST_ARTIFACTS_DIR, HOST_WORKSPACE_DIR},
 };
 
@@ -18,7 +18,7 @@ impl VolumesCleaner {
         project_name: &str,
         task_id: &str,
     ) -> Result<()> {
-        let task_dir = Task::format_task_path(&space_name, &project_name, &task_id);
+        let task_dir = PathFormatter::get_task_path(&space_name, &project_name, &task_id);
 
         let host_workspace_dir = format!("{}/{}", HOST_WORKSPACE_DIR, task_dir);
 
@@ -36,7 +36,7 @@ impl VolumesCleaner {
         project_name: &str,
         task_id: &str,
     ) -> Result<()> {
-        let task_dir = Task::format_task_path(&space_name, &project_name, &task_id);
+        let task_dir = PathFormatter::get_task_path(&space_name, &project_name, &task_id);
 
         let host_artifacts_dir = format!("{}/{}", HOST_ARTIFACTS_DIR, task_dir);
 

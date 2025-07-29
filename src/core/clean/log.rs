@@ -5,6 +5,7 @@
 use anyhow::Result;
 use std::fs;
 
+use crate::formatter::path::PathFormatter;
 use crate::shared::constants::HOST_LOG_DIR;
 
 pub struct LogCleaner {}
@@ -52,7 +53,7 @@ impl LogCleaner {
     pub fn clean_project(space_name: &str, project_name: &str) -> Result<()> {
         tracing::info!("Cleaning space: {}, project: {}", space_name, project_name);
 
-        let project_log_dir = format_log_project_path(space_name, project_name);
+        let project_log_dir = PathFormatter::format_log_project_path(space_name, project_name);
 
         fs::remove_dir_all(project_log_dir)?;
 
@@ -67,7 +68,7 @@ impl LogCleaner {
             task_id
         );
 
-        let project_log_dir = format_log_project_path(space_name, project_name);
+        let project_log_dir = PathFormatter::format_log_project_path(space_name, project_name);
         // 获取 log_dir 下的所有目录
         let dirs = fs::read_dir(project_log_dir)?;
 
@@ -87,12 +88,4 @@ impl LogCleaner {
         }
         Ok(())
     }
-}
-
-fn format_log_project_path(space_name: &str, project_name: &str) -> String {
-    format!("{}/{}", HOST_LOG_DIR, format_log_project_dir_name(space_name, project_name))
-}
-
-fn format_log_project_dir_name(space_name: &str, project_name: &str) -> String {
-    format!("<{}>-{}", space_name, project_name)
 }

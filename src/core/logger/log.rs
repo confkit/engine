@@ -5,10 +5,10 @@
 use anyhow::Result;
 use std::fs;
 
-use crate::formatter::log::LogFormatter;
+use crate::formatter::path::PathFormatter;
 
 pub fn print_task_log(space_name: &str, project_name: &str, task_id: &str) -> Result<()> {
-    let host_log_path = LogFormatter::get_project_log_path(space_name, project_name);
+    let host_log_path = PathFormatter::get_project_log_path(space_name, project_name);
     let files = fs::read_dir(&host_log_path)?;
 
     for file in files {
