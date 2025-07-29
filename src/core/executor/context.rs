@@ -165,6 +165,7 @@ impl ExecutionContext {
             env.insert("GIT_BRANCH".to_string(), git_info.branch.clone());
             env.insert("GIT_HASH".to_string(), git_info.commit_hash.clone());
             env.insert("GIT_HASH_SHORT".to_string(), git_info.commit_hash_short.clone());
+            env.insert("PROJECT_VERSION".to_string(), git_info.project_version.clone());
         }
 
         // 项目环境变量

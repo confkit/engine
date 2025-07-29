@@ -213,6 +213,7 @@ ConfKit automatically injects the following environment variables when executing
 
 - `TASK_ID` - Unique task identifier (e.g. `20250113-143022-a1b2c3`)
 - `PROJECT_NAME` - Project name from config file
+- `PROJECT_VERSION` - Project version from remote repository(javascript: package.json, rust: Cargo.toml)
 - `SPACE_NAME` - Space name
 - `HOST_WORKSPACE_DIR` - Host task workspace directory
 - `HOST_ARTIFACTS_DIR` - Host task artifacts directory

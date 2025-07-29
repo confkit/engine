@@ -10,8 +10,8 @@ use tokio::fs::read_to_string;
 use crate::shared::constants::CONFKIT_CONFIG_FILE;
 use crate::shared::global::CONFIG;
 use crate::types::config::{
-    ConfKitConfig, ConfKitImageConfig, ConfKitProjectConfig, ConfKitSpaceConfig,
-    EngineComposeConfig,
+    ConfKitConfig, ConfKitImageConfig, ConfKitProjectConfig, ConfKitSourceConfig,
+    ConfKitSpaceConfig, EngineComposeConfig,
 };
 use crate::utils::fs::get_yaml_files_in_dir;
 
@@ -30,7 +30,7 @@ impl ConfKitConfigLoader {
 
     /// 从YAML文件加载配置
     pub async fn from_file(path: &str) -> Result<ConfKitConfig> {
-        let content = tokio::fs::read_to_string(path).await?;
+        let content = read_to_string(path).await?;
         let config: ConfKitConfig = serde_yaml::from_str(&content)?;
         Self::validate(&config)?;
         Ok(config)
@@ -72,6 +72,21 @@ impl ConfKitConfigLoader {
         Ok(space_config.cloned())
     }
 
+    // 获取项目源信息
+    pub async fn get_project_source_info(
+        space_name: &str,
+        project_name: &str,
+    ) -> Result<Option<ConfKitSourceConfig>> {
+        let project_config = Self::get_project_config(space_name, project_name).await?;
+
+        if project_config.is_none() {
+            return Ok(None);
+        }
+
+        let project_config = project_config.unwrap();
+        Ok(project_config.source)
+    }
+
     // 获取 space 下的所有项目配置
     pub async fn get_project_config_list(space_name: &str) -> Result<Vec<ConfKitProjectConfig>> {
         let space_config = Self::get_space_config(space_name).await?;
@@ -104,7 +119,7 @@ impl ConfKitConfigLoader {
     // 获取 Engine Compose 配置文件
     pub async fn get_engine_compose_config() -> Result<EngineComposeConfig> {
         let config_file_path = Self::get_config().engine_compose.file;
-        let config = tokio::fs::read_to_string(config_file_path).await?;
+        let config = read_to_string(config_file_path).await?;
         let config: EngineComposeConfig = serde_yaml::from_str(&config)?;
 
         Ok(config)

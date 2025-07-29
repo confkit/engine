@@ -214,6 +214,7 @@ ConfKit 在执行任务时会自动注入以下环境变量：
 
 - `TASK_ID` - 任务唯一标识符（如 `20250113-143022-a1b2c3`）
 - `PROJECT_NAME` - 配置文件中的项目名称
+- `PROJECT_VERSION` - 项目版本号, 取自远程仓库(javascript: package.json, rust: Cargo.toml)
 - `SPACE_NAME` - 空间名称
 - `HOST_WORKSPACE_DIR` - 主机任务工作空间目录
 - `HOST_ARTIFACTS_DIR` - 主机任务产物目录

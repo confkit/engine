@@ -119,6 +119,10 @@ pub struct ConfKitCleanerConfig {
 pub struct ConfKitSourceConfig {
     pub git_repo: String,
     pub git_branch: String,
+    // 项目语言: javascript, rust
+    pub language: Option<String>,
+    // 项目配置文件: javascript: package.json, rust: Cargo.toml
+    pub manifest_file: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

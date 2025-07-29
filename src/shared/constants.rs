@@ -19,3 +19,9 @@ pub const CONTAINER_WORKSPACE_DIR: &str = "/workspace";
 
 /// 容器产物目录
 pub const CONTAINER_ARTIFACTS_DIR: &str = "/artifacts";
+
+/// 缓存目录
+pub const HOST_CACHE_DIR: &str = "./volumes/cache";
+
+/// 容器缓存目录
+pub const CONTAINER_CACHE_DIR: &str = "/cache";
