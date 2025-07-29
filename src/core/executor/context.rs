@@ -7,7 +7,7 @@ use std::{collections::HashMap, fs, path::Path};
 use tokio::process::Command;
 
 use crate::{
-    formatter::{log::LogFormatter, path::PathFormatter},
+    formatter::path::PathFormatter,
     infra::git::{GitClient, GitInfo},
     shared::constants::{
         CONTAINER_ARTIFACTS_DIR, CONTAINER_WORKSPACE_DIR, HOST_ARTIFACTS_DIR, HOST_WORKSPACE_DIR,

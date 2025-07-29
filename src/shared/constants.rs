@@ -6,13 +6,13 @@
 pub const CONFKIT_CONFIG_FILE: &str = ".confkit.yml";
 
 /// 工作目录
-pub const HOST_WORKSPACE_DIR: &str = "./volumes/workspace";
+pub const HOST_WORKSPACE_DIR: &str = "volumes/workspace";
 
 /// 产物目录
-pub const HOST_ARTIFACTS_DIR: &str = "./volumes/artifacts";
+pub const HOST_ARTIFACTS_DIR: &str = "volumes/artifacts";
 
 /// 日志目录
-pub const HOST_LOG_DIR: &str = "./volumes/logs";
+pub const HOST_LOG_DIR: &str = "volumes/logs";
 
 /// 容器工作空间目录
 pub const CONTAINER_WORKSPACE_DIR: &str = "/workspace";
@@ -21,7 +21,7 @@ pub const CONTAINER_WORKSPACE_DIR: &str = "/workspace";
 pub const CONTAINER_ARTIFACTS_DIR: &str = "/artifacts";
 
 /// 缓存目录
-pub const HOST_CACHE_DIR: &str = "./volumes/cache";
+pub const HOST_CACHE_DIR: &str = "volumes/cache";
 
 /// 容器缓存目录
 pub const CONTAINER_CACHE_DIR: &str = "/cache";

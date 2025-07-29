@@ -35,12 +35,14 @@ impl CommandExecutor {
     ) -> Result<i32> {
         for cmd in commands {
             let mut command = Command::new("sh");
+
+            resolve_host_variables(&mut command, &context.environment);
+
             command.arg("-c");
             command.arg(cmd);
 
             command.current_dir(working_dir);
 
-            resolve_host_variables(&mut command, &context.environment);
             let exit_code = CommandUtil::execute_command_with_output(
                 &mut command,
                 Some(Box::new(|line| tracing::info!("{}", line))),
