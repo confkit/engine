@@ -20,11 +20,11 @@ mod formatter;
 use cli::Cli;
 use engine::engine::ConfKitEngine;
 use infra::config::ConfKitConfigLoader;
-use shared::constants::{HOST_ARTIFACTS_DIR, HOST_CACHE_DIR, HOST_LOG_DIR, HOST_WORKSPACE_DIR};
+use shared::constants::{HOST_CACHE_DIR, HOST_LOG_DIR, HOST_WORKSPACE_DIR};
 
 // 初始化所需目录
 fn init_dirs() -> Result<()> {
-    let dirs = [HOST_WORKSPACE_DIR, HOST_ARTIFACTS_DIR, HOST_LOG_DIR, HOST_CACHE_DIR];
+    let dirs = [HOST_WORKSPACE_DIR, HOST_LOG_DIR, HOST_CACHE_DIR];
 
     for dir in dirs {
         if !Path::new(dir).exists() {

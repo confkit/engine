@@ -68,9 +68,6 @@ impl Runner {
         // 创建工作目录
         make_dir_with_permissions(&self.context.host_workspace_dir, 0o777)?;
 
-        // 创建产物目录
-        make_dir_with_permissions(&self.context.host_artifacts_dir, 0o777)?;
-
         // 打印任务信息
         self.print_task_info()?;
 
@@ -84,10 +81,6 @@ impl Runner {
 
         if self.context.clean_workspace {
             VolumesCleaner::clean_workspace(&self.space_name, &self.project_name, &self.task.id)
-                .await?;
-        }
-        if self.context.clean_artifacts {
-            VolumesCleaner::clean_artifacts(&self.space_name, &self.project_name, &self.task.id)
                 .await?;
         }
 
@@ -143,11 +136,8 @@ impl Runner {
         self.logger.info(&format!("Space: {}", self.context.space_name))?;
         self.logger.info(&format!("Project: {}", self.context.project_name))?;
         self.logger.info(&format!("Host workspace dir: {}", self.context.host_workspace_dir))?;
-        self.logger.info(&format!("Host artifacts dir: {}", self.context.host_artifacts_dir))?;
         self.logger
             .info(&format!("Container workspace dir: {}", self.context.container_workspace_dir))?;
-        self.logger
-            .info(&format!("Container artifacts dir: {}", self.context.container_artifacts_dir))?;
 
         // 打印 Git 信息
         self.logger.info(&LogFormatter::header("Git Info"))?;

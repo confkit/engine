@@ -34,10 +34,9 @@ examples/
     │   └── confkit/
     │       └── engine.yml
     └── volumes/
+        ├── cache/
         ├── logs/
-        ├── context/
-        ├── workspace/
-        └── artifacts/
+        └── workspace/
 ```
 
 ### 基础配置文件
@@ -217,9 +216,7 @@ ConfKit 在执行任务时会自动注入以下环境变量：
 - `PROJECT_VERSION` - 项目版本号, 取自远程仓库(javascript: package.json, rust: Cargo.toml)
 - `SPACE_NAME` - 空间名称
 - `HOST_WORKSPACE_DIR` - 主机任务工作空间目录
-- `HOST_ARTIFACTS_DIR` - 主机任务产物目录
 - `CONTAINER_WORKSPACE_DIR` - 容器任务工作空间目录
-- `CONTAINER_ARTIFACTS_DIR` - 容器任务产物目录
 
 #### Git 变量
 

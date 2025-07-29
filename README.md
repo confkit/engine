@@ -34,10 +34,9 @@ examples/
     │   └── confkit/
     │       └── engine.yml
     └── volumes/
+        ├── cache/
         ├── logs/
-        ├── context/
-        ├── workspace/
-        └── artifacts/
+        └── workspace/
 ```
 
 ### Basic Configuration File
@@ -216,9 +215,7 @@ ConfKit automatically injects the following environment variables when executing
 - `PROJECT_VERSION` - Project version from remote repository(javascript: package.json, rust: Cargo.toml)
 - `SPACE_NAME` - Space name
 - `HOST_WORKSPACE_DIR` - Host task workspace directory
-- `HOST_ARTIFACTS_DIR` - Host task artifacts directory
 - `CONTAINER_WORKSPACE_DIR` - Container task workspace directory
-- `CONTAINER_ARTIFACTS_DIR` - Container task artifacts directory
 
 #### Git Variables
 
