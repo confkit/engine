@@ -68,7 +68,7 @@ pub struct EngineServiceConfig {
     pub environment: Option<HashMap<String, String>>,
 
     #[serde(default)]
-    pub volumes: Option<Vec<String>>,
+    pub volumes: Option<Vec<serde_yaml::Value>>,
 
     #[serde(default)]
     pub depends_on: Option<Vec<String>>,
