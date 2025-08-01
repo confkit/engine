@@ -61,11 +61,6 @@ args = ["run", "--", "--help"]
 command = "cargo"
 description = "Run the application with help"
 
-[tasks.release]
-args = ["build", "--release"]
-command = "cargo"
-description = "Build release version"
-
 [tasks.check]
 args = ["check"]
 command = "cargo"
@@ -83,3 +78,69 @@ script = [
   "cargo install cargo-watch",
   "cargo install cargo-make",
 ]
+
+# Linux targets
+
+[tasks.setup-linux-x86_64]
+args = ["target", "add", "x86_64-unknown-linux-gnu"]
+command = "rustup"
+description = "Setup Linux x86_64 target"
+
+[tasks.setup-linux-aarch64]
+args = ["target", "add", "aarch64-unknown-linux-gnu"]
+command = "rustup"
+description = "Setup Linux aarch64 target"
+
+[tasks.build-x86_64-unknown-linux-gnu]
+args = ["build", "--target", "x86_64-unknown-linux-gnu", "--release"]
+command = "cargo"
+dependencies = ["setup-linux-x86_64"]
+description = "Build release version for x86_64-unknown-linux-gnu"
+
+[tasks.build-aarch64-unknown-linux-gnu]
+args = ["build", "--target", "aarch64-unknown-linux-gnu", "--release"]
+command = "cargo"
+dependencies = ["setup-linux-aarch64"]
+description = "Build release version for aarch64-unknown-linux-gnu"
+
+# macOS targets
+
+[tasks.setup-macos-x86_64]
+args = ["target", "add", "x86_64-apple-darwin"]
+command = "rustup"
+description = "Setup macOS x86_64 target"
+
+[tasks.setup-macos-aarch64]
+args = ["target", "add", "aarch64-apple-darwin"]
+command = "rustup"
+description = "Setup macOS aarch64 target"
+
+[tasks.build-x86_64-apple-darwin]
+args = ["build", "--target", "x86_64-apple-darwin", "--release"]
+command = "cargo"
+dependencies = ["setup-macos-x86_64"]
+description = "Build release version for x86_64-apple-darwin"
+
+[tasks.build-aarch64-apple-darwin]
+args = ["build", "--target", "aarch64-apple-darwin", "--release"]
+command = "cargo"
+dependencies = ["setup-macos-aarch64"]
+description = "Build release version for aarch64-apple-darwin"
+
+[tasks.build-macos]
+args = ["Build release version for macOS"]
+command = "echo"
+dependencies = [
+  "build-x86_64-apple-darwin",
+  "build-aarch64-apple-darwin",
+]
+description = "Build release version for macOS"
+
+[tasks.build-linux]
+args = ["Build release version for Linux"]
+command = "echo"
+dependencies = [
+  "build-x86_64-unknown-linux-gnu",
+  "build-aarch64-unknown-linux-gnu",
+]
+description = "Build release version for Linux"

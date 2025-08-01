@@ -43,7 +43,9 @@ fn set_dir_permissions(path: &str, permissions: u32) -> Result<()> {
 #[cfg(not(unix))]
 fn set_dir_permissions(path: &str, permissions: u32) -> Result<()> {
     // Windows 或其他平台，跳过权限设置
-    fs::Permissions::from_mode(permissions);
+    // 在 Windows 上，权限管理方式与 Unix 不同，这里直接跳过
+    let _ = path; // 避免未使用变量警告
+    let _ = permissions; // 避免未使用变量警告
     Ok(())
 }
 
