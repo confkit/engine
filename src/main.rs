@@ -38,7 +38,17 @@ fn init_dirs() -> Result<()> {
 #[tokio::main]
 async fn main() -> Result<()> {
     // 初始化日志系统
-    tracing_subscriber::fmt().with_max_level(tracing::Level::DEBUG).without_time().init();
+    let tracing_subscriber = tracing_subscriber::fmt().without_time().with_level(true); // 保留日志级别
+
+    #[cfg(debug_assertions)]
+    let tracing_subscriber =
+        tracing_subscriber.with_target(true).with_max_level(tracing::Level::DEBUG); // 开发模式显示路径
+
+    #[cfg(not(debug_assertions))]
+    let tracing_subscriber =
+        tracing_subscriber.with_target(false).with_max_level(tracing::Level::INFO); // 发布模式隐藏路径
+
+    tracing_subscriber.init();
 
     tracing::info!("Version: {}", env!("CARGO_PKG_VERSION"));
 
