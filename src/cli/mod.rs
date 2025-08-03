@@ -24,6 +24,10 @@ use run::RunArgs;
 #[command(about = "confkit CLI - Configuration-driven build and deployment tool")]
 #[command(version)]
 pub struct Cli {
+    /// Hide level information in logs
+    #[arg(long, global = true)]
+    pub hide_level: bool,
+    /// Command to execute
     #[command(subcommand)]
     command: Option<Commands>,
 }
@@ -41,14 +45,6 @@ pub enum Commands {
     /// Log management.
     Log(LogArgs),
 }
-/// Space management.
-// Space(SpaceCommand),
-/// Project management.
-// Project(ProjectCommand),
-/// Task management.
-// Task(TaskCommand),
-/// Log management.
-// Log(LogCommand),
 
 impl Cli {
     pub async fn execute(self) -> Result<()> {
@@ -60,5 +56,9 @@ impl Cli {
             Some(Commands::Log(args)) => log::handle_log(&args).await,
             None => InteractiveCommand::execute().await,
         }
+    }
+
+    pub fn parse_args() -> Self {
+        Self::parse()
     }
 }

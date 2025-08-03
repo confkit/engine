@@ -37,18 +37,27 @@ fn init_dirs() -> Result<()> {
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    // 解析全局令行参数
+    let cli = Cli::parse_args();
+
+    // 设置日志级别
+    let mut log_level = tracing::Level::INFO;
+    // 是否显示日志路径
+    let mut show_path = false;
+
+    // 开发模式
+    if cfg!(debug_assertions) {
+        log_level = tracing::Level::DEBUG;
+        show_path = true;
+    }
+
     // 初始化日志系统
-    let tracing_subscriber = tracing_subscriber::fmt().without_time().with_level(true); // 保留日志级别
-
-    #[cfg(debug_assertions)]
-    let tracing_subscriber =
-        tracing_subscriber.with_target(true).with_max_level(tracing::Level::DEBUG); // 开发模式显示路径
-
-    #[cfg(not(debug_assertions))]
-    let tracing_subscriber =
-        tracing_subscriber.with_target(false).with_max_level(tracing::Level::INFO); // 发布模式隐藏路径
-
-    tracing_subscriber.init();
+    tracing_subscriber::fmt()
+        .without_time()
+        .with_max_level(log_level)
+        .with_target(show_path)
+        .with_level(!cli.hide_level)
+        .init();
 
     tracing::info!("Version: {}", env!("CARGO_PKG_VERSION"));
 
