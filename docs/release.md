@@ -19,6 +19,12 @@ cargo release minor --execute --no-confirm --no-publish
 cargo release major --execute --no-confirm --no-publish
 ```
 
+### 1.3 推送 tag
+
+```sh
+git push --follow-tags
+```
+
 ## 2. 构建产物
 
 - MacOS: `cargo build --release --target x86_64-apple-darwin`
