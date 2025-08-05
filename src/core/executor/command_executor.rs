@@ -43,6 +43,12 @@ impl CommandExecutor {
 
             command.current_dir(working_dir);
 
+            tracing::info!(
+                "Executing host command: '{}' with environment variables in directory: {}",
+                cmd,
+                working_dir
+            );
+
             let exit_code = CommandUtil::execute_command_with_output(
                 &mut command,
                 Some(Box::new(|line| tracing::info!("{}", line))),

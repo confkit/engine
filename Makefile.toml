@@ -17,7 +17,7 @@ command = "cargo"
 description = "Clean build artifacts"
 
 [tasks.check-format]
-args = ["fmt", "--", "--check"]
+args = ["fmt", "--check"]
 command = "cargo"
 description = "Check code formatting"
 

@@ -400,24 +400,24 @@ impl DockerEngine {
 
             command.args([container, "sh", "-c", cmd]);
 
-            // // 完整打印命令字符串
-            // let mut command_parts =
-            //     vec!["docker".to_string(), "exec".to_string(), "-i".to_string()];
+            // 完整打印命令字符串
+            let mut command_parts =
+                vec!["docker".to_string(), "exec".to_string(), "-i".to_string()];
 
-            // // 添加环境变量参数
-            // for (key, value) in environment {
-            //     command_parts.push("-e".to_string());
-            //     command_parts.push(format!("{}={}", key, value));
-            // }
+            // 添加环境变量参数
+            for (key, value) in environment {
+                command_parts.push("-e".to_string());
+                command_parts.push(format!("{}={}", key, value));
+            }
 
-            // command_parts.push("-w".to_string());
-            // command_parts.push(working_dir.to_string());
-            // command_parts.push(container.to_string());
-            // command_parts.push("sh".to_string());
-            // command_parts.push("-c".to_string());
-            // command_parts.push(cmd.to_string());
+            command_parts.push("-w".to_string());
+            command_parts.push(working_dir.to_string());
+            command_parts.push(container.to_string());
+            command_parts.push("sh".to_string());
+            command_parts.push("-c".to_string());
+            command_parts.push(cmd.to_string());
 
-            // tracing::debug!("command: {}", command_parts.join(" "));
+            tracing::info!("Executing container command: {}", command_parts.join(" "));
 
             let exit_code = CommandUtil::execute_command_with_output(
                 &mut command,
