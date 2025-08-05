@@ -109,23 +109,24 @@ impl GitClient {
         file_path: &str,
     ) -> Result<String> {
         // 创建临时目录, uuid 命名
-        let temp_dir =
-            format!("{}/{}", HOST_CACHE_DIR, Uuid::new_v4().to_string()[..8].to_string());
-        tracing::debug!("Temp directory: {}", temp_dir);
+        let temp_dir = format!("{HOST_CACHE_DIR}/{}", Uuid::new_v4().to_string()[..8].to_string());
+
+        tracing::debug!("Temp directory: {temp_dir}");
+
         fs::create_dir_all(&temp_dir)?;
 
-        tracing::debug!("Initializing git directory: {}", temp_dir);
+        tracing::debug!("Initializing git directory: {temp_dir}");
         // git 初始化目录
         Command::new("git").args(["init"]).current_dir(&temp_dir).output()?;
 
-        tracing::debug!("Adding remote repository: {}", git_repo);
+        tracing::debug!("Adding remote repository: {git_repo}");
         // git 添加远程仓库
         Command::new("git")
             .args(["remote", "add", "origin", git_repo])
             .current_dir(&temp_dir)
             .output()?;
 
-        tracing::debug!("Configuring sparse checkout: {}", file_path);
+        tracing::debug!("Configuring sparse checkout: {file_path}");
         // 启用稀疏检出
         Command::new("git")
             .args(["config", "core.sparseCheckout", "true"])
@@ -133,16 +134,16 @@ impl GitClient {
             .output()?;
 
         // 创建稀疏检出目录
-        fs::create_dir_all(format!("{}/.git/info", temp_dir))?;
+        fs::create_dir_all(format!("{temp_dir}/.git/info"))?;
 
         // 写入稀疏检出配置
-        fs::write(format!("{}/.git/info/sparse-checkout", temp_dir), file_path)?;
+        fs::write(format!("{temp_dir}/.git/info/sparse-checkout"), file_path)?;
 
-        tracing::debug!("Pulling origin: {}", git_branch);
+        tracing::debug!("Pulling origin: {git_branch}");
         // 仅 clone 指定文件
         Command::new("git").args(["pull", "origin", git_branch]).current_dir(&temp_dir).output()?;
 
-        tracing::debug!("Getting source file content: {}", file_path);
+        tracing::debug!("Getting source file content: {file_path}");
         // 获取文件内容
         let source_file = Command::new("cat").args([file_path]).current_dir(&temp_dir).output()?;
 
@@ -151,9 +152,7 @@ impl GitClient {
 
         if !source_file.status.success() {
             tracing::error!(
-                "Failed to get source file content for git repo: {} branch: {}",
-                git_repo,
-                git_branch
+                "Failed to get source file content for git repo: {git_repo} branch: {git_branch}"
             );
             return Ok("".to_string());
         }
@@ -190,7 +189,7 @@ impl GitClient {
             "javascript" => Self::parse_javascript_config(&manifest_file_content),
             "rust" => Self::parse_rust_config(&manifest_file_content),
             _ => {
-                tracing::warn!("Unsupported language: {}", language);
+                tracing::warn!("Unsupported language: {language}");
                 Ok("".to_string())
             }
         }

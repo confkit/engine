@@ -20,8 +20,8 @@ impl Task {
     // 生成任务ID
     fn generate_task_id() -> String {
         let uuid = Uuid::new_v4();
-        let short_uuid = uuid.to_string()[..11].to_string();
-        short_uuid
+
+        uuid.to_string()[..11].to_string()
     }
 
     pub fn finish(&mut self) {

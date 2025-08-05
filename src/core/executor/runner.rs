@@ -150,7 +150,7 @@ impl Runner {
         // 环境变量
         self.logger.info(&LogFormatter::header("Environment"))?;
         for (key, value) in &self.context.environment {
-            self.logger.info(&format!("{}: {}", key, value))?;
+            self.logger.info(&format!("{key}: {value}"))?;
         }
 
         Ok(())
@@ -166,7 +166,7 @@ impl Runner {
         let skipped = results.iter().filter(|r| r.status == StepStatus::Skipped).count();
 
         self.logger
-            .info(&format!("Success: {}, Failed: {}, Skipped: {}", successful, failed, skipped))?;
+            .info(&format!("Success: {successful}, Failed: {failed}, Skipped: {skipped}"))?;
 
         self.logger.info(&format!("Started at: {}", self.task.started_at))?;
         self.logger.info(&format!(

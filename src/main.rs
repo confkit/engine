@@ -18,7 +18,7 @@ mod engine;
 mod formatter;
 
 use cli::Cli;
-use engine::engine::ConfKitEngine;
+use engine::ConfKitEngine;
 use infra::config::ConfKitConfigLoader;
 use shared::constants::{HOST_CACHE_DIR, HOST_LOG_DIR, HOST_WORKSPACE_DIR};
 

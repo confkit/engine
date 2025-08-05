@@ -26,7 +26,7 @@ pub fn get_yaml_files_in_dir(dir: &str) -> Result<Vec<String>> {
     let yaml_files = files
         .iter()
         .filter(|file| file.ends_with(".yml") || file.ends_with(".yaml"))
-        .map(|file| file.clone())
+        .cloned()
         .collect();
 
     Ok(yaml_files)

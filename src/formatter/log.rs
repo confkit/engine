@@ -10,6 +10,7 @@ impl LogFormatter {
         let title_len = title.len();
         let padding = (78 - title_len) / 2;
         let padding_str = "=".repeat(padding);
-        return format!("\n{}[ {} ]{}", padding_str, title, padding_str);
+
+        format!("\n{padding_str}[ {title} ]{padding_str}")
     }
 }

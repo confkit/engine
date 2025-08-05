@@ -41,8 +41,8 @@ impl ExecutionContext {
     ) -> Result<Self> {
         let task_path_identify = PathFormatter::get_task_path(&space_name, &project_name, &task_id);
 
-        let host_workspace_dir = format!("{}/{}", HOST_WORKSPACE_DIR, task_path_identify);
-        let container_workspace_dir = format!("{}/{}", CONTAINER_WORKSPACE_DIR, task_path_identify);
+        let host_workspace_dir = format!("{HOST_WORKSPACE_DIR}/{task_path_identify}");
+        let container_workspace_dir = format!("{CONTAINER_WORKSPACE_DIR}/{task_path_identify}");
 
         let host_log_path = PathFormatter::get_task_log_path(&space_name, &project_name, &task_id);
 
@@ -80,7 +80,7 @@ impl ExecutionContext {
     pub fn resolve_working_dir(&self, working_dir: &str) -> String {
         let mut result = working_dir.to_string();
         for (key, value) in &self.environment {
-            let pattern = format!("${{{}}}", key);
+            let pattern = format!("${{{key}}}");
             result = result.replace(&pattern, value);
         }
 
@@ -168,6 +168,6 @@ pub fn resolve_host_variables(command: &mut Command, environment: &HashMap<Strin
 /// 注入容器环境变量
 pub fn resolve_container_variables(command: &mut Command, environment: &HashMap<String, String>) {
     for (key, value) in environment {
-        command.args(&["-e", &format!("{}={}", key, value)]);
+        command.args(["-e", &format!("{key}={value}")]);
     }
 }

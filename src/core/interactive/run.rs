@@ -47,9 +47,9 @@ impl InteractiveMenu {
 
         // 匹配出 project: 从 selection 中移除掉 <space_name>
         let project_name =
-            selection.replace(format!("<{}>", space_name).as_str(), "").trim().to_string();
+            selection.replace(format!("<{space_name}>").as_str(), "").trim().to_string();
 
-        tracing::info!("space_name: {}, project_name: {}", space_name, project_name);
+        tracing::info!("space_name: {space_name}, project_name: {project_name}");
 
         let mut runner = Runner::new(space_name, &project_name).await?;
 

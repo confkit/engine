@@ -5,7 +5,7 @@
 use anyhow::Result;
 
 use crate::core::builder::image::ImageBuilder;
-use crate::engine::engine::ConfKitEngine;
+use crate::engine::ConfKitEngine;
 use crate::formatter::builder_container::BuilderContainerFormatter;
 use crate::types::config::{ContainerStatus, EngineContainerInfo};
 
@@ -86,11 +86,11 @@ impl ContainerBuilder {
             let containers = Self::get_list().await?;
 
             for container in containers {
-                let can_restart = match container.status {
-                    ContainerStatus::Restarting => false,
-                    ContainerStatus::Unbuilt => false,
-                    _ => true,
-                };
+                // 如果容器正在重启或者未构建, 则跳过
+                let can_restart = !matches!(
+                    container.status,
+                    ContainerStatus::Restarting | ContainerStatus::Unbuilt
+                );
 
                 if can_restart {
                     ConfKitEngine::restart_container(container.name.as_str()).await?;

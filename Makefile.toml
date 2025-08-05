@@ -65,6 +65,7 @@ description = "Run the application with help"
 args = ["check"]
 command = "cargo"
 description = "Check compilation without building"
+dependencies = ["check-format", "clippy"]
 
 [tasks.watch]
 args = ["watch", "-x", "check", "-x", "test", "-i", "examples/**/*", "-i", "docs/**/*"]

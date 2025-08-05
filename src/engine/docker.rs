@@ -37,7 +37,7 @@ impl DockerEngine {
         let output = Command::new("docker")
             .arg("images")
             .arg("-q")
-            .arg(format!("{}:{}", image, tag))
+            .arg(format!("{image}:{tag}"))
             .output()?;
 
         // 检查命令执行是否成功
@@ -64,7 +64,7 @@ impl DockerEngine {
             .arg("images")
             .arg("--format")
             .arg("{{.ID}}\t{{.Tag}}\t{{.CreatedAt}}\t{{.Size}}")
-            .arg(format!("{}:{}", image, tag))
+            .arg(format!("{image}:{tag}"))
             .output()?;
 
         if !output.status.success() {
@@ -107,7 +107,7 @@ impl DockerEngine {
     // 拉取远程镜像到本地进行缓存
     pub async fn pull_image(image: &str, tag: &str) -> Result<()> {
         let mut command = tokio::process::Command::new("docker");
-        command.arg("pull").arg(format!("{}:{}", image, tag));
+        command.arg("pull").arg(format!("{image}:{tag}"));
 
         CommandUtil::execute_command_with_output(
             &mut command,
@@ -137,7 +137,7 @@ impl DockerEngine {
         command
             .arg("build")
             .arg("-t")
-            .arg(format!("{}:{}", name, tag))
+            .arg(format!("{name}:{tag}"))
             .arg("-f")
             .arg(dockerfile)
             .arg(context.unwrap_or("."));
@@ -162,7 +162,7 @@ impl DockerEngine {
     // 移除镜像
     pub async fn remove_image(image: &str, tag: &str) -> Result<()> {
         let mut command = tokio::process::Command::new("docker");
-        command.arg("rmi").arg(format!("{}:{}", image, tag));
+        command.arg("rmi").arg(format!("{image}:{tag}"));
 
         CommandUtil::execute_command_with_output(
             &mut command,
@@ -182,7 +182,7 @@ impl DockerEngine {
             .arg("ps")
             .arg("-a")
             .arg("--filter")
-            .arg(format!("name=^{}$", name))
+            .arg(format!("name=^{name}$"))
             .arg("--quiet")
             .output()?;
 
@@ -315,7 +315,7 @@ impl DockerEngine {
             .arg("ps")
             .arg("-a")
             .arg("--filter")
-            .arg(format!("name={}", name))
+            .arg(format!("name={name}"))
             .arg("--format")
             .arg("{{.ID}}\t{{.Image}}\t{{.Status}}\t{{.CreatedAt}}\t{{.Size}}")
             .output()?;
@@ -367,7 +367,7 @@ impl DockerEngine {
         };
 
         let image = match parts[1] {
-            img if img.is_empty() => service_config.image,
+            "" => service_config.image,
             img => img.to_string(),
         };
 
@@ -392,13 +392,13 @@ impl DockerEngine {
         for cmd in commands {
             let mut command = tokio::process::Command::new("docker");
 
-            command.args(&["exec", "-i"]);
+            command.args(["exec", "-i"]);
 
             resolve_container_variables(&mut command, environment);
 
-            command.args(&["-w", working_dir]);
+            command.args(["-w", working_dir]);
 
-            command.args(&[container, "sh", "-c", cmd]);
+            command.args([container, "sh", "-c", cmd]);
 
             // // 完整打印命令字符串
             // let mut command_parts =

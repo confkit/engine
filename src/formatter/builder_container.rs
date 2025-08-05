@@ -37,7 +37,7 @@ impl BuilderContainerFormatter {
         let mut table = builder.build();
         table.with(Style::ascii_rounded());
 
-        println!("{}", table);
+        println!("{table}");
     }
 
     // 打印单个镜像信息

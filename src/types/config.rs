@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, fmt};
 
 /// ================================================ Engine infra types ================================================
-
+/// engine image info
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EngineImageInfo {
     pub id: String,
@@ -18,6 +18,7 @@ pub struct EngineImageInfo {
     pub status: ImageStatus,
 }
 
+/// engine container info
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EngineContainerInfo {
     pub id: String,
@@ -31,7 +32,6 @@ pub struct EngineContainerInfo {
 }
 
 /// ================================================ Engine Compose Config ================================================
-
 /// engine compose config
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EngineComposeConfig {
@@ -79,7 +79,6 @@ pub struct EngineServiceConfig {
 }
 
 /// ================================================ ConfKit Config ================================================
-
 /// 项目配置
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConfKitConfig {

@@ -5,7 +5,7 @@
 use anyhow::Result;
 
 use crate::{
-    engine::engine::ConfKitEngine, formatter::builder_image::BuilderImageFormatter,
+    engine::ConfKitEngine, formatter::builder_image::BuilderImageFormatter,
     infra::config::ConfKitConfigLoader, types::config::ConfKitImageInfo,
 };
 
@@ -58,7 +58,7 @@ impl ImageBuilder {
     // 构建镜像
     pub async fn build(name: &str, tag: &str) -> Result<()> {
         // 检查目标镜像是否已经存在
-        if ConfKitEngine::check_image_exists(&name, tag).await? {
+        if ConfKitEngine::check_image_exists(name, tag).await? {
             tracing::info!("Image {} already exists", name);
             return Ok(());
         }
@@ -72,14 +72,14 @@ impl ImageBuilder {
         };
 
         let is_base_image_exists =
-            ConfKitEngine::check_image_exists(&config.base_image, &tag).await?;
+            ConfKitEngine::check_image_exists(&config.base_image, tag).await?;
 
         tracing::debug!("Checking base image: {}", config.base_image);
 
         // 检查基础镜像是否存在, 不存在则拉取
         if !is_base_image_exists {
             tracing::info!("Pulling base image: {}", config.base_image);
-            ConfKitEngine::pull_image(&config.base_image, &tag).await?;
+            ConfKitEngine::pull_image(&config.base_image, tag).await?;
         }
 
         tracing::debug!("Building image: {} with tag: {}", name, tag);
@@ -108,7 +108,7 @@ impl ImageBuilder {
         // TODO: 检查镜像是否被使用，如果被使用，则提示用户是否强制移除
         // TODO: 强制移除, 需要先停止所有使用该镜像的容器, 并删除所有使用该镜像的容器
 
-        ConfKitEngine::remove_image(&name, &tag).await?;
+        ConfKitEngine::remove_image(name, tag).await?;
 
         Ok(())
     }

@@ -54,7 +54,7 @@ impl InteractiveMenu {
         let (image_name, image_tag) = self.select_image().await?;
 
         // 全部创建
-        if image_name == "All" && image_tag == "" {
+        if image_name == "All" && image_tag.is_empty() {
             ImageBuilder::build_all().await?;
             return Ok(true);
         }
@@ -78,7 +78,7 @@ impl InteractiveMenu {
             return Ok(true);
         }
 
-        if image_name == "All" && image_tag == "" {
+        if image_name == "All" && image_tag.is_empty() {
             ImageBuilder::remove_all().await?;
             return Ok(true);
         }

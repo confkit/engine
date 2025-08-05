@@ -50,7 +50,7 @@ impl Log {
 
         // 写入消息并添加换行符
         let timestamp = Local::now().format("%Y-%m-%d %H:%M:%S");
-        if let Err(e) = file.write_all(format!("[{}] {}\n", timestamp, message).as_bytes()) {
+        if let Err(e) = file.write_all(format!("[{timestamp}] {message}\n").as_bytes()) {
             tracing::error!("Failed to write log: {}", e);
             return Ok(());
         }

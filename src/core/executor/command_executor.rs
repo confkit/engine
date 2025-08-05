@@ -8,7 +8,7 @@ use tracing;
 
 use super::context::ExecutionContext;
 use crate::{
-    core::executor::context::resolve_host_variables, engine::engine::ConfKitEngine,
+    core::executor::context::resolve_host_variables, engine::ConfKitEngine,
     utils::command::CommandUtil,
 };
 

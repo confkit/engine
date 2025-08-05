@@ -15,9 +15,9 @@ impl VolumesCleaner {
         project_name: &str,
         task_id: &str,
     ) -> Result<()> {
-        let task_dir = PathFormatter::get_task_path(&space_name, &project_name, &task_id);
+        let task_dir = PathFormatter::get_task_path(space_name, project_name, task_id);
 
-        let host_workspace_dir = format!("{}/{}", HOST_WORKSPACE_DIR, task_dir);
+        let host_workspace_dir = format!("{HOST_WORKSPACE_DIR}/{task_dir}");
 
         let host_workspace_dir = Path::new(&host_workspace_dir);
 

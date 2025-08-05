@@ -105,12 +105,12 @@ impl StepExecutor {
         self.logger.info("Step Details:")?;
         self.logger
             .info(&format!(" - Container: {}", step.container.as_deref().unwrap_or("Host")))?;
-        self.logger.info(&format!(" - Working Directory: {}", working_dir))?;
+        self.logger.info(&format!(" - Working Directory: {working_dir}"))?;
         self.logger.info(&format!(" - Command Count: {}", step.commands.len()))?;
 
         if let Some(timeout) = &step.timeout {
             // TODO: 超时后，需要记录日志，并返回错误码
-            self.logger.info(&format!(" - Timeout: {}", timeout))?;
+            self.logger.info(&format!(" - Timeout: {timeout}"))?;
 
             return Ok(());
         }
@@ -146,7 +146,7 @@ impl StepExecutor {
                 ))?;
 
                 if let Some(error) = &result.error {
-                    self.logger.error(&format!("Error Message: {}", error))?;
+                    self.logger.error(&format!("Error Message: {error}"))?;
                 }
 
                 Ok(())

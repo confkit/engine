@@ -41,11 +41,11 @@ impl LogCleaner {
             let dir = dir.unwrap();
             let dir_name = dir.file_name().to_string_lossy().to_string();
             // 匹配 <space_name>
-            if !dir_name.starts_with(format!("<{}>", space_name).as_str()) {
+            if !dir_name.starts_with(format!("<{space_name}>").as_str()) {
                 continue;
             }
             // 删除目录
-            fs::remove_dir_all(format!("{}/{}", log_dir, dir_name))?;
+            fs::remove_dir_all(format!("{log_dir}/{dir_name}"))?;
         }
         Ok(())
     }
@@ -80,7 +80,7 @@ impl LogCleaner {
             let dir = dir.unwrap();
             let dir_name = dir.file_name().to_string_lossy().to_string();
             // 匹配 <task_id>
-            if !dir_name.ends_with(format!("{}.log", task_id).as_str()) {
+            if !dir_name.ends_with(format!("{task_id}.log").as_str()) {
                 continue;
             }
             // 删除文件
