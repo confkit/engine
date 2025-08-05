@@ -6,7 +6,7 @@ use anyhow::Result;
 use inquire::Select;
 
 use crate::core::{
-    builder::{container::ContainerBuilder, image::ImageBuilder},
+    builder::container::ContainerBuilder,
     interactive::ui::{InteractiveUI, InteractiveYesNoUI},
 };
 
@@ -32,7 +32,7 @@ impl InteractiveMenu {
         match selection {
             Ok(choice) => match choice {
                 InteractiveBuilderUI::List => {
-                    ImageBuilder::print_list().await?;
+                    ContainerBuilder::print_list().await?;
                     Ok(true)
                 }
                 InteractiveBuilderUI::Start => {

@@ -17,7 +17,7 @@ impl BuilderContainerFormatter {
         builder.push_record(vec![
             "● Name",
             "● ID",
-            "● Base Image",
+            "● Image",
             "● Created At",
             "● Size",
             "● Status",
