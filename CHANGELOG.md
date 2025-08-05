@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [unreleased]
+## [0.1.0] - 2025-08-05
 
 ### 🚀 Features
 
@@ -48,6 +48,7 @@ All notable changes to this project will be documented in this file.
 - 更新文档
 - Update
 - Update document
+- 更新 changelog
 
 ### ⚡ Performance
 
