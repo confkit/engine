@@ -13,6 +13,7 @@ tag = true
 sign-commit = false
 sign-tag = false
 
+# 跳过验证（比如 workspace 检查）
 allow-branch = ["main"]
 
 pre-release-hook = ["git", "cliff", "-o", "CHANGELOG.md", "--tag", "{{version}}" ]
