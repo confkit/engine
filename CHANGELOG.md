@@ -1,0 +1,63 @@
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+## [unreleased]
+
+### 🚀 Features
+
+- Builder 命令开发中
+- Builder create 开发中
+- 完成 builder create 以及 interactive 功能同步
+- 添加 builder image remove 命令
+- 添加容器相关命令 create/remove/stop/start
+- Run 命令开发中
+- 实现 run 命令
+- 添加 interactive 运行任务
+- 添加日志记录功能
+- 添加 interactive log
+- Interactive 添加 run 执行, 优化 log 生成
+- Add podman engine, remove image force remove
+- Add log command
+
+### 🐛 Bug Fixes
+
+- 修复 builder  list 命令, 同步功能到 interactive 命令
+- Builder 命令和 interactive 功能修复
+- 移除大量无用结构体字段
+- 修复容器存在判断
+- Container execute move to engine, perf workspace/artifacts clean
+- Add project_version
+- 调整路径命名
+- Remove artifacts
+- File compose file volumes
+- 修复 not unix 目录授权
+- 发布模式 tracing 隐藏路径
+- 区分 tracing 运行时打印
+- 修复部分 clippy 语法警告
+
+### 🚜 Refactor
+
+- Builder create/list 迁移到 builder image create/list
+- Docker 命令调用抽象
+- V2 start
+- 基本完成重构
+
+### 📚 Documentation
+
+- 更新文档
+- Update
+- Update document
+
+### ⚡ Performance
+
+- 优化日志头
+- Perf code
+
+### ⚙️ Miscellaneous Tasks
+
+- 删除多余 clippy 配置文件
+- Update docs and release settings
+- Add publish script
+- Update release settings
+- 调整发布配置
