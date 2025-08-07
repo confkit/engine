@@ -5,21 +5,18 @@
 - 更新 `Cargo.toml` 版本号
 - 更新 `CHANGELOG`
 
-### 1.1 生成 changelog
-
-```sh
-git cliff -o CHANGELOG.md
-```
-
-### 1.2 更新版本号
+### 1.1 更新版本号
 
 ```sh
 cargo release patch --execute --no-confirm --no-publish
 cargo release minor --execute --no-confirm --no-publish
 cargo release major --execute --no-confirm --no-publish
+
+# 发布版本会自动执行
+# git cliff -o CHANGELOG.md
 ```
 
-### 1.3 推送 tag
+### 1.2 推送 tag
 
 ```sh
 git push --follow-tags
