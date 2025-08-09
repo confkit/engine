@@ -1,32 +1,66 @@
 [config]
 default_to_workspace = false
 
+# 基础任务
+
+[tasks.setup]
+description = "安装开发依赖"
+script = [
+  "cargo install cargo-watch",
+  "cargo install cargo-edit",
+  "cargo install cargo-audit",
+]
+
+[tasks.update]
+args = ["update"]
+command = "cargo"
+description = "更新依赖"
+
 [tasks.dev]
 dependencies = [
   "clean",
   "check-format",
-  "clippy",
+  "lint",
   "test",
   "build",
 ]
-description = "Development workflow - clean, check, test, and build"
+description = "开发流程 - 清理、检查格式、测试和构建"
+
+[tasks.watch]
+args = ["watch", "-x", "check", "-x", "test", "-i", "examples/**/*", "-i", "docs/**/*"]
+command = "cargo"
+description = "监听变化并重新构建"
+install_crate = "cargo-watch"
+
+[tasks.doc]
+description = "生成文档"
+command = "cargo"
+args = ["doc", "--open"]
+
+# 辅助任务
 
 [tasks.clean]
 args = ["clean"]
 command = "cargo"
-description = "Clean build artifacts"
+description = "清理构建产物"
+
+[tasks.check]
+args = ["check"]
+command = "cargo"
+dependencies = ["check-format", "clippy"]
+description = "检查编译"
 
 [tasks.check-format]
 args = ["fmt", "--check"]
 command = "cargo"
-description = "Check code formatting"
+description = "检查代码格式"
 
 [tasks.format]
 args = ["fmt"]
 command = "cargo"
-description = "Format code"
+description = "格式化代码"
 
-[tasks.clippy]
+[tasks.lint]
 args = [
   "clippy",
   "--all-targets",
@@ -44,41 +78,33 @@ args = [
   "unused_variables",
 ]
 command = "cargo"
-description = "Run clippy lints"
+description = "运行 clippy lints"
 
 [tasks.test]
 args = ["test"]
 command = "cargo"
-description = "Run tests"
+description = "运行测试"
 
-[tasks.build]
-args = ["build"]
+[tasks.profile]
+args = ["build", "--release", "--profile", "profiling"]
 command = "cargo"
-description = "Build the project"
+description = "性能分析构建"
 
-[tasks.run]
-args = ["run", "--", "--help"]
+[tasks.bench]
+args = ["bench"]
 command = "cargo"
-description = "Run the application with help"
+description = "运行基准测试"
 
-[tasks.check]
-args = ["check"]
+[tasks.audit]
+args = ["audit"]
 command = "cargo"
-description = "Check compilation without building"
-dependencies = ["check-format", "clippy"]
+description = "安全审计"
+install_crate = "cargo-audit"
 
-[tasks.watch]
-args = ["watch", "-x", "check", "-x", "test", "-i", "examples/**/*", "-i", "docs/**/*"]
+[tasks.test-verbose]
+args = ["test", "--", "--nocapture"]
 command = "cargo"
-description = "Watch for changes and rebuild"
-install_crate = "cargo-watch"
-
-[tasks.install-deps]
-description = "Install development dependencies"
-script = [
-  "cargo install cargo-watch",
-  "cargo install cargo-make",
-]
+description = "详细测试输出"
 
 # Linux targets
 
@@ -127,6 +153,8 @@ args = ["build", "--target", "aarch64-apple-darwin", "--release"]
 command = "cargo"
 dependencies = ["setup-macos-aarch64"]
 description = "Build release version for aarch64-apple-darwin"
+
+# Build release version for all targets
 
 [tasks.build-macos]
 args = ["Build release version for macOS"]
