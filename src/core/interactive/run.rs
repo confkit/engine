@@ -31,6 +31,8 @@ impl InteractiveMenu {
 
         options.push(InteractiveOptionUI::Back.to_string());
 
+        options.sort();
+
         let selection = Select::new("Please select a space:", options)
             .with_help_message("Use ↑↓ to navigate, Enter to confirm")
             .prompt()?;
