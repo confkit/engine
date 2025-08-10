@@ -23,8 +23,14 @@ impl CommandExecutor {
         working_dir: &str,
         commands: &[String],
     ) -> Result<i32> {
-        ConfKitEngine::execute_in_container(container, working_dir, commands, &context.environment)
-            .await
+        ConfKitEngine::execute_in_container(
+            container,
+            &context.project_config.shell.container,
+            working_dir,
+            commands,
+            &context.environment,
+        )
+        .await
     }
 
     /// 在本地执行命令
@@ -34,7 +40,8 @@ impl CommandExecutor {
         commands: &[String],
     ) -> Result<i32> {
         for cmd in commands {
-            let mut command = Command::new("sh");
+            // 创建命令
+            let mut command = Command::new(&context.project_config.shell.host);
 
             resolve_host_variables(&mut command, &context.environment);
 

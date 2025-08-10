@@ -167,6 +167,7 @@ impl ConfKitEngine {
     // 在容器中执行命令
     pub async fn execute_in_container(
         container: &str,
+        shell: &str,
         working_dir: &str,
         commands: &[String],
         environment: &HashMap<String, String>,
@@ -174,12 +175,24 @@ impl ConfKitEngine {
         let engine = Self::get_engine().await?;
         match engine {
             Engine::Docker => {
-                DockerEngine::execute_in_container(container, working_dir, commands, environment)
-                    .await
+                DockerEngine::execute_in_container(
+                    container,
+                    shell,
+                    working_dir,
+                    commands,
+                    environment,
+                )
+                .await
             }
             Engine::Podman => {
-                PodmanEngine::execute_in_container(container, working_dir, commands, environment)
-                    .await
+                PodmanEngine::execute_in_container(
+                    container,
+                    shell,
+                    working_dir,
+                    commands,
+                    environment,
+                )
+                .await
             }
         }
     }

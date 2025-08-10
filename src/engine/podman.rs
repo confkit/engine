@@ -370,6 +370,7 @@ impl PodmanEngine {
     // 在容器中执行命令
     pub async fn execute_in_container(
         container: &str,
+        shell: &str,
         working_dir: &str,
         commands: &[String],
         environment: &HashMap<String, String>,
@@ -383,7 +384,7 @@ impl PodmanEngine {
 
             command.arg("-w").arg(working_dir);
 
-            command.arg(container).arg("sh").arg("-c").arg(cmd);
+            command.arg(container).arg(shell).arg("-c").arg(cmd);
 
             let exit_code = CommandUtil::execute_command_with_output(
                 &mut command,

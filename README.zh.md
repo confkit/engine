@@ -47,6 +47,11 @@ version: 1.0.0
 # 容器引擎: docker/podman
 engine: docker
 
+# 终端类型: bash/zsh
+shell:
+  host: bash
+  container: bash
+
 engine_compose:
   # 容器分组(default: confkit)
   # project: confkit

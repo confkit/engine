@@ -101,6 +101,8 @@ pub struct ConfKitSpaceConfig {
 pub struct ConfKitProjectConfig {
     pub name: String,
     pub description: String,
+    #[serde(default = "default_shell")]
+    pub shell: ConfKitShellConfig,
     pub source: Option<ConfKitSourceConfig>,
     pub environment_files: Option<Vec<ConfKitEnvironmentFileConfig>>,
     pub environment: Option<HashMap<String, String>>,
@@ -175,6 +177,14 @@ pub struct ConfKitEngineComposeConfig {
     pub file: String,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ConfKitShellConfig {
+    #[serde(default = "default_bash")]
+    pub host: String,
+    #[serde(default = "default_bash")]
+    pub container: String,
+}
+
 /// 宿主机使用的引擎
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
@@ -189,6 +199,14 @@ fn default_engine() -> Engine {
 
 fn default_project() -> String {
     "confkit".to_string()
+}
+
+fn default_bash() -> String {
+    "bash".to_string()
+}
+
+fn default_shell() -> ConfKitShellConfig {
+    ConfKitShellConfig { host: "bash".to_string(), container: "bash".to_string() }
 }
 
 fn default_image_unbuilt() -> ImageStatus {

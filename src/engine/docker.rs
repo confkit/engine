@@ -385,6 +385,7 @@ impl DockerEngine {
     // 在容器中执行命令
     pub async fn execute_in_container(
         container: &str,
+        shell: &str,
         working_dir: &str,
         commands: &[String],
         environment: &HashMap<String, String>,
@@ -398,7 +399,7 @@ impl DockerEngine {
 
             command.args(["-w", working_dir]);
 
-            command.args([container, "sh", "-c", cmd]);
+            command.args([container, shell, "-c", cmd]);
 
             // 完整打印命令字符串
             let mut command_parts =
@@ -413,7 +414,7 @@ impl DockerEngine {
             command_parts.push("-w".to_string());
             command_parts.push(working_dir.to_string());
             command_parts.push(container.to_string());
-            command_parts.push("sh".to_string());
+            command_parts.push(shell.to_string());
             command_parts.push("-c".to_string());
             command_parts.push(cmd.to_string());
 
