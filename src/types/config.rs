@@ -131,7 +131,10 @@ pub struct ConfKitStepConfig {
     pub container: Option<String>,
     pub working_dir: Option<String>,
     pub commands: Vec<String>,
-    pub timeout: Option<String>,
+    /// 超时时间，单位：秒
+    pub timeout: Option<u64>,
+    #[serde(default)]
+    pub continue_on_error: Option<bool>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

@@ -8,7 +8,8 @@ use tracing;
 
 use super::context::ExecutionContext;
 use crate::{
-    core::executor::context::resolve_host_variables, engine::ConfKitEngine,
+    core::executor::{context::resolve_host_variables, task::Task},
+    engine::ConfKitEngine,
     utils::command::CommandUtil,
 };
 
@@ -22,6 +23,7 @@ impl CommandExecutor {
         container: &str,
         working_dir: &str,
         commands: &[String],
+        task: &Task,
     ) -> Result<i32> {
         ConfKitEngine::execute_in_container(
             container,
@@ -29,6 +31,7 @@ impl CommandExecutor {
             working_dir,
             commands,
             &context.environment,
+            &task.clone(),
         )
         .await
     }
@@ -38,6 +41,7 @@ impl CommandExecutor {
         context: &ExecutionContext,
         working_dir: &str,
         commands: &[String],
+        task: &Task,
     ) -> Result<i32> {
         for cmd in commands {
             // 创建命令
@@ -50,16 +54,24 @@ impl CommandExecutor {
 
             command.current_dir(working_dir);
 
-            tracing::info!(
-                "Executing host command: '{}' with environment variables in directory: {}",
-                cmd,
-                working_dir
-            );
+            task.info(&format!(
+                "Executing host command: '{cmd}' with environment variables in directory: {working_dir}"
+            ))?;
 
             let exit_code = CommandUtil::execute_command_with_output(
                 &mut command,
-                Some(Box::new(|line| tracing::info!("{}", line))),
-                Some(Box::new(|line| tracing::info!("{}", line))),
+                {
+                    let task = task.clone();
+                    Some(Box::new(move |line| {
+                        let _ = task.info(line);
+                    }))
+                },
+                {
+                    let task = task.clone();
+                    Some(Box::new(move |line| {
+                        let _ = task.info(line);
+                    }))
+                },
             )
             .await?;
 

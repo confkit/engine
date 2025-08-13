@@ -6,7 +6,7 @@ use anyhow::Result;
 use std::{collections::HashMap, process::Command};
 
 use crate::{
-    core::executor::context::resolve_container_variables,
+    core::executor::{context::resolve_container_variables, task::Task},
     infra::config::ConfKitConfigLoader,
     types::config::{
         ContainerStatus, EngineContainerInfo, EngineImageInfo, EngineServiceConfig, ImageStatus,
@@ -389,6 +389,7 @@ impl DockerEngine {
         working_dir: &str,
         commands: &[String],
         environment: &HashMap<String, String>,
+        task: &Task,
     ) -> Result<i32> {
         for cmd in commands {
             let mut command = tokio::process::Command::new("docker");
@@ -418,12 +419,22 @@ impl DockerEngine {
             command_parts.push("-c".to_string());
             command_parts.push(cmd.to_string());
 
-            tracing::info!("Executing container command: {}", command_parts.join(" "));
+            tracing::info!("Executing in container {container} with command: {cmd}");
 
             let exit_code = CommandUtil::execute_command_with_output(
                 &mut command,
-                Some(Box::new(|line| tracing::info!("{}", line))),
-                Some(Box::new(|line| tracing::info!("{}", line))),
+                {
+                    let task = task.clone();
+                    Some(Box::new(move |line| {
+                        let _ = task.info(line);
+                    }))
+                },
+                {
+                    let task = task.clone();
+                    Some(Box::new(move |line| {
+                        let _ = task.info(line);
+                    }))
+                },
             )
             .await?;
 

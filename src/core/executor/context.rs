@@ -26,8 +26,6 @@ pub struct ExecutionContext {
     pub host_workspace_dir: String,
     /// 容器工作空间目录
     pub container_workspace_dir: String,
-    /// 日志路径
-    pub host_log_path: String,
     /// Git 信息
     pub git_info: Option<GitInfo>,
 }
@@ -44,8 +42,6 @@ impl ExecutionContext {
 
         let host_workspace_dir = format!("{HOST_WORKSPACE_DIR}/{task_path_identify}");
         let container_workspace_dir = format!("{CONTAINER_WORKSPACE_DIR}/{task_path_identify}");
-
-        let host_log_path = PathFormatter::get_task_log_path(&space_name, &project_name, &task_id);
 
         let git_client = GitClient::new(&space_name, &project_name).await?;
 
@@ -73,7 +69,6 @@ impl ExecutionContext {
             environment,
             host_workspace_dir,
             container_workspace_dir,
-            host_log_path,
             git_info: git_client.git_info,
             clean_workspace,
         })

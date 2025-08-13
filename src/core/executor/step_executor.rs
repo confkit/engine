@@ -9,18 +9,18 @@ use std::time::Instant;
 use super::command_executor::CommandExecutor;
 use super::context::ExecutionContext;
 use super::types::{StepResult, StepStatus};
-use crate::infra::log::Log;
+use crate::core::executor::task::Task;
 use crate::types::config::ConfKitStepConfig;
 
 /// 步骤执行器
 pub struct StepExecutor {
     context: ExecutionContext,
-    logger: Log,
+    task: Task,
 }
 
 impl StepExecutor {
-    pub fn new(context: ExecutionContext, logger: Log) -> Self {
-        Self { context, logger }
+    pub fn new(context: ExecutionContext, task: Task) -> Self {
+        Self { context, task }
     }
 
     /// 执行单个步骤
@@ -73,10 +73,17 @@ impl StepExecutor {
                 container,
                 &working_dir,
                 &step.commands,
+                &self.task,
             )
             .await?
         } else {
-            CommandExecutor::execute_locally(&self.context, &working_dir, &step.commands).await?
+            CommandExecutor::execute_locally(
+                &self.context,
+                &working_dir,
+                &step.commands,
+                &self.task,
+            )
+            .await?
         };
 
         let duration = start_time.elapsed();
@@ -84,60 +91,64 @@ impl StepExecutor {
         result.finished_at = Some(Utc::now());
 
         // 设置结果
-        if execution_result == 0 {
-            result.status = StepStatus::Success;
-            result.exit_code = Some(execution_result);
-            result.output = String::new();
-        } else {
-            result.status = StepStatus::Failed;
-            result.exit_code = Some(execution_result);
-            result.output = String::new();
-            result.error = Some(String::new());
+        result.exit_code = Some(execution_result);
+        result.output = String::new();
+
+        // 检查是否超时
+        if let Some(timeout) = &step.timeout {
+            if duration.as_secs() > *timeout {
+                result.status = StepStatus::Failed;
+                result.exit_code = Some(1);
+                result.error = Some(format!("Step timeout: {} seconds", timeout));
+                self.log_step_result(&result, step_number, total_steps)?;
+                return Ok(result);
+            }
         }
 
-        self.log_step_result(&result, step_number, total_steps).await?;
+        // 根据执行结果设置状态
+        if execution_result == 0 {
+            result.status = StepStatus::Success;
+        } else {
+            result.status = StepStatus::Failed;
+            result.error = Some(format!("Command failed with exit code: {}", execution_result));
+        }
+
+        self.log_step_result(&result, step_number, total_steps)?;
 
         Ok(result)
     }
 
     /// 记录步骤详情
     async fn log_step_details(&self, step: &ConfKitStepConfig, working_dir: &str) -> Result<()> {
-        self.logger.info("Step Details:")?;
-        self.logger
+        self.task.info("Step Details:")?;
+        self.task
             .info(&format!(" - Container: {}", step.container.as_deref().unwrap_or("Host")))?;
-        self.logger.info(&format!(" - Working Directory: {working_dir}"))?;
-        self.logger.info(&format!(" - Command Count: {}", step.commands.len()))?;
+        self.task.info(&format!(" - Working Directory: {working_dir}"))?;
+        self.task.info(&format!(" - Command Count: {}", step.commands.len()))?;
 
         if let Some(timeout) = &step.timeout {
-            // TODO: 超时后，需要记录日志，并返回错误码
-            self.logger.info(&format!(" - Timeout: {timeout}"))?;
-
-            return Ok(());
+            self.task.info(&format!(" - Timeout: {timeout}"))?;
         }
         Ok(())
     }
 
     /// 记录步骤结果
-    async fn log_step_result(
+    fn log_step_result(
         &self,
         result: &StepResult,
         step_number: usize,
         total_steps: usize,
     ) -> Result<()> {
         match result.status {
-            StepStatus::Success => {
-                self.logger.info(&format!(
-                    "[{}/{}] ✓ Step '{}' executed successfully (Duration: {:.1}s)",
-                    step_number,
-                    total_steps,
-                    result.name,
-                    result.duration_ms.unwrap_or(0) as f64 / 1000.0
-                ))?;
-
-                Ok(())
-            }
+            StepStatus::Success => self.task.info(&format!(
+                "[{}/{}] ✓ Step '{}' executed successfully (Duration: {:.1}s)",
+                step_number,
+                total_steps,
+                result.name,
+                result.duration_ms.unwrap_or(0) as f64 / 1000.0
+            ))?,
             StepStatus::Failed => {
-                self.logger.error(&format!(
+                self.task.error(&format!(
                     "[{}/{}] ✗ Step '{}' executed failed (Duration: {:.1}s)",
                     step_number,
                     total_steps,
@@ -146,12 +157,23 @@ impl StepExecutor {
                 ))?;
 
                 if let Some(error) = &result.error {
-                    self.logger.error(&format!("Error Message: {error}"))?;
+                    self.task.error(&format!("Error Message: {error}"))?;
                 }
-
-                Ok(())
             }
-            _ => Ok(()),
+            StepStatus::Skipped => {
+                self.task.info(&format!(
+                    "[{}/{}] ○ Step '{}' skipped",
+                    step_number, total_steps, result.name
+                ))?;
+            }
+            StepStatus::Running => {
+                // 这种情况通常不应该出现在结果记录中，但为了完整性处理
+                self.task.info(&format!(
+                    "[{}/{}] ▶ Step '{}' is running...",
+                    step_number, total_steps, result.name
+                ))?;
+            }
         }
+        Ok(())
     }
 }

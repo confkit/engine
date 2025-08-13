@@ -2,7 +2,7 @@
 //! Created: 2025-07-13
 //! Description: ConfKit Engine CLI
 
-use std::{fs, path::Path};
+use std::{fs, path::Path, sync::Arc};
 
 use anyhow::Result;
 use clap::Parser;
@@ -22,6 +22,8 @@ use engine::ConfKitEngine;
 use infra::config::ConfKitConfigLoader;
 use shared::constants::{HOST_CACHE_DIR, HOST_LOG_DIR, HOST_WORKSPACE_DIR};
 
+use crate::infra::event_hub::{EventHub, LogSubscriber};
+
 // 初始化所需目录
 fn init_dirs() -> Result<()> {
     let dirs = [HOST_WORKSPACE_DIR, HOST_LOG_DIR, HOST_CACHE_DIR];
@@ -32,6 +34,12 @@ fn init_dirs() -> Result<()> {
         }
     }
 
+    Ok(())
+}
+
+// 初始化事件中心
+async fn init_event_hub() -> Result<()> {
+    EventHub::global().subscribe(Arc::new(LogSubscriber::with_default_path("logs/app.log"))).await;
     Ok(())
 }
 
@@ -58,6 +66,9 @@ async fn main() -> Result<()> {
         .with_target(show_path)
         .with_level(!cli.hide_level)
         .init();
+
+    // 初始化事件中心
+    init_event_hub().await?;
 
     tracing::info!("Version: {}", env!("CARGO_PKG_VERSION"));
 

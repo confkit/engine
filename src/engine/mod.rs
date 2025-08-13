@@ -4,6 +4,7 @@
 
 use std::collections::HashMap;
 
+use crate::core::executor::task::Task;
 use crate::engine::docker::DockerEngine;
 use crate::engine::podman::PodmanEngine;
 use crate::shared::global::ENGINE;
@@ -171,6 +172,7 @@ impl ConfKitEngine {
         working_dir: &str,
         commands: &[String],
         environment: &HashMap<String, String>,
+        task: &Task,
     ) -> Result<i32> {
         let engine = Self::get_engine().await?;
         match engine {
@@ -181,6 +183,7 @@ impl ConfKitEngine {
                     working_dir,
                     commands,
                     environment,
+                    task,
                 )
                 .await
             }
@@ -191,6 +194,7 @@ impl ConfKitEngine {
                     working_dir,
                     commands,
                     environment,
+                    task,
                 )
                 .await
             }

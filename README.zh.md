@@ -178,6 +178,7 @@ steps:
       - "echo 'Git Hash: ${GIT_HASH}'"
       - "go build -o app ./main.go"
     timeout: "5m"
+    continue_on_error: true
 ```
 
 ## 📋 日志管理
