@@ -104,8 +104,12 @@ pub struct ConfKitProjectConfig {
     #[serde(default = "default_shell")]
     pub shell: ConfKitShellConfig,
     pub source: Option<ConfKitSourceConfig>,
+    /// 环境变量文件, 优先级最低
     pub environment_files: Option<Vec<ConfKitEnvironmentFileConfig>>,
+    /// 环境变量, 优先级次之
     pub environment: Option<HashMap<String, String>>,
+    /// 来自参数的环境变量, 优先级最高(仅 interfactive 模式下生效)
+    pub environment_from_args: Option<Vec<ConfKitEnvironmentInteractiveConfig>>,
     pub cleaner: Option<ConfKitCleanerConfig>,
     pub steps: Vec<ConfKitStepConfig>,
 }
@@ -262,4 +266,40 @@ impl fmt::Display for ContainerStatus {
             ContainerStatus::Unbuilt => write!(f, "N/A"),
         }
     }
+}
+
+/// 交互式环境变量类型
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum ConfKitInteractiveType {
+    /// 输入框
+    Input,
+    /// 单选框
+    Radio,
+    /// 复选框
+    Checkbox,
+}
+
+/// 交互式环境变量配置
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ConfKitEnvironmentInteractiveConfig {
+    /// 环境变量名称
+    pub name: String,
+    /// 交互方式(input/radio/checkbox)
+    #[serde(rename = "type")]
+    pub interactive_type: ConfKitInteractiveType,
+    /// 交互提示
+    pub prompt: String,
+    /// 默认值
+    pub default: Option<String>,
+    /// 是否必填
+    #[serde(default = "default_required")]
+    pub required: bool,
+    /// 选项列表(仅对radio和checkbox有效)
+    pub options: Option<Vec<String>>,
+}
+
+/// 默认为必填
+fn default_required() -> bool {
+    true
 }

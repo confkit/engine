@@ -1,3 +1,9 @@
+//! Author: xiaoYown
+//! Created: 2025-08-14
+//! Description: Runner implementation
+
+use std::collections::HashMap;
+
 use anyhow::Result;
 use tracing;
 
@@ -22,7 +28,11 @@ pub struct Runner {
 }
 
 impl Runner {
-    pub async fn new(space_name: &str, project_name: &str) -> Result<Self> {
+    pub async fn new(
+        space_name: &str,
+        project_name: &str,
+        environment_from_args: HashMap<String, String>,
+    ) -> Result<Self> {
         // 获取项目配置
         let project_config =
             ConfKitConfigLoader::get_project_config(space_name, project_name).await?;
@@ -48,6 +58,7 @@ impl Runner {
             space_name.to_string(),
             project_name.to_string(),
             &project_config,
+            environment_from_args,
         )
         .await?;
 

@@ -1,3 +1,7 @@
+//! Author: xiaoYown
+//! Created: 2025-08-05
+//! Description: Path formatter
+
 use chrono::Local;
 
 use crate::shared::constants::HOST_LOG_DIR;

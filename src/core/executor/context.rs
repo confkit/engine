@@ -37,6 +37,7 @@ impl ExecutionContext {
         space_name: String,
         project_name: String,
         project_config: &ConfKitProjectConfig,
+        environment_from_args: HashMap<String, String>,
     ) -> Result<Self> {
         let task_path_identify = PathFormatter::get_task_path(&space_name, &project_name, &task_id);
 
@@ -46,6 +47,7 @@ impl ExecutionContext {
         let git_client = GitClient::new(&space_name, &project_name).await?;
 
         let environment = Self::build_environment(
+            environment_from_args,
             &task_id,
             &space_name,
             &project_name,
@@ -88,6 +90,7 @@ impl ExecutionContext {
 impl ExecutionContext {
     /// 构建环境变量
     fn build_environment(
+        environment_from_args: HashMap<String, String>,
         task_id: &str,
         space_name: &str,
         project_name: &str,
@@ -142,6 +145,11 @@ impl ExecutionContext {
             env.insert("GIT_HASH".to_string(), git_info.commit_hash.clone());
             env.insert("GIT_HASH_SHORT".to_string(), git_info.commit_hash_short.clone());
             env.insert("PROJECT_VERSION".to_string(), git_info.project_version.clone());
+        }
+
+        // 参数环境变量
+        for (key, value) in environment_from_args {
+            env.insert(key.clone(), value.clone());
         }
 
         // 项目环境变量
