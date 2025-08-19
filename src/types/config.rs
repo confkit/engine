@@ -278,6 +278,8 @@ pub enum ConfKitInteractiveType {
     Radio,
     /// 复选框
     Checkbox,
+    /// 确认框
+    Confirm,
 }
 
 /// 交互式环境变量配置
@@ -285,7 +287,7 @@ pub enum ConfKitInteractiveType {
 pub struct ConfKitEnvironmentInteractiveConfig {
     /// 环境变量名称
     pub name: String,
-    /// 交互方式(input/radio/checkbox)
+    /// 交互方式(input/radio/checkbox/confirm)
     #[serde(rename = "type")]
     pub interactive_type: ConfKitInteractiveType,
     /// 交互提示

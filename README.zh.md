@@ -242,6 +242,63 @@ environment:
   CUSTOM_VAR: "${PROJECT_NAME}-${GIT_COMMIT_SHORT}"
 ```
 
+#### 交互式环境变量
+
+ConfKit 支持在任务执行过程中交互式输入环境变量。在 `environment_from_args` 部分定义：
+
+```yaml
+environment_from_args:
+  # input 类型 - 自由文本输入
+  - name: "API_URL"
+    type: "input"
+    prompt: "请输入API地址"
+    default: "https://api.example.com"
+    required: true
+    
+  # radio 类型 - 单选
+  - name: "ENVIRONMENT"
+    type: "radio"
+    prompt: "选择部署环境"
+    default: "staging"
+    required: true
+    options:
+      - "development"
+      - "staging"
+      - "production"
+      
+  # checkbox 类型 - 多选
+  - name: "FEATURES"
+    type: "checkbox"
+    prompt: "选择要启用的功能"
+    default: "auth"
+    required: false
+    options:
+      - "auth"
+      - "logging"
+      - "metrics"
+      
+  # confirm 类型 - 是/否确认
+  - name: "ENABLE_DEBUG"
+    type: "confirm"
+    prompt: "是否启用调试模式？"
+    default: "false"
+    required: false
+```
+
+**支持的交互类型：**
+- `input`：自由文本输入
+- `radio`：从选项中单选
+- `checkbox`：从选项中多选
+- `confirm`：是/否确认（返回 "true" 或 "false"）
+
+**配置选项：**
+- `name`：环境变量名称
+- `type`：交互类型（input/radio/checkbox/confirm）
+- `prompt`：用户提示文本
+- `default`：默认值（可选）
+- `required`：是否必填（默认：true）
+- `options`：radio/checkbox 类型的可选项
+
 所有环境变量都支持使用 `${变量名}` 语法进行变量替换。
 
 ### 智能日志匹配

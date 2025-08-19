@@ -8,8 +8,10 @@
 // 单选 - radio
 // 多选 - checkbox
 // 输入 - input
+// 确认 - confirm
 
 mod checkbox;
+mod confirm;
 mod input;
 mod radio;
 
@@ -18,7 +20,9 @@ use std::collections::HashMap;
 
 use crate::types::config::{ConfKitEnvironmentInteractiveConfig, ConfKitInteractiveType};
 
-pub use self::{checkbox::handle_checkbox, input::handle_input, radio::handle_radio};
+pub use self::{
+    checkbox::handle_checkbox, confirm::handle_confirm, input::handle_input, radio::handle_radio,
+};
 
 /// 处理交互式环境变量配置
 pub async fn process_interactive_environments(
@@ -35,6 +39,7 @@ pub async fn process_interactive_environments(
             ConfKitInteractiveType::Input => handle_input(config).await?,
             ConfKitInteractiveType::Radio => handle_radio(config).await?,
             ConfKitInteractiveType::Checkbox => handle_checkbox(config).await?,
+            ConfKitInteractiveType::Confirm => handle_confirm(config).await?,
         };
 
         // 将结果添加到环境变量中

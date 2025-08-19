@@ -235,6 +235,63 @@ environment:
   CUSTOM_VAR: "${PROJECT_NAME}-${GIT_COMMIT_SHORT}"
 ```
 
+#### Interactive Environment Variables
+
+ConfKit supports interactive environment variable input during task execution. Define them in the `environment_from_args` section:
+
+```yaml
+environment_from_args:
+  # Input type - free text input
+  - name: "API_URL"
+    type: "input"
+    prompt: "Please enter API URL"
+    default: "https://api.example.com"
+    required: true
+    
+  # Radio type - single choice selection
+  - name: "ENVIRONMENT"
+    type: "radio"
+    prompt: "Select deployment environment"
+    default: "staging"
+    required: true
+    options:
+      - "development"
+      - "staging"
+      - "production"
+      
+  # Checkbox type - multiple choice selection
+  - name: "FEATURES"
+    type: "checkbox"
+    prompt: "Select features to enable"
+    default: "auth"
+    required: false
+    options:
+      - "auth"
+      - "logging"
+      - "metrics"
+      
+  # Confirm type - yes/no confirmation
+  - name: "ENABLE_DEBUG"
+    type: "confirm"
+    prompt: "Enable debug mode?"
+    default: "false"
+    required: false
+```
+
+**Supported Interactive Types:**
+- `input`: Free text input
+- `radio`: Single choice selection from options
+- `checkbox`: Multiple choice selection from options
+- `confirm`: Yes/No confirmation (returns "true" or "false")
+
+**Configuration Options:**
+- `name`: Environment variable name
+- `type`: Interactive type (input/radio/checkbox/confirm)
+- `prompt`: User prompt text
+- `default`: Default value (optional)
+- `required`: Whether input is required (default: true)
+- `options`: Available choices for radio/checkbox types
+
 All environment variables support variable substitution using the `${VAR_NAME}` syntax.
 
 ### Smart Log Matching
