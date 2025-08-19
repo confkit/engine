@@ -11,7 +11,7 @@ pub struct PathFormatter;
 impl PathFormatter {
     // 格式化任务路径
     pub fn get_task_path(space_name: &str, project_name: &str, task_id: &str) -> String {
-        format!("[{space_name}]-{project_name}-{task_id}")
+        format!("--S-{space_name})-S--{project_name}-{task_id}")
     }
 
     pub fn get_log_project_dir_name(space_name: &str, project_name: &str) -> String {
@@ -23,7 +23,8 @@ impl PathFormatter {
     }
 
     pub fn get_project_log_path(space_name: &str, project_name: &str) -> String {
-        format!("{HOST_LOG_DIR}/[{space_name}]-{project_name}/")
+        let project_log_path = Self::get_log_project_dir_name(space_name, project_name);
+        format!("{HOST_LOG_DIR}/{project_log_path}")
     }
 
     pub fn get_task_log_path(space_name: &str, project_name: &str, task_id: &str) -> String {
