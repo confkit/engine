@@ -171,7 +171,8 @@ steps:
       - "echo 'Building ${APP_NAME} v${BUILD_VERSION}'"
       - "echo 'Git Hash: ${GIT_HASH}'"
       - "go build -o app ./main.go"
-    timeout: "5m"
+    # 5m = 300s
+    timeout: 300
 ```
 
 ## 📋 Log Management

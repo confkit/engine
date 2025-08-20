@@ -11,7 +11,7 @@ pub struct PathFormatter;
 impl PathFormatter {
     // 格式化任务路径
     pub fn get_task_path(space_name: &str, project_name: &str, task_id: &str) -> String {
-        format!("--S-{space_name})-S--{project_name}-{task_id}")
+        format!("--{space_name}--{project_name}-{task_id}")
     }
 
     pub fn get_log_project_dir_name(space_name: &str, project_name: &str) -> String {

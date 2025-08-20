@@ -42,12 +42,13 @@ impl GitClient {
     pub async fn get_envs(space_name: &str, project_name: &str) -> Result<Option<GitInfo>> {
         let source = ConfKitConfigLoader::get_project_source_info(space_name, project_name).await?;
 
-        if source.is_none() {
-            tracing::info!("Project source not found for project: {}", project_name);
-            return Ok(None);
-        }
-
-        let source = source.unwrap();
+        let source = match source {
+            Some(source) => source,
+            None => {
+                tracing::info!("Project source not found for project: {}", project_name);
+                return Ok(None);
+            }
+        };
 
         let source_hash = match Self::get_source_hash(&source.git_repo, &source.git_branch).await {
             Ok(source_hash) => source_hash,

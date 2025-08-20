@@ -151,11 +151,13 @@ impl Runner {
 
         // 打印 Git 信息
         self.task.info(&LogFormatter::header("Git Info"))?;
-        self.task
-            .info(&format!("Repository: {}", self.context.git_info.as_ref().unwrap().repo_url))?;
-        self.task.info(&format!("Branch: {}", self.context.git_info.as_ref().unwrap().branch))?;
-        self.task
-            .info(&format!("Commit: {}", self.context.git_info.as_ref().unwrap().commit_hash))?;
+        if let Some(git_info) = &self.context.git_info {
+            self.task.info(&format!("Repository: {}", git_info.repo_url))?;
+            self.task.info(&format!("Branch: {}", git_info.branch))?;
+            self.task.info(&format!("Commit: {}", git_info.commit_hash))?;
+        } else {
+            self.task.info("Git information not available")?;
+        }
 
         // 环境变量
         self.task.info(&LogFormatter::header("Environment"))?;
