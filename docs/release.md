@@ -32,7 +32,7 @@ cargo release major --execute --no-confirm --no-publish
 ### 4.1 直接下载
 
 ```bash
-wget https://github.com/confkit-io/confkit/releases/latest/download/confkit-linux -O confkit
+wget https://github.com/confkit/engine/releases/latest/download/confkit-linux -O confkit
 chmod +x confkit
 ./confkit --help
 ```
@@ -40,7 +40,7 @@ chmod +x confkit
 ### 4.2 curl/wget 一键安装
 
 ```bash
-curl -L https://github.com/confkit-io/confkit/releases/latest/download/confkit-linux -o /usr/local/bin/confkit
+curl -L https://github.com/confkit/engine/releases/latest/download/confkit-linux -o /usr/local/bin/confkit
 chmod +x /usr/local/bin/confkit
 ```
 
@@ -57,7 +57,7 @@ brew install confkit
 - 用户一键安装命令：
 
 ```bash
-curl -fsSL https://github.com/confkit-io/confkit/releases/latest/download/install.sh | sh
+curl -fsSL https://github.com/confkit/engine/releases/latest/download/install.sh | sh
 ```
 
 ## 5. 发布公告

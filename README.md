@@ -15,10 +15,39 @@ ConfKit is a configuration-driven build and deployment tool designed for modern 
 
 ### Installation
 
+#### Quick Install (Recommended)
+
+Run the following command to download and install the latest version:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/confkit/engine/main/install.sh | sh
+```
+
+This will automatically:
+- Detect your platform and architecture
+- Download the appropriate binary from GitHub releases
+- Install to the system binary directory (`/usr/local/bin` on macOS, `/usr/local/bin` or `~/.local/bin` on Linux)
+- Add the binary to your PATH automatically
+
+#### Supported Platforms
+
+- **Linux**: `x86_64-unknown-linux-gnu`, `aarch64-unknown-linux-gnu`
+- **macOS**: `x86_64-apple-darwin`, `aarch64-apple-darwin`
+
+#### Manual Installation
+
+If you prefer to build from source:
+
 ```bash
 git clone <repository-url>
 cd confkit/engine
 cargo build --release
+```
+
+#### Verify Installation
+
+```bash
+confkit --help
 ```
 
 ### Example Configuration Structure
