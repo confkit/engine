@@ -17,10 +17,23 @@ ConfKit is a configuration-driven build and deployment tool designed for modern 
 
 #### Quick Install (Recommended)
 
-Run the following command to download and install the latest version:
+**Install Latest Version:**
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/confkit/engine/main/install.sh | sh
+```
+
+**Install Specific Version:**
+
+```bash
+# Method 1: Use command line parameter (Recommended)
+curl -fsSL https://raw.githubusercontent.com/confkit/engine/main/install.sh | sh -s -- 1.2.3
+
+# Method 2: Use bash process substitution
+bash <(curl -fsSL https://raw.githubusercontent.com/confkit/engine/main/install.sh) 1.2.3
+
+# Method 3: Use environment variable with bash
+CONFKIT_VERSION=1.2.3 bash <(curl -fsSL https://raw.githubusercontent.com/confkit/engine/main/install.sh)
 ```
 
 This will automatically:
@@ -28,6 +41,11 @@ This will automatically:
 - Download the appropriate binary from GitHub releases
 - Install to the system binary directory (`/usr/local/bin` on macOS, `/usr/local/bin` or `~/.local/bin` on Linux)
 - Add the binary to your PATH automatically
+
+**Version Format Support:**
+- `latest` - Install the latest release (default)
+- `1.2.3` - Automatically converts to `v1.2.3`
+- `v1.2.3` - Use exact version tag
 
 #### Supported Platforms
 

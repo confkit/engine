@@ -17,10 +17,23 @@ ConfKit 是一个配置驱动的构建和部署工具，专为现代化 CI/CD �
 
 #### 快速安装（推荐）
 
-运行以下命令下载并安装最新版本：
+**安装最新版本：**
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/confkit/engine/main/install.sh | sh
+```
+
+**安装指定版本：**
+
+```bash
+# 方法1：使用命令行参数（推荐）
+curl -fsSL https://raw.githubusercontent.com/confkit/engine/main/install.sh | sh -s -- 1.2.3
+
+# 方法2：使用 bash 进程替换
+bash <(curl -fsSL https://raw.githubusercontent.com/confkit/engine/main/install.sh) 1.2.3
+
+# 方法3：使用环境变量和 bash
+CONFKIT_VERSION=1.2.3 bash <(curl -fsSL https://raw.githubusercontent.com/confkit/engine/main/install.sh)
 ```
 
 这将自动：
@@ -28,6 +41,11 @@ curl -fsSL https://raw.githubusercontent.com/confkit/engine/main/install.sh | sh
 - 从 GitHub 发布页面下载对应的二进制文件
 - 安装到系统二进制目录（macOS 为 `/usr/local/bin`，Linux 为 `/usr/local/bin` 或 `~/.local/bin`）
 - 自动将二进制文件添加到 PATH
+
+**版本格式支持：**
+- `latest` - 安装最新发布版本（默认）
+- `1.2.3` - 自动转换为 `v1.2.3`
+- `v1.2.3` - 使用精确版本标签
 
 #### 支持的平台
 

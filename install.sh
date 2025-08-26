@@ -8,6 +8,16 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
+# 版本号处理 - 支持环境变量或命令行参数
+VERSION=${CONFKIT_VERSION:-${1:-"latest"}}
+
+# 如果版本号不是 "latest" 且不以 "v" 开头，则添加 "v" 前缀
+if [ "$VERSION" != "latest" ] && [ "${VERSION#v}" = "$VERSION" ]; then
+    VERSION="v$VERSION"
+fi
+
+printf "${BLUE}安装版本: $VERSION${NC}\n"
+
 # 获取操作系统
 OS=$(uname -s | tr '[:upper:]' '[:lower:]')
 
@@ -37,9 +47,23 @@ case "$OS" in
       USE_SUDO=""
       mkdir -p "$INSTALL_DIR"
     fi
-    SHELL_RC="$HOME/.bashrc"
-    if [ -f "$HOME/.zshrc" ]; then
+    # Linux: 智能检测 shell 配置文件
+    if [ -n "$ZSH_VERSION" ] || [ "$(basename "$SHELL")" = "zsh" ]; then
       SHELL_RC="$HOME/.zshrc"
+    elif [ -f "$HOME/.zshrc" ] && [ ! -f "$HOME/.bashrc" ]; then
+      SHELL_RC="$HOME/.zshrc"
+    else
+      SHELL_RC="$HOME/.bashrc"
+      # 确保 .bashrc 被 .bash_profile 或 .profile 调用
+      if [ -f "$HOME/.bash_profile" ]; then
+        if ! grep -q ". ~/.bashrc" "$HOME/.bash_profile" 2>/dev/null; then
+          echo ". ~/.bashrc" >> "$HOME/.bash_profile"
+        fi
+      elif [ -f "$HOME/.profile" ]; then
+        if ! grep -q ". ~/.bashrc" "$HOME/.profile" 2>/dev/null; then
+          echo ". ~/.bashrc" >> "$HOME/.profile"
+        fi
+      fi
     fi
     ;;
   darwin)
@@ -58,8 +82,12 @@ case "$OS" in
     ;;
 esac
 
-# 构建下载 URL
-URL="https://github.com/confkit/engine/releases/latest/download/confkit-${TARGET}"
+# 构建下载 URL - 根据版本号构建不同的URL
+if [ "$VERSION" = "latest" ]; then
+    URL="https://github.com/confkit/engine/releases/latest/download/confkit-${TARGET}"
+else
+    URL="https://github.com/confkit/engine/releases/download/${VERSION}/confkit-${TARGET}"
+fi
 
 printf "${BLUE}正在下载 confkit for ${TARGET}...${NC}\n"
 printf "${BLUE}下载地址: $URL${NC}\n"
@@ -138,11 +166,36 @@ if command -v confkit >/dev/null 2>&1; then
   confkit --help
   printf "\n${GREEN}🎉 confkit 安装成功！${NC}\n"
 else
-  printf "\n${YELLOW}安装完成，但 confkit 尚未在当前会话的 PATH 中。${NC}\n"
+  printf "\n${YELLOW}✓ 安装完成！但需要重新加载 shell 配置${NC}\n"
+  
   if [ "$PATH_UPDATED" = "true" ]; then
-    printf "${YELLOW}请运行以下命令使 PATH 生效:\n  source $SHELL_RC${NC}\n"
+    printf "${GREEN}PATH 已添加到配置文件: $SHELL_RC${NC}\n"
+    printf "\n${BLUE}请选择以下方式之一使配置生效:${NC}\n"
+    printf "${YELLOW}1. 重新加载配置: source $SHELL_RC${NC}\n"
+    printf "${YELLOW}2. 重新打开终端${NC}\n"
+    printf "${YELLOW}3. 直接运行: $INSTALL_DIR/confkit --version${NC}\n"
+    
+    # 尝试检测用户当前使用的 shell
+    CURRENT_SHELL=$(basename "$SHELL")
+    printf "\n${BLUE}检测到您使用的是 $CURRENT_SHELL shell${NC}\n"
+    
+    # 给出具体的重新加载命令
+    case "$CURRENT_SHELL" in
+      bash)
+        printf "${GREEN}推荐运行: source ~/.bashrc${NC}\n"
+        ;;
+      zsh)
+        printf "${GREEN}推荐运行: source ~/.zshrc${NC}\n"
+        ;;
+      *)
+        printf "${GREEN}推荐运行: source $SHELL_RC${NC}\n"
+        ;;
+    esac
   else
-    printf "${YELLOW}请手动将 $INSTALL_DIR 添加到您的 PATH 中。${NC}\n"
+    printf "${RED}警告: 无法自动添加到 PATH${NC}\n"
+    printf "${YELLOW}请手动将以下行添加到您的 shell 配置文件:${NC}\n"
+    printf "${BLUE}export PATH=\"$INSTALL_DIR:\$PATH\"${NC}\n"
   fi
-  printf "${YELLOW}或者您可以直接运行:\n  $INSTALL_DIR/confkit --help${NC}\n"
+  
+  printf "\n${GREEN}安装位置: $INSTALL_DIR/confkit${NC}\n"
 fi
