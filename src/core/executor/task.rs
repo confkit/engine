@@ -44,15 +44,15 @@ impl Task {
         self.log_with_level(message, LogLevel::Error)
     }
 
-    /// 记录 Warn 级别日志的便捷方法
-    pub fn warn(&self, message: &str) -> Result<(), anyhow::Error> {
-        self.log_with_level(message, LogLevel::Warn)
-    }
+    // /// 记录 Warn 级别日志的便捷方法
+    // pub fn warn(&self, message: &str) -> Result<(), anyhow::Error> {
+    //     self.log_with_level(message, LogLevel::Warn)
+    // }
 
-    /// 记录 Debug 级别日志的便捷方法
-    pub fn debug(&self, message: &str) -> Result<(), anyhow::Error> {
-        self.log_with_level(message, LogLevel::Debug)
-    }
+    // /// 记录 Debug 级别日志的便捷方法
+    // pub fn debug(&self, message: &str) -> Result<(), anyhow::Error> {
+    //     self.log_with_level(message, LogLevel::Debug)
+    // }
 
     // 生成任务ID
     fn generate_task_id() -> String {
@@ -68,8 +68,8 @@ impl Task {
     pub fn clone(&self) -> Self {
         Self {
             id: self.id.clone(),
-            started_at: self.started_at.clone(),
-            finished_at: self.finished_at.clone(),
+            started_at: self.started_at,
+            finished_at: self.finished_at,
             log_path: self.log_path.clone(),
         }
     }

@@ -23,7 +23,7 @@ pub async fn handle_input(config: &ConfKitEnvironmentInteractiveConfig) -> Resul
         let name = config.name.clone();
         text = text.with_validator(move |input: &str| {
             if input.trim().is_empty() {
-                return Ok(Validation::Invalid(format!("{} 不能为空", name).into()));
+                return Ok(Validation::Invalid(format!("{name} 不能为空").into()));
             }
             Ok(Validation::Valid)
         });

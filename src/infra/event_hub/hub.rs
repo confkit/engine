@@ -4,7 +4,7 @@
 
 use once_cell::sync::OnceCell;
 use std::sync::Arc;
-use tokio::sync::{mpsc, Mutex, RwLock};
+use tokio::sync::{mpsc, RwLock};
 
 use crate::infra::event_hub::{Event, EventSubscriber};
 
@@ -40,23 +40,23 @@ pub struct EventHub {
     sender: mpsc::UnboundedSender<Event>,
     /// 订阅者列表
     subscribers: Arc<RwLock<Vec<Arc<dyn EventSubscriber>>>>,
-    /// 配置
-    config: EventHubConfig,
-    /// 是否已启动
-    started: Arc<Mutex<bool>>,
+    // /// 配置
+    // config: EventHubConfig,
+    // /// 是否已启动
+    // started: Arc<Mutex<bool>>,
 }
 
 impl EventHub {
     /// 创建新的事件中心实例
-    pub fn new(config: EventHubConfig) -> Self {
+    fn new(config: EventHubConfig) -> Self {
         let (sender, receiver) = mpsc::unbounded_channel();
         let subscribers = Arc::new(RwLock::new(Vec::new()));
 
         let hub = Self {
             sender,
             subscribers: subscribers.clone(),
-            config: config.clone(),
-            started: Arc::new(Mutex::new(false)),
+            // config: config.clone(),
+            // started: Arc::new(Mutex::new(false)),
         };
 
         // 启动事件处理工作线程
@@ -99,20 +99,20 @@ impl EventHub {
         subscribers.push(subscriber);
     }
 
-    /// 取消订阅
-    ///
-    /// # 参数
-    /// - `subscriber_name`: 订阅者名称
-    pub async fn unsubscribe(&self, subscriber_name: &str) {
-        let mut subscribers = self.subscribers.write().await;
-        subscribers.retain(|s| s.name() != subscriber_name);
-        tracing::debug!("Unsubscribing from event: {}", subscriber_name);
-    }
+    // /// 取消订阅
+    // ///
+    // /// # 参数
+    // /// - `subscriber_name`: 订阅者名称
+    // pub async fn unsubscribe(&self, subscriber_name: &str) {
+    //     let mut subscribers = self.subscribers.write().await;
+    //     subscribers.retain(|s| s.name() != subscriber_name);
+    //     tracing::debug!("Unsubscribing from event: {}", subscriber_name);
+    // }
 
-    /// 获取订阅者数量
-    pub async fn subscriber_count(&self) -> usize {
-        self.subscribers.read().await.len()
-    }
+    // /// 获取订阅者数量
+    // pub async fn subscriber_count(&self) -> usize {
+    //     self.subscribers.read().await.len()
+    // }
 
     /// 启动事件处理工作线程
     fn start_workers(

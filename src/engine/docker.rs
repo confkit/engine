@@ -409,7 +409,7 @@ impl DockerEngine {
             // 添加环境变量参数
             for (key, value) in environment {
                 command_parts.push("-e".to_string());
-                command_parts.push(format!("{}={}", key, value));
+                command_parts.push(format!("{key}={value}"));
             }
 
             command_parts.push("-w".to_string());

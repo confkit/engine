@@ -29,23 +29,23 @@ struct LogMessage {
 pub struct LogSubscriber {
     /// 默认日志文件路径（当事件中未指定路径时使用）
     default_log_path: Option<PathBuf>,
-    /// 是否启用时间戳
-    enable_timestamp: bool,
-    /// 日志格式模板
-    format_template: String,
+    // /// 是否启用时间戳
+    // enable_timestamp: bool,
+    // /// 日志格式模板
+    // format_template: String,
 }
 
 impl LogSubscriber {
-    /// 创建新的日志订阅者（无默认路径）
-    ///
-    /// 日志路径必须通过事件的 metadata 中的 "log_path" 字段传递
-    pub fn new() -> Self {
-        Self {
-            default_log_path: None,
-            enable_timestamp: true,
-            format_template: "[{timestamp}] [{level}] {message}".to_string(),
-        }
-    }
+    // /// 创建新的日志订阅者（无默认路径）
+    // ///
+    // /// 日志路径必须通过事件的 metadata 中的 "log_path" 字段传递
+    // pub fn new() -> Self {
+    //     Self {
+    //         default_log_path: None,
+    //         enable_timestamp: true,
+    //         format_template: "[{timestamp}] [{level}] {message}".to_string(),
+    //     }
+    // }
 
     /// 创建带默认日志路径的订阅者
     ///
@@ -54,28 +54,28 @@ impl LogSubscriber {
     pub fn with_default_path<P: AsRef<Path>>(default_log_path: P) -> Self {
         Self {
             default_log_path: Some(default_log_path.as_ref().to_path_buf()),
-            enable_timestamp: true,
-            format_template: "[{timestamp}][{level}] {message}".to_string(),
+            // enable_timestamp: true,
+            // format_template: "[{timestamp}][{level}] {message}".to_string(),
         }
     }
 
-    /// 创建带自定义配置的日志订阅者
-    ///
-    /// # 参数
-    /// - `default_log_path`: 默认日志文件路径
-    /// - `enable_timestamp`: 是否启用时间戳
-    /// - `format_template`: 日志格式模板
-    pub fn with_config<P: AsRef<Path>>(
-        default_log_path: Option<P>,
-        enable_timestamp: bool,
-        format_template: String,
-    ) -> Self {
-        Self {
-            default_log_path: default_log_path.map(|p| p.as_ref().to_path_buf()),
-            enable_timestamp,
-            format_template,
-        }
-    }
+    // /// 创建带自定义配置的日志订阅者
+    // ///
+    // /// # 参数
+    // /// - `default_log_path`: 默认日志文件路径
+    // /// - `enable_timestamp`: 是否启用时间戳
+    // /// - `format_template`: 日志格式模板
+    // pub fn with_config<P: AsRef<Path>>(
+    //     default_log_path: Option<P>,
+    //     enable_timestamp: bool,
+    //     format_template: String,
+    // ) -> Self {
+    //     Self {
+    //         default_log_path: default_log_path.map(|p| p.as_ref().to_path_buf()),
+    //         enable_timestamp,
+    //         format_template,
+    //     }
+    // }
 
     /// 从事件中获取日志路径
     ///

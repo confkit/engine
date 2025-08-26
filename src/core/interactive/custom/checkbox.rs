@@ -19,6 +19,7 @@ pub async fn handle_checkbox(config: &ConfKitEnvironmentInteractiveConfig) -> Re
     let mut multi_select = MultiSelect::new(&config.prompt, options.clone());
 
     // 声明 default_indices 在外层作用域
+    #[allow(unused_assignments)]
     let mut default_indices: Vec<usize> = Vec::new();
 
     // 设置默认值
@@ -39,7 +40,7 @@ pub async fn handle_checkbox(config: &ConfKitEnvironmentInteractiveConfig) -> Re
         let name = config.name.clone(); // 克隆名称到本地变量
         multi_select = multi_select.with_validator(move |selections: &[ListOption<&String>]| {
             if selections.is_empty() {
-                return Ok(Validation::Invalid(format!("{} 至少需要选择一项", name).into()));
+                return Ok(Validation::Invalid(format!("{name} 至少需要选择一项").into()));
             }
             Ok(Validation::Valid)
         });

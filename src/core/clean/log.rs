@@ -53,7 +53,7 @@ impl LogCleaner {
     pub fn clean_project(space_name: &str, project_name: &str) -> Result<()> {
         tracing::info!("Cleaning space: {}, project: {}", space_name, project_name);
 
-        let project_log_dir = PathFormatter::format_log_project_path(space_name, project_name);
+        let project_log_dir = PathFormatter::log_project_dir(space_name, project_name);
 
         fs::remove_dir_all(project_log_dir)?;
 
@@ -68,7 +68,7 @@ impl LogCleaner {
             task_id
         );
 
-        let project_log_dir = PathFormatter::format_log_project_path(space_name, project_name);
+        let project_log_dir = PathFormatter::log_project_dir(space_name, project_name);
         // 获取 log_dir 下的所有目录
         let dirs = fs::read_dir(project_log_dir)?;
 

@@ -117,6 +117,7 @@ pub struct ConfKitProjectConfig {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConfKitCleanerConfig {
     pub workspace: Option<bool>,
+    pub artifacts: Option<bool>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

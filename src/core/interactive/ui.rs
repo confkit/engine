@@ -10,7 +10,7 @@ pub enum InteractiveUI {
     Run,
     Builder,
     Image,
-    Log,
+    // Log,
 }
 
 // 主菜单 UI

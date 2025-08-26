@@ -41,16 +41,15 @@ impl InteractiveMenu {
                     if !self.builder().await? {
                         break;
                     }
-                }
-                // InteractiveUI::Log => {
-                //     if !self.log().await? {
-                //         break;
-                //     }
-                // }
-                // InteractiveUI::Quit => {
-                //     break;
-                // }
-                _ => todo!(),
+                } // InteractiveUI::Log => {
+                  //     if !self.log().await? {
+                  //         break;
+                  //     }
+                  // }
+                  // InteractiveUI::Quit => {
+                  //     break;
+                  // }
+                  // _ => todo!(),
             }
         }
         Ok(())

@@ -99,7 +99,7 @@ impl StepExecutor {
             if duration.as_secs() > *timeout {
                 result.status = StepStatus::Failed;
                 result.exit_code = Some(1);
-                result.error = Some(format!("Step timeout: {} seconds", timeout));
+                result.error = Some(format!("Step timeout: {timeout} seconds"));
                 self.log_step_result(&result, step_number, total_steps)?;
                 return Ok(result);
             }
@@ -110,7 +110,7 @@ impl StepExecutor {
             result.status = StepStatus::Success;
         } else {
             result.status = StepStatus::Failed;
-            result.error = Some(format!("Command failed with exit code: {}", execution_result));
+            result.error = Some(format!("Command failed with exit code: {execution_result}"));
         }
 
         self.log_step_result(&result, step_number, total_steps)?;

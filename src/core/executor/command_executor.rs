@@ -4,7 +4,6 @@
 
 use anyhow::Result;
 use tokio::process::Command;
-use tracing;
 
 use super::context::ExecutionContext;
 use crate::{

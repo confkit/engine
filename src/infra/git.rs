@@ -110,7 +110,7 @@ impl GitClient {
         file_path: &str,
     ) -> Result<String> {
         // 创建临时目录, uuid 命名
-        let temp_dir = format!("{HOST_CACHE_DIR}/{}", Uuid::new_v4().to_string()[..8].to_string());
+        let temp_dir = format!("{HOST_CACHE_DIR}/{}", &Uuid::new_v4().to_string()[..8]);
 
         tracing::debug!("Temp directory: {temp_dir}");
 

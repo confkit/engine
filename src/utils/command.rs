@@ -9,6 +9,7 @@ use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio::process::Command;
 
 pub type LogCallback = Arc<dyn Fn(&str) + Send + Sync>;
+pub type LogCallbackBox = Box<dyn Fn(&str) + Send + Sync>;
 
 pub struct CommandUtil;
 
@@ -39,8 +40,8 @@ impl CommandUtil {
     // 执行命令并输出日志
     pub async fn execute_command_with_output(
         cmd: &mut Command,
-        on_stdout: Option<Box<dyn Fn(&str) + Send + Sync>>,
-        on_stderr: Option<Box<dyn Fn(&str) + Send + Sync>>,
+        on_stdout: Option<LogCallbackBox>,
+        on_stderr: Option<LogCallbackBox>,
     ) -> Result<i32> {
         let mut child = cmd.stdout(Stdio::piped()).stderr(Stdio::piped()).spawn()?;
 

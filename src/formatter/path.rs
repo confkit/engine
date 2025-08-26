@@ -2,8 +2,6 @@
 //! Created: 2025-08-05
 //! Description: Path formatter
 
-use chrono::Local;
-
 use crate::shared::constants::HOST_LOG_DIR;
 
 pub struct PathFormatter;
@@ -14,26 +12,13 @@ impl PathFormatter {
         format!("--{space_name}--{project_name}-{task_id}")
     }
 
-    pub fn get_log_project_dir_name(space_name: &str, project_name: &str) -> String {
-        format!("[{space_name}]-{project_name}")
+    // 获取日志项目目录
+    pub fn log_project_dir(space_name: &str, project_name: &str) -> String {
+        format!("{}/{}", HOST_LOG_DIR, log_project_dir_name(space_name, project_name))
     }
+}
 
-    pub fn format_log_project_path(space_name: &str, project_name: &str) -> String {
-        format!("{}/{}", HOST_LOG_DIR, Self::get_log_project_dir_name(space_name, project_name))
-    }
-
-    pub fn get_project_log_path(space_name: &str, project_name: &str) -> String {
-        let project_log_path = Self::get_log_project_dir_name(space_name, project_name);
-        format!("{HOST_LOG_DIR}/{project_log_path}")
-    }
-
-    pub fn get_task_log_path(space_name: &str, project_name: &str, task_id: &str) -> String {
-        let timestamp = Local::now().format("%Y.%m.%d-%H:%M:%S%.3f");
-
-        let project_log_path = Self::get_project_log_path(space_name, project_name);
-
-        let host_log_path = format!("{project_log_path}/[{timestamp}]{task_id}.log");
-
-        host_log_path
-    }
+// 获取日志项目目录名称
+fn log_project_dir_name(space_name: &str, project_name: &str) -> String {
+    format!("[{space_name}]-{project_name}")
 }

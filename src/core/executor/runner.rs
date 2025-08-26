@@ -22,8 +22,6 @@ use crate::utils::fs::make_dir_with_permissions;
 pub struct Runner {
     context: ExecutionContext,
     task: Task,
-    space_name: String,
-    project_name: String,
     project_config: ConfKitProjectConfig,
 }
 
@@ -40,12 +38,12 @@ impl Runner {
         let project_config = match project_config {
             Some(config) => config,
             None => {
-                tracing::error!("Project '{}' not found in space '{}'", project_name, space_name);
+                tracing::error!("Project '{project_name}' not found in space '{space_name}'");
                 return Err(anyhow::anyhow!("Project not found"));
             }
         };
 
-        let host_log_dir = PathFormatter::get_project_log_path(&space_name, &project_name);
+        let host_log_dir = PathFormatter::log_project_dir(space_name, project_name);
 
         // 创建任务
         let task = Task::new(&host_log_dir);
@@ -62,23 +60,11 @@ impl Runner {
         )
         .await?;
 
-        Ok(Self {
-            context,
-            task,
-            space_name: space_name.to_string(),
-            project_name: project_name.to_string(),
-            project_config,
-        })
+        Ok(Self { context, task, project_config })
     }
 
     pub async fn start(&mut self) -> Result<()> {
-        // TODO: 检查容器是否存在
-
-        // 创建工作目录
-        make_dir_with_permissions(&self.context.host_workspace_dir, 0o777)?;
-
-        // 打印任务信息
-        self.print_task_info()?;
+        self.prepare_task().await?;
 
         // 创建步骤执行器
         let executor = StepExecutor::new(self.context.clone(), self.task.clone());
@@ -88,15 +74,39 @@ impl Runner {
 
         self.task.info("Cleaning workspace")?;
 
-        if self.context.clean_workspace {
-            VolumesCleaner::clean_workspace(&self.space_name, &self.project_name, &self.task.id)
-                .await?;
-        }
+        self.post_task().await?;
 
         self.task.finish();
 
         // 输出执行摘要
         self.print_execution_summary(&results)?;
+
+        Ok(())
+    }
+
+    /// 任务前准备工作
+    async fn prepare_task(&self) -> Result<()> {
+        // 创建工作目录
+        make_dir_with_permissions(&self.context.host_workspace_dir, 0o777)?;
+        // 创建产物目录
+        make_dir_with_permissions(&self.context.host_artifacts_dir, 0o777)?;
+
+        // 打印任务信息
+        self.print_task_info()?;
+
+        Ok(())
+    }
+
+    /// 任务后期事务处理
+    async fn post_task(&self) -> Result<()> {
+        // 清理工作空间
+        if self.context.clean_workspace {
+            VolumesCleaner::clean_dir(&self.context.host_workspace_dir).await?;
+        }
+        // 清理产物
+        if self.context.clean_artifacts {
+            VolumesCleaner::clean_dir(&self.context.host_artifacts_dir).await?;
+        }
 
         Ok(())
     }
@@ -114,7 +124,7 @@ impl Runner {
 
         self.task.info(&format!(
             "Start to execute project: {} (total {} steps)",
-            self.project_name, total_steps
+            self.context.project_name, total_steps
         ))?;
 
         for (index, step) in project_config.steps.iter().enumerate() {
