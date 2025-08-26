@@ -2,11 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.1] - 2025-08-26
+
+### 🐛 Bug Fixes
+
+- 产物目录直接提供根目录, 提高使用自由度
 ## [0.2.0] - 2025-08-26
 
 ### 🚀 Features
 
-- Add env args HOST_ARTIFACTS_ROOT_DIR/CONTAINER_ARTIFACTS_ROOT_DIR, fix lint warning
+- Add env args HOST_ARTIFACTS_DIR/CONTAINER_ARTIFACTS_DIR, fix lint warning
+
+### ⚙️ Miscellaneous Tasks
+
+- Release confkit-engine version 0.2.0
 ## [0.1.2] - 2025-08-25
 
 ### 🚀 Features
