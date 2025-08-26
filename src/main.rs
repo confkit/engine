@@ -69,6 +69,14 @@ async fn main() -> Result<()> {
         .with_level(!cli.hide_level)
         .init();
 
+    // 检查配置文件是否存在
+    if !ConfKitConfigLoader::is_config_file_exists().await {
+        tracing::error!(
+            "✗ .confkit.yml not found in current directory. This is not a confkit project."
+        );
+        std::process::exit(1);
+    }
+
     // 初始化事件中心
     init_event_hub().await?;
 

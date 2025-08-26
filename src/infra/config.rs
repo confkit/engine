@@ -20,6 +20,11 @@ pub struct ConfKitConfigLoader;
 impl ConfKitConfigLoader {
     // ================================================ Config ================================================
 
+    // 判断配置文件是否存在
+    pub async fn is_config_file_exists() -> bool {
+        Path::new(CONFKIT_CONFIG_FILE).exists()
+    }
+
     // 设置全局配置文件
     pub async fn set_config() -> Result<()> {
         let config = Self::from_file(CONFKIT_CONFIG_FILE).await?;
