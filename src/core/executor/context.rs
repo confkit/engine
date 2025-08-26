@@ -28,14 +28,12 @@ pub struct ExecutionContext {
     pub git_info: Option<GitInfo>,
     /// 是否清理工作空间
     pub clean_workspace: bool,
-    /// 是否清理产物
-    pub clean_artifacts: bool,
     /// 主机工作空间目录
     pub host_workspace_dir: String,
     /// 容器工作空间目录
     pub container_workspace_dir: String,
-    /// 主机产物目录
-    pub host_artifacts_dir: String,
+    // /// 主机产物目录
+    // pub host_artifacts_dir: String,
     // /// 容器产物目录
     // pub container_artifacts_dir: String,
 }
@@ -71,10 +69,10 @@ impl ExecutionContext {
             container_artifacts_dir: &container_artifacts_dir,
         });
 
-        let (clean_workspace, clean_artifacts) = if let Some(cleaner) = &project_config.cleaner {
-            (cleaner.workspace.unwrap_or(true), cleaner.artifacts.unwrap_or(true))
+        let clean_workspace = if let Some(cleaner) = &project_config.cleaner {
+            cleaner.workspace.unwrap_or(true)
         } else {
-            (true, true)
+            true
         };
 
         Ok(Self {
@@ -85,10 +83,9 @@ impl ExecutionContext {
             environment,
             git_info: git_client.git_info,
             clean_workspace,
-            clean_artifacts,
             host_workspace_dir,
             container_workspace_dir,
-            host_artifacts_dir,
+            // host_artifacts_dir,
             // container_artifacts_dir,
         })
     }

@@ -88,8 +88,6 @@ impl Runner {
     async fn prepare_task(&self) -> Result<()> {
         // 创建工作目录
         make_dir_with_permissions(&self.context.host_workspace_dir, 0o777)?;
-        // 创建产物目录
-        make_dir_with_permissions(&self.context.host_artifacts_dir, 0o777)?;
 
         // 打印任务信息
         self.print_task_info()?;
@@ -102,10 +100,6 @@ impl Runner {
         // 清理工作空间
         if self.context.clean_workspace {
             VolumesCleaner::clean_dir(&self.context.host_workspace_dir).await?;
-        }
-        // 清理产物
-        if self.context.clean_artifacts {
-            VolumesCleaner::clean_dir(&self.context.host_artifacts_dir).await?;
         }
 
         Ok(())
