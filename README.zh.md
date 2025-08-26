@@ -253,8 +253,8 @@ ConfKit 在执行任务时会自动注入以下环境变量：
 - `SPACE_NAME` - 空间名称
 - `HOST_WORKSPACE_DIR` - 主机任务工作空间目录
 - `CONTAINER_WORKSPACE_DIR` - 容器任务工作空间目录
-- `HOST_ARTIFACTS_DIR` - 主机任务产物目录
-- `CONTAINER_ARTIFACTS_DIR` - 容器任务产物目录
+- `HOST_ARTIFACTS_ROOT_DIR` - 主机任务产物根目录
+- `CONTAINER_ARTIFACTS_ROOT_DIR` - 容器任务产物根目录
 
 
 #### Git 变量

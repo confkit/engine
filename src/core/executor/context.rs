@@ -10,7 +10,8 @@ use crate::{
     formatter::path::PathFormatter,
     infra::git::{GitClient, GitInfo},
     shared::constants::{
-        CONTAINER_ARTIFACTS_DIR, CONTAINER_WORKSPACE_DIR, HOST_ARTIFACTS_DIR, HOST_WORKSPACE_DIR,
+        CONTAINER_ARTIFACTS_ROOT_DIR, CONTAINER_WORKSPACE_DIR, HOST_ARTIFACTS_ROOT_DIR,
+        HOST_WORKSPACE_DIR,
     },
     types::config::ConfKitProjectConfig,
 };
@@ -52,8 +53,8 @@ impl ExecutionContext {
 
         let host_workspace_dir = format!("{HOST_WORKSPACE_DIR}/{task_path_identify}");
         let container_workspace_dir = format!("{CONTAINER_WORKSPACE_DIR}/{task_path_identify}");
-        let host_artifacts_dir = format!("{HOST_ARTIFACTS_DIR}/{task_path_identify}");
-        let container_artifacts_dir = format!("{CONTAINER_ARTIFACTS_DIR}/{task_path_identify}");
+        let host_artifacts_dir = HOST_ARTIFACTS_ROOT_DIR.to_string();
+        let container_artifacts_dir = CONTAINER_ARTIFACTS_ROOT_DIR.to_string();
 
         let git_client = GitClient::new(&space_name, &project_name).await?;
 
@@ -158,7 +159,7 @@ impl ExecutionContext {
         // 主机工作空间目录
         env.insert("HOST_WORKSPACE_DIR".to_string(), params.host_workspace_dir.to_string());
         // 主机产物目录
-        env.insert("HOST_ARTIFACTS_DIR".to_string(), params.host_artifacts_dir.to_string());
+        env.insert("HOST_ARTIFACTS_ROOT_DIR".to_string(), params.host_artifacts_dir.to_string());
         // 容器工作空间目录
         env.insert(
             "CONTAINER_WORKSPACE_DIR".to_string(),
@@ -166,7 +167,7 @@ impl ExecutionContext {
         );
         // 容器产物目录
         env.insert(
-            "CONTAINER_ARTIFACTS_DIR".to_string(),
+            "CONTAINER_ARTIFACTS_ROOT_DIR".to_string(),
             params.container_artifacts_dir.to_string(),
         );
 

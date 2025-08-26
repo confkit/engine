@@ -6,7 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### 🚀 Features
 
-- Add env args HOST_ARTIFACTS_DIR/CONTAINER_ARTIFACTS_DIR, fix lint warning
+- Add env args HOST_ARTIFACTS_ROOT_DIR/CONTAINER_ARTIFACTS_ROOT_DIR, fix lint warning
 ## [0.1.2] - 2025-08-25
 
 ### 🚀 Features

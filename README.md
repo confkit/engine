@@ -246,8 +246,8 @@ ConfKit automatically injects the following environment variables when executing
 - `SPACE_NAME` - Space name
 - `HOST_WORKSPACE_DIR` - Host task workspace directory
 - `CONTAINER_WORKSPACE_DIR` - Container task workspace directory
-- `HOST_ARTIFACTS_DIR` - Host task artifacts directory
-- `CONTAINER_ARTIFACTS_DIR` - Container task artifacts directory
+- `HOST_ARTIFACTS_ROOT_DIR` - Host task artifact root directory
+- `CONTAINER_ARTIFACTS_ROOT_DIR` - Container task artifact root directory
 
 #### Git Variables
 
