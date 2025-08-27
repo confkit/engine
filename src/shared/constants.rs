@@ -23,5 +23,8 @@ pub const CONTAINER_ARTIFACTS_ROOT_DIR: &str = "/artifacts";
 /// 缓存目录
 pub const HOST_CACHE_DIR: &str = "volumes/cache";
 
+/// 临时目录(用于临时文件存储, 仓库信息获取等)
+pub const HOST_TEMP_DIR: &str = "volumes/temp";
+
 // /// 容器缓存目录
 // pub const CONTAINER_CACHE_DIR: &str = "/cache";

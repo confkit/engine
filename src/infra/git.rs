@@ -7,7 +7,7 @@ use std::{fs, process::Command};
 use uuid::Uuid;
 
 use crate::{
-    infra::config::ConfKitConfigLoader, shared::constants::HOST_CACHE_DIR,
+    infra::config::ConfKitConfigLoader, shared::constants::HOST_TEMP_DIR,
     types::config::ConfKitSourceConfig,
 };
 
@@ -110,7 +110,7 @@ impl GitClient {
         file_path: &str,
     ) -> Result<String> {
         // 创建临时目录, uuid 命名
-        let temp_dir = format!("{HOST_CACHE_DIR}/{}", &Uuid::new_v4().to_string()[..8]);
+        let temp_dir = format!("{HOST_TEMP_DIR}/{}", &Uuid::new_v4().to_string()[..8]);
 
         tracing::debug!("Temp directory: {temp_dir}");
 
