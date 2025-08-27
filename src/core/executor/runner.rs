@@ -146,9 +146,9 @@ impl Runner {
     fn print_task_info(&self) -> Result<()> {
         self.task.info(&LogFormatter::header("Task Info"))?;
         // 打印任务信息
-        self.task.info(&format!("Task: {}", self.context.task_id))?;
         self.task.info(&format!("Space: {}", self.context.space_name))?;
         self.task.info(&format!("Project: {}", self.context.project_name))?;
+        self.task.info(&format!("Task: {}", self.context.task_id))?;
         self.task.info(&format!("Host workspace dir: {}", self.context.host_workspace_dir))?;
         self.task
             .info(&format!("Container workspace dir: {}", self.context.container_workspace_dir))?;
@@ -175,6 +175,9 @@ impl Runner {
     /// 打印执行摘要
     fn print_execution_summary(&self, results: &[StepResult]) -> Result<()> {
         self.task.info(&LogFormatter::header("Execution Summary"))?;
+        self.task.info(&format!("Space: {}", self.context.space_name))?;
+        self.task.info(&format!("Project: {}", self.context.project_name))?;
+        self.task.info(&format!("Task: {}", self.task.id))?;
         self.task.info(&format!("Total steps: {}", results.len()))?;
 
         let successful = results.iter().filter(|r| r.status == StepStatus::Success).count();
