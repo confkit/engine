@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.3] - 2025-08-30
+
+### 🐛 Bug Fixes
+
+- 仓库稀疏检出目录从 cache 迁出, 转移到 temp
+- 优化 clean 命令
+
+### 📚 Documentation
+
+- Task 重写计划
+
+### ⚡ Performance
+
+- 优化执行摘要打印
+
+### ⚙️ Miscellaneous Tasks
+
+- 修复 makefile 任务
+
 ## [0.2.2] - 2025-08-26
 
 ### 🐛 Bug Fixes
@@ -12,6 +31,7 @@ All notable changes to this project will be documented in this file.
 ### ⚙️ Miscellaneous Tasks
 
 - 支持指定版本下载
+- Release confkit-engine version 0.2.2
 
 ## [0.2.1] - 2025-08-26
 
