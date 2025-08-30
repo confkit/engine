@@ -99,7 +99,7 @@ impl Runner {
     async fn post_task(&self) -> Result<()> {
         // 清理工作空间
         if self.context.clean_workspace {
-            VolumesCleaner::clean_dir(&self.context.host_workspace_dir).await?;
+            VolumesCleaner::clean_dir(&self.context.host_workspace_dir, true).await?;
         }
 
         Ok(())

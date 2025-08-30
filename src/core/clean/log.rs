@@ -5,21 +5,22 @@
 use anyhow::Result;
 use std::fs;
 
+use crate::core::clean::volumes::VolumesCleaner;
 use crate::formatter::path::PathFormatter;
 use crate::shared::constants::HOST_LOG_DIR;
 
 pub struct LogCleaner {}
 
 impl LogCleaner {
-    pub fn clean_all() -> Result<()> {
+    pub async fn clean_all() -> Result<()> {
         tracing::info!("Cleaning all logs");
 
-        fs::remove_dir_all(HOST_LOG_DIR)?;
+        VolumesCleaner::clean_dir(&HOST_LOG_DIR, false).await?;
 
         Ok(())
     }
 
-    pub fn clean_space(space_name: &str) -> Result<()> {
+    pub async fn clean_space(space_name: &str) -> Result<()> {
         tracing::info!("Cleaning space: {}", space_name);
 
         let log_dir = HOST_LOG_DIR;
@@ -45,22 +46,22 @@ impl LogCleaner {
                 continue;
             }
             // 删除目录
-            fs::remove_dir_all(format!("{log_dir}/{dir_name}"))?;
+            VolumesCleaner::clean_dir(&format!("{log_dir}/{dir_name}"), true).await?;
         }
         Ok(())
     }
 
-    pub fn clean_project(space_name: &str, project_name: &str) -> Result<()> {
+    pub async fn clean_project(space_name: &str, project_name: &str) -> Result<()> {
         tracing::info!("Cleaning space: {}, project: {}", space_name, project_name);
 
         let project_log_dir = PathFormatter::log_project_dir(space_name, project_name);
 
-        fs::remove_dir_all(project_log_dir)?;
+        VolumesCleaner::clean_dir(&project_log_dir, true).await?;
 
         Ok(())
     }
 
-    pub fn clean_task(space_name: &str, project_name: &str, task_id: &str) -> Result<()> {
+    pub async fn clean_task(space_name: &str, project_name: &str, task_id: &str) -> Result<()> {
         tracing::info!(
             "Cleaning space: {}, project: {}, task: {}",
             space_name,
@@ -84,7 +85,7 @@ impl LogCleaner {
                 continue;
             }
             // 删除文件
-            fs::remove_file(dir.path())?;
+            VolumesCleaner::remove_file(dir.path().to_str().unwrap()).await?;
         }
         Ok(())
     }
