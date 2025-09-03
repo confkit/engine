@@ -5,6 +5,7 @@
 pub mod menu;
 
 mod builder;
+mod clean;
 mod custom;
 mod image;
 mod main;

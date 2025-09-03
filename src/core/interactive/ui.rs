@@ -10,7 +10,7 @@ pub enum InteractiveUI {
     Run,
     Builder,
     Image,
-    // Log,
+    Clean,
 }
 
 // 主菜单 UI
@@ -18,7 +18,7 @@ pub enum InteractiveMainUI {
     Run,
     Builder,
     Image,
-    Log,
+    Clean,
     Quit,
 }
 
@@ -30,7 +30,7 @@ impl fmt::Display for InteractiveMainUI {
                 write!(f, "[BUILDER] Manage build images and environments")
             }
             InteractiveMainUI::Image => write!(f, "[IMAGE] Manage build images"),
-            InteractiveMainUI::Log => write!(f, "[LOG] Manage log files"),
+            InteractiveMainUI::Clean => write!(f, "[CLEAN] Clean logs, workspace and artifacts"),
             InteractiveMainUI::Quit => write!(f, "[QUIT] Exit"),
         }
     }
@@ -79,6 +79,28 @@ impl fmt::Display for InteractiveBuilderUI {
         }
     }
 }
+
+// 清理管理菜单 UI
+pub enum InteractiveCleanUI {
+    Logs,
+    Workspace,
+    Artifacts,
+    All,
+    Back,
+}
+
+impl fmt::Display for InteractiveCleanUI {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            InteractiveCleanUI::Logs => write!(f, "[LOGS] Clean log files"),
+            InteractiveCleanUI::Workspace => write!(f, "[WORKSPACE] Clean workspace directories"),
+            InteractiveCleanUI::Artifacts => write!(f, "[ARTIFACTS] Clean build artifacts"),
+            InteractiveCleanUI::All => write!(f, "[ALL] Clean all (logs, workspace, artifacts)"),
+            InteractiveCleanUI::Back => write!(f, "[BACK] Back to main menu"),
+        }
+    }
+}
+
 
 // 通用 Yes/No/Back
 #[derive(Debug, Clone, PartialEq, Eq)]
