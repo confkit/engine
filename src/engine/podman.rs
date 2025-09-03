@@ -6,8 +6,9 @@ use anyhow::Result;
 use std::{collections::HashMap, process::Command};
 
 use crate::{
-    core::executor::{context::resolve_container_variables, task::Task},
+    core::executor::context::resolve_container_variables,
     infra::config::ConfKitConfigLoader,
+    infra::logger::TaskLogger,
     types::config::{
         ContainerStatus, EngineContainerInfo, EngineImageInfo, EngineServiceConfig, ImageStatus,
     },
@@ -374,7 +375,7 @@ impl PodmanEngine {
         working_dir: &str,
         commands: &[String],
         environment: &HashMap<String, String>,
-        task: &Task,
+        task_logger: &TaskLogger,
     ) -> Result<i32> {
         for cmd in commands {
             let mut command = tokio::process::Command::new("podman");
@@ -387,20 +388,25 @@ impl PodmanEngine {
 
             command.arg(container).arg(shell).arg("-c").arg(cmd);
 
+            // 创建回调，避免重复代码
+            let stdout_callback: Option<Box<dyn Fn(&str) + Send + Sync>> = {
+                let task_logger = task_logger.clone();
+                Some(Box::new(move |line| {
+                    let _ = task_logger.info(line);
+                }))
+            };
+
+            let stderr_callback: Option<Box<dyn Fn(&str) + Send + Sync>> = {
+                let task_logger = task_logger.clone();
+                Some(Box::new(move |line| {
+                    let _ = task_logger.info(line);
+                }))
+            };
+
             let exit_code = CommandUtil::execute_command_with_output(
                 &mut command,
-                {
-                    let task = task.clone();
-                    Some(Box::new(move |line| {
-                        let _ = task.info(line);
-                    }))
-                },
-                {
-                    let task = task.clone();
-                    Some(Box::new(move |line| {
-                        let _ = task.info(line);
-                    }))
-                },
+                stdout_callback,
+                stderr_callback,
             )
             .await?;
 

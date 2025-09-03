@@ -7,9 +7,8 @@ use tokio::process::Command;
 
 use super::context::ExecutionContext;
 use crate::{
-    core::executor::{context::resolve_host_variables, task::Task},
-    engine::ConfKitEngine,
-    utils::command::CommandUtil,
+    core::executor::context::resolve_host_variables, engine::ConfKitEngine,
+    infra::logger::TaskLogger, utils::command::CommandUtil,
 };
 
 /// 命令执行器
@@ -22,7 +21,7 @@ impl CommandExecutor {
         container: &str,
         working_dir: &str,
         commands: &[String],
-        task: &Task,
+        task_logger: &TaskLogger,
     ) -> Result<i32> {
         ConfKitEngine::execute_in_container(
             container,
@@ -30,7 +29,7 @@ impl CommandExecutor {
             working_dir,
             commands,
             &context.environment,
-            &task.clone(),
+            task_logger,
         )
         .await
     }
@@ -40,18 +39,7 @@ impl CommandExecutor {
         context: &ExecutionContext,
         working_dir: &str,
         commands: &[String],
-        task: &Task,
-    ) -> Result<i32> {
-        Self::execute_locally_with_timeout(context, working_dir, commands, task, None).await
-    }
-
-    /// 在本地执行命令，支持超时
-    pub async fn execute_locally_with_timeout(
-        context: &ExecutionContext,
-        working_dir: &str,
-        commands: &[String],
-        task: &Task,
-        timeout: Option<std::time::Duration>,
+        task_logger: &TaskLogger,
     ) -> Result<i32> {
         for (index, cmd) in commands.iter().enumerate() {
             // 创建命令
@@ -64,54 +52,40 @@ impl CommandExecutor {
 
             command.current_dir(working_dir);
 
-            task.info(&format!(
+            task_logger.info(&format!(
                 "Executing host command ({}/{}): '{cmd}' in directory: {working_dir}",
                 index + 1,
                 commands.len()
             ))?;
 
-            let exit_code = if timeout.is_some() {
-                CommandUtil::execute_command_with_timeout(
-                    &mut command,
-                    {
-                        let task = task.clone();
-                        Some(Box::new(move |line| {
-                            let _ = task.info(line);
-                        }))
-                    },
-                    {
-                        let task = task.clone();
-                        Some(Box::new(move |line| {
-                            let _ = task.info(line);
-                        }))
-                    },
-                    timeout,
-                )
-                .await?
-            } else {
-                CommandUtil::execute_command_with_output(
-                    &mut command,
-                    {
-                        let task = task.clone();
-                        Some(Box::new(move |line| {
-                            let _ = task.info(line);
-                        }))
-                    },
-                    {
-                        let task = task.clone();
-                        Some(Box::new(move |line| {
-                            let _ = task.info(line);
-                        }))
-                    },
-                )
-                .await?
+            // 创建回调，避免重复代码
+            let stdout_callback: Option<Box<dyn Fn(&str) + Send + Sync>> = {
+                let task_logger = task_logger.clone();
+                Some(Box::new(move |line| {
+                    let _ = task_logger.info(line);
+                }))
             };
 
+            let stderr_callback: Option<Box<dyn Fn(&str) + Send + Sync>> = {
+                let task_logger = task_logger.clone();
+                Some(Box::new(move |line| {
+                    let _ = task_logger.info(line);
+                }))
+            };
+
+            let exit_code = CommandUtil::execute_command_with_output(
+                &mut command,
+                stdout_callback,
+                stderr_callback,
+            )
+            .await?;
+
             if exit_code != 0 {
-                task.error(&format!("Command failed with exit code {exit_code}: '{cmd}'"))?;
+                task_logger
+                    .error(&format!("Command failed with exit code {exit_code}: '{cmd}'"))?;
                 return Ok(exit_code);
             } else {
-                task.info(&format!(
+                task_logger.info(&format!(
                     "Command completed successfully ({}/{}): '{cmd}'",
                     index + 1,
                     commands.len()

@@ -6,8 +6,9 @@ use anyhow::Result;
 use std::{collections::HashMap, process::Command};
 
 use crate::{
-    core::executor::{context::resolve_container_variables, task::Task},
+    core::executor::context::resolve_container_variables,
     infra::config::ConfKitConfigLoader,
+    infra::logger::TaskLogger,
     types::config::{
         ContainerStatus, EngineContainerInfo, EngineImageInfo, EngineServiceConfig, ImageStatus,
     },
@@ -389,7 +390,7 @@ impl DockerEngine {
         working_dir: &str,
         commands: &[String],
         environment: &HashMap<String, String>,
-        task: &Task,
+        task_logger: &TaskLogger,
     ) -> Result<i32> {
         for cmd in commands {
             let mut command = tokio::process::Command::new("docker");
@@ -402,39 +403,27 @@ impl DockerEngine {
 
             command.args([container, shell, "-c", cmd]);
 
-            // 完整打印命令字符串
-            let mut command_parts =
-                vec!["docker".to_string(), "exec".to_string(), "-i".to_string()];
-
-            // 添加环境变量参数
-            for (key, value) in environment {
-                command_parts.push("-e".to_string());
-                command_parts.push(format!("{key}={value}"));
-            }
-
-            command_parts.push("-w".to_string());
-            command_parts.push(working_dir.to_string());
-            command_parts.push(container.to_string());
-            command_parts.push(shell.to_string());
-            command_parts.push("-c".to_string());
-            command_parts.push(cmd.to_string());
-
             tracing::info!("Executing in container {container} with command: {cmd}");
+
+            // 创建回调，避免重复代码
+            let stdout_callback: Option<Box<dyn Fn(&str) + Send + Sync>> = {
+                let task_logger = task_logger.clone();
+                Some(Box::new(move |line| {
+                    let _ = task_logger.info(line);
+                }))
+            };
+
+            let stderr_callback: Option<Box<dyn Fn(&str) + Send + Sync>> = {
+                let task_logger = task_logger.clone();
+                Some(Box::new(move |line| {
+                    let _ = task_logger.info(line);
+                }))
+            };
 
             let exit_code = CommandUtil::execute_command_with_output(
                 &mut command,
-                {
-                    let task = task.clone();
-                    Some(Box::new(move |line| {
-                        let _ = task.info(line);
-                    }))
-                },
-                {
-                    let task = task.clone();
-                    Some(Box::new(move |line| {
-                        let _ = task.info(line);
-                    }))
-                },
+                stdout_callback,
+                stderr_callback,
             )
             .await?;
 

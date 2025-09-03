@@ -5,3 +5,4 @@
 pub mod config;
 pub mod event_hub;
 pub mod git;
+pub mod logger;

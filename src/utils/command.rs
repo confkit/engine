@@ -96,14 +96,18 @@ impl CommandUtil {
         // 设置信号处理
         let cancel_token_clone = cancel_token.clone();
         let child_handle = std::sync::Arc::new(tokio::sync::Mutex::new(Some(child)));
-        
+
         #[cfg(unix)]
         {
             let child_handle_clone = child_handle.clone();
             tokio::spawn(async move {
-                let mut sigint = tokio::signal::unix::signal(tokio::signal::unix::SignalKind::interrupt()).expect("Failed to create SIGINT handler");
-                let mut sigterm = tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate()).expect("Failed to create SIGTERM handler");
-                
+                let mut sigint =
+                    tokio::signal::unix::signal(tokio::signal::unix::SignalKind::interrupt())
+                        .expect("Failed to create SIGINT handler");
+                let mut sigterm =
+                    tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())
+                        .expect("Failed to create SIGTERM handler");
+
                 tokio::select! {
                     _ = sigint.recv() => {
                         tracing::info!("Received SIGINT, cancelling command execution");
@@ -146,7 +150,7 @@ impl CommandUtil {
 
         // 取消日志读取任务
         cancel_token.cancel();
-        
+
         // 等待日志读取任务完成
         for handle in log_handles {
             let _ = handle.await;
