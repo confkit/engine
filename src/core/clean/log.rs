@@ -15,7 +15,7 @@ impl LogCleaner {
     pub async fn clean_all() -> Result<()> {
         tracing::info!("Cleaning all logs");
 
-        VolumesCleaner::clean_dir(&HOST_LOG_DIR, false).await?;
+        VolumesCleaner::clean_dir(HOST_LOG_DIR, false).await?;
 
         Ok(())
     }
