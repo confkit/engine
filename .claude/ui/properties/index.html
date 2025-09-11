@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CCDD 工作流系统 - 智能化项目开发工具</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'dd-blue': '#1e40af',
+                        'dd-green': '#059669',
+                        'dd-purple': '#7c3aed'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-md sticky top-0 z-10">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <div class="w-10 h-10 bg-gradient-to-r from-dd-blue to-dd-purple rounded-lg flex items-center justify-center">
+                        <span class="text-white font-bold text-lg">DD</span>
+                    </div>
+                    <h1 class="text-2xl font-bold text-gray-800">CCDD 工作流系统</h1>
+                </div>
+                <nav class="hidden md:flex space-x-6">
+                    <a href="#commands" class="text-gray-600 hover:text-dd-blue transition-colors">命令总览</a>
+                    <a href="#workflows" class="text-gray-600 hover:text-dd-blue transition-colors">工作流程</a>
+                    <a href="#features" class="text-gray-600 hover:text-dd-blue transition-colors">核心特性</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="py-16">
+        <div class="container mx-auto px-6 text-center">
+            <h2 class="text-4xl md:text-6xl font-bold text-gray-800 mb-6">
+                智能化项目开发
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-dd-blue to-dd-purple">工作流系统</span>
+            </h2>
+            <p class="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
+                基于 AI 智能体的项目管理系统，从需求设计到代码实现的完整自动化工作流
+            </p>
+            <div class="flex justify-center space-x-4">
+                <button class="bg-dd-blue text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition-colors font-semibold">
+                    开始使用
+                </button>
+                <button class="border-2 border-dd-blue text-dd-blue px-8 py-3 rounded-lg hover:bg-dd-blue hover:text-white transition-colors font-semibold">
+                    查看文档
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Commands Overview -->
+    <section id="commands" class="py-16 bg-white">
+        <div class="container mx-auto px-6">
+            <h3 class="text-3xl font-bold text-center text-gray-800 mb-12">
+                22 个智能命令
+            </h3>
+            
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- 智能对话类 -->
+                <div class="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-xl border border-blue-100">
+                    <div class="flex items-center mb-4">
+                        <div class="w-8 h-8 bg-dd-blue rounded-lg flex items-center justify-center mr-3">
+                            <span class="text-white text-sm">💬</span>
+                        </div>
+                        <h4 class="text-lg font-semibold text-gray-800">智能对话类</h4>
+                    </div>
+                    <div class="space-y-2">
+                        <div class="bg-white px-3 py-2 rounded-lg text-sm">
+                            <code class="text-dd-blue font-mono">/dd:chat</code>
+                            <span class="text-gray-600 ml-2">智能项目对话</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 帮助状态类 -->
+                <div class="bg-gradient-to-br from-green-50 to-emerald-50 p-6 rounded-xl border border-green-100">
+                    <div class="flex items-center mb-4">
+                        <div class="w-8 h-8 bg-dd-green rounded-lg flex items-center justify-center mr-3">
+                            <span class="text-white text-sm">❓</span>
+                        </div>
+                        <h4 class="text-lg font-semibold text-gray-800">帮助状态类</h4>
+                    </div>
+                    <div class="space-y-2">
+                        <div class="bg-white px-3 py-2 rounded-lg text-sm">
+                            <code class="text-dd-green font-mono">/dd:help</code>
+                            <span class="text-gray-600 ml-2">帮助信息</span>
+                        </div>
+                        <div class="bg-white px-3 py-2 rounded-lg text-sm">
+                            <code class="text-dd-green font-mono">/dd:status</code>
+                            <span class="text-gray-600 ml-2">项目状态</span>
+                        </div>
+                        <div class="bg-white px-3 py-2 rounded-lg text-sm">
+                            <code class="text-dd-green font-mono">/dd:version</code>
+                            <span class="text-gray-600 ml-2">版本信息</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 项目初始化类 -->
+                <div class="bg-gradient-to-br from-purple-50 to-violet-50 p-6 rounded-xl border border-purple-100">
+                    <div class="flex items-center mb-4">
+                        <div class="w-8 h-8 bg-dd-purple rounded-lg flex items-center justify-center mr-3">
+                            <span class="text-white text-sm">🚀</span>
+                        </div>
+                        <h4 class="text-lg font-semibold text-gray-800">项目初始化类</h4>
+                    </div>
+                    <div class="space-y-2">
+                        <div class="bg-white px-3 py-2 rounded-lg text-sm">
+                            <code class="text-dd-purple font-mono">/dd:init</code>
+                            <span class="text-gray-600 ml-2">项目初始化</span>
+                        </div>
+                        <div class="bg-white px-3 py-2 rounded-lg text-sm">
+                            <code class="text-dd-purple font-mono">/dd:prd</code>
+                            <span class="text-gray-600 ml-2">需求设计</span>
+                        </div>
+                        <div class="bg-white px-3 py-2 rounded-lg text-sm">
+                            <code class="text-dd-purple font-mono">/dd:ui</code>
+                            <span class="text-gray-600 ml-2">UI 原型设计</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 架构管理类 -->
+                <div class="bg-gradient-to-br from-orange-50 to-amber-50 p-6 rounded-xl border border-orange-100">
+                    <div class="flex items-center mb-4">
+                        <div class="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center mr-3">
+                            <span class="text-white text-sm">🏗️</span>
+                        </div>
+                        <h4 class="text-lg font-semibold text-gray-800">架构管理类</h4>
+                    </div>
+                    <div class="space-y-2">
+                        <div class="bg-white px-3 py-2 rounded-lg text-sm">
+                            <code class="text-orange-600 font-mono">/dd:framework-init</code>
+                            <span class="text-gray-600 ml-2">架构设计</span>
+                        </div>
+                        <div class="bg-white px-3 py-2 rounded-lg text-sm">
+                            <code class="text-orange-600 font-mono">/dd:framework-audit</code>
+                            <span class="text-gray-600 ml-2">架构审计</span>
+                        </div>
+                        <div class="bg-white px-3 py-2 rounded-lg text-sm">
+                            <code class="text-orange-600 font-mono">/dd:framework-adjust</code>
+                            <span class="text-gray-600 ml-2">架构调整</span>
+                        </div>
+                        <div class="bg-white px-3 py-2 rounded-lg text-sm">
+                            <code class="text-orange-600 font-mono">/dd:prd-decompose</code>
+                            <span class="text-gray-600 ml-2">需求拆解</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 功能管理类 -->
+                <div class="bg-gradient-to-br from-emerald-50 to-green-50 p-6 rounded-xl border border-emerald-100">
+                    <div class="flex items-center mb-4">
+                        <div class="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center mr-3">
+                            <span class="text-white text-sm">⚙️</span>
+                        </div>
+                        <h4 class="text-lg font-semibold text-gray-800">功能管理类</h4>
+                    </div>
+                    <div class="space-y-2">
+                        <div class="bg-white px-3 py-2 rounded-lg text-sm">
+                            <code class="text-emerald-600 font-mono">/dd:feature-add</code>
+                            <span class="text-gray-600 ml-2">添加功能</span>
+                        </div>
+                        <div class="bg-white px-3 py-2 rounded-lg text-sm">
+                            <code class="text-emerald-600 font-mono">/dd:feature-decompose</code>
+                            <span class="text-gray-600 ml-2">功能分解</span>
+                        </div>
+                        <div class="bg-white px-3 py-2 rounded-lg text-sm">
+                            <code class="text-emerald-600 font-mono">/dd:feature-start</code>
+                            <span class="text-gray-600 ml-2">开始功能开发</span>
+                        </div>
+                        <div class="bg-white px-3 py-2 rounded-lg text-sm">
+                            <code class="text-emerald-600 font-mono">/dd:feature-update</code>
+                            <span class="text-gray-600 ml-2">更新功能状态</span>
+                        </div>
+                        <div class="bg-white px-3 py-2 rounded-lg text-sm">
+                            <code class="text-emerald-600 font-mono">/dd:feature-status</code>
+                            <span class="text-gray-600 ml-2">功能状态查询</span>
+                        </div>
+                        <div class="bg-white px-3 py-2 rounded-lg text-sm">
+                            <code class="text-emerald-600 font-mono">/dd:feature-refactory</code>
+                            <span class="text-gray-600 ml-2">功能重构</span>
+                        </div>
+                        <div class="bg-white px-3 py-2 rounded-lg text-sm">
+                            <code class="text-emerald-600 font-mono">/dd:feature-remove</code>
+                            <span class="text-gray-600 ml-2">移除功能</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 议题管理类 & 代码质量类 -->
+                <div class="bg-gradient-to-br from-pink-50 to-rose-50 p-6 rounded-xl border border-pink-100">
+                    <div class="flex items-center mb-4">
+                        <div class="w-8 h-8 bg-pink-500 rounded-lg flex items-center justify-center mr-3">
+                            <span class="text-white text-sm">📋</span>
+                        </div>
+                        <h4 class="text-lg font-semibold text-gray-800">议题 & 质量管理</h4>
+                    </div>
+                    <div class="space-y-2">
+                        <div class="bg-white px-3 py-2 rounded-lg text-sm">
+                            <code class="text-pink-600 font-mono">/dd:issue-start</code>
+                            <span class="text-gray-600 ml-2">开始议题</span>
+                        </div>
+                        <div class="bg-white px-3 py-2 rounded-lg text-sm">
+                            <code class="text-pink-600 font-mono">/dd:issue-update</code>
+                            <span class="text-gray-600 ml-2">更新议题状态</span>
+                        </div>
+                        <div class="bg-white px-3 py-2 rounded-lg text-sm">
+                            <code class="text-pink-600 font-mono">/dd:code-reflect</code>
+                            <span class="text-gray-600 ml-2">代码反思</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Workflows -->
+    <section id="workflows" class="py-16 bg-gradient-to-r from-slate-50 to-gray-50">
+        <div class="container mx-auto px-6">
+            <h3 class="text-3xl font-bold text-center text-gray-800 mb-12">
+                五大核心工作流程
+            </h3>
+            
+            <div class="grid lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                <!-- 新项目完整流程 -->
+                <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+                    <div class="bg-gradient-to-r from-dd-blue to-blue-600 p-6">
+                        <h4 class="text-2xl font-bold text-white mb-2">新项目完整流程</h4>
+                        <p class="text-blue-100">从零开始的完整项目开发工作流</p>
+                    </div>
+                    <div class="p-6">
+                        <div class="space-y-3">
+                            <div class="flex items-center p-3 bg-blue-50 rounded-lg">
+                                <div class="w-8 h-8 bg-dd-blue text-white rounded-full flex items-center justify-center text-sm font-bold mr-3">1</div>
+                                <div>
+                                    <div class="font-semibold text-gray-800">项目初始化</div>
+                                    <code class="text-sm text-dd-blue">/dd:init</code>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center p-3 bg-blue-50 rounded-lg">
+                                <div class="w-8 h-8 bg-dd-blue text-white rounded-full flex items-center justify-center text-sm font-bold mr-3">2</div>
+                                <div>
+                                    <div class="font-semibold text-gray-800">需求设计</div>
+                                    <code class="text-sm text-dd-blue">/dd:prd</code>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center p-3 bg-blue-50 rounded-lg">
+                                <div class="w-8 h-8 bg-dd-blue text-white rounded-full flex items-center justify-center text-sm font-bold mr-3">3</div>
+                                <div>
+                                    <div class="font-semibold text-gray-800">UI 原型设计（可选）</div>
+                                    <code class="text-sm text-dd-blue">/dd:ui</code>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center p-3 bg-blue-50 rounded-lg">
+                                <div class="w-8 h-8 bg-dd-blue text-white rounded-full flex items-center justify-center text-sm font-bold mr-3">4</div>
+                                <div>
+                                    <div class="font-semibold text-gray-800">需求拆解</div>
+                                    <code class="text-sm text-dd-blue">/dd:prd-decompose</code>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center p-3 bg-blue-50 rounded-lg">
+                                <div class="w-8 h-8 bg-dd-blue text-white rounded-full flex items-center justify-center text-sm font-bold mr-3">5</div>
+                                <div>
+                                    <div class="font-semibold text-gray-800">架构设计</div>
+                                    <code class="text-sm text-dd-blue">/dd:framework-init</code>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center p-3 bg-blue-50 rounded-lg">
+                                <div class="w-8 h-8 bg-dd-blue text-white rounded-full flex items-center justify-center text-sm font-bold mr-3">6</div>
+                                <div>
+                                    <div class="font-semibold text-gray-800">开始功能开发</div>
+                                    <code class="text-sm text-dd-blue">/dd:feature-start</code>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 旧项目初始化流程 -->
+                <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+                    <div class="bg-gradient-to-r from-teal-500 to-cyan-500 p-6">
+                        <h4 class="text-2xl font-bold text-white mb-2">旧项目初始化流程</h4>
+                        <p class="text-teal-100">分析现有项目并建立管理体系</p>
+                    </div>
+                    <div class="p-6">
+                        <div class="space-y-3">
+                            <div class="flex items-center p-3 bg-teal-50 rounded-lg">
+                                <div class="w-8 h-8 bg-teal-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-3">1</div>
+                                <div>
+                                    <div class="font-semibold text-gray-800">分析项目初始化</div>
+                                    <code class="text-sm text-teal-600">/dd:init --analyze</code>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center p-3 bg-teal-50 rounded-lg">
+                                <div class="w-8 h-8 bg-teal-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-3">2</div>
+                                <div>
+                                    <div class="font-semibold text-gray-800">架构审计</div>
+                                    <code class="text-sm text-teal-600">/dd:framework-audit</code>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center p-3 bg-teal-50 rounded-lg">
+                                <div class="w-8 h-8 bg-teal-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-3">3</div>
+                                <div>
+                                    <div class="font-semibold text-gray-800">架构优化（如需要）</div>
+                                    <code class="text-sm text-teal-600">/dd:framework-adjust</code>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center p-3 bg-teal-50 rounded-lg">
+                                <div class="w-8 h-8 bg-teal-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-3">4</div>
+                                <div>
+                                    <div class="font-semibold text-gray-800">添加新功能</div>
+                                    <code class="text-sm text-teal-600">/dd:feature-add <功能名></code>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center p-3 bg-teal-50 rounded-lg">
+                                <div class="w-8 h-8 bg-teal-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-3">5</div>
+                                <div>
+                                    <div class="font-semibold text-gray-800">开始迭代开发</div>
+                                    <code class="text-sm text-teal-600">/dd:feature-start <功能名></code>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 功能开发迭代流程 -->
+                <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+                    <div class="bg-gradient-to-r from-dd-green to-green-600 p-6">
+                        <h4 class="text-2xl font-bold text-white mb-2">功能开发迭代流程</h4>
+                        <p class="text-green-100">单个功能的完整开发工作流</p>
+                    </div>
+                    <div class="p-6">
+                        <div class="space-y-3">
+                            <div class="flex items-center p-3 bg-green-50 rounded-lg">
+                                <div class="w-8 h-8 bg-dd-green text-white rounded-full flex items-center justify-center text-sm font-bold mr-3">1</div>
+                                <div>
+                                    <div class="font-semibold text-gray-800">添加功能</div>
+                                    <code class="text-sm text-dd-green">/dd:feature-add <功能名></code>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center p-3 bg-green-50 rounded-lg">
+                                <div class="w-8 h-8 bg-dd-green text-white rounded-full flex items-center justify-center text-sm font-bold mr-3">2</div>
+                                <div>
+                                    <div class="font-semibold text-gray-800">功能分解</div>
+                                    <code class="text-sm text-dd-green">/dd:feature-decompose <功能名></code>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center p-3 bg-green-50 rounded-lg">
+                                <div class="w-8 h-8 bg-dd-green text-white rounded-full flex items-center justify-center text-sm font-bold mr-3">3</div>
+                                <div>
+                                    <div class="font-semibold text-gray-800">开始议题</div>
+                                    <code class="text-sm text-dd-green">/dd:issue-start <功能名>:<议题ID></code>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center p-3 bg-green-50 rounded-lg">
+                                <div class="w-8 h-8 bg-dd-green text-white rounded-full flex items-center justify-center text-sm font-bold mr-3">4</div>
+                                <div>
+                                    <div class="font-semibold text-gray-800">更新议题状态</div>
+                                    <code class="text-sm text-dd-green">/dd:issue-update <功能名>:<议题ID></code>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center p-3 bg-green-50 rounded-lg">
+                                <div class="w-8 h-8 bg-dd-green text-white rounded-full flex items-center justify-center text-sm font-bold mr-3">5</div>
+                                <div>
+                                    <div class="font-semibold text-gray-800">更新功能状态</div>
+                                    <code class="text-sm text-dd-green">/dd:feature-update <功能名></code>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center p-3 bg-green-50 rounded-lg">
+                                <div class="w-8 h-8 bg-dd-green text-white rounded-full flex items-center justify-center text-sm font-bold mr-3">6</div>
+                                <div>
+                                    <div class="font-semibold text-gray-800">代码反思</div>
+                                    <code class="text-sm text-dd-green">/dd:code-reflect</code>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 架构管理流程 -->
+                <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+                    <div class="bg-gradient-to-r from-orange-500 to-amber-500 p-6">
+                        <h4 class="text-2xl font-bold text-white mb-2">架构管理流程</h4>
+                        <p class="text-orange-100">项目架构设计与优化工作流</p>
+                    </div>
+                    <div class="p-6">
+                        <div class="space-y-3">
+                            <div class="flex items-center p-3 bg-orange-50 rounded-lg">
+                                <div class="w-8 h-8 bg-orange-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-3">1</div>
+                                <div>
+                                    <div class="font-semibold text-gray-800">架构设计</div>
+                                    <code class="text-sm text-orange-600">/dd:framework-init</code>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center p-3 bg-orange-50 rounded-lg">
+                                <div class="w-8 h-8 bg-orange-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-3">2</div>
+                                <div>
+                                    <div class="font-semibold text-gray-800">架构审计</div>
+                                    <code class="text-sm text-orange-600">/dd:framework-audit</code>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center p-3 bg-orange-50 rounded-lg">
+                                <div class="w-8 h-8 bg-orange-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-3">3</div>
+                                <div>
+                                    <div class="font-semibold text-gray-800">架构调整</div>
+                                    <code class="text-sm text-orange-600">/dd:framework-adjust</code>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center p-3 bg-orange-50 rounded-lg">
+                                <div class="w-8 h-8 bg-orange-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-3">4</div>
+                                <div>
+                                    <div class="font-semibold text-gray-800">继续功能开发</div>
+                                    <code class="text-sm text-orange-600">/dd:feature-start</code>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 质量管理流程 -->
+                <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+                    <div class="bg-gradient-to-r from-purple-500 to-pink-500 p-6">
+                        <h4 class="text-2xl font-bold text-white mb-2">质量管理流程</h4>
+                        <p class="text-purple-100">代码质量与项目管理工作流</p>
+                    </div>
+                    <div class="p-6">
+                        <div class="space-y-3">
+                            <div class="flex items-center p-3 bg-purple-50 rounded-lg">
+                                <div class="w-8 h-8 bg-purple-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-3">1</div>
+                                <div>
+                                    <div class="font-semibold text-gray-800">代码反思</div>
+                                    <code class="text-sm text-purple-600">/dd:code-reflect</code>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center p-3 bg-purple-50 rounded-lg">
+                                <div class="w-8 h-8 bg-purple-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-3">2</div>
+                                <div>
+                                    <div class="font-semibold text-gray-800">功能重构</div>
+                                    <code class="text-sm text-purple-600">/dd:feature-refactory</code>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center p-3 bg-purple-50 rounded-lg">
+                                <div class="w-8 h-8 bg-purple-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-3">3</div>
+                                <div>
+                                    <div class="font-semibold text-gray-800">项目状态查询</div>
+                                    <code class="text-sm text-purple-600">/dd:status</code>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center p-3 bg-purple-50 rounded-lg">
+                                <div class="w-8 h-8 bg-purple-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-3">4</div>
+                                <div>
+                                    <div class="font-semibold text-gray-800">智能对话</div>
+                                    <code class="text-sm text-purple-600">/dd:chat</code>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features -->
+    <section id="features" class="py-16 bg-white">
+        <div class="container mx-auto px-6">
+            <h3 class="text-3xl font-bold text-center text-gray-800 mb-12">
+                核心特性
+            </h3>
+            
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-gradient-to-r from-dd-blue to-purple-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                        <span class="text-white text-2xl">🤖</span>
+                    </div>
+                    <h4 class="text-lg font-semibold text-gray-800 mb-2">AI 智能体架构</h4>
+                    <p class="text-gray-600 text-sm">7 个专门智能体协同工作，各司其职提供专业服务</p>
+                </div>
+                
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-gradient-to-r from-dd-green to-emerald-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                        <span class="text-white text-2xl">🔄</span>
+                    </div>
+                    <h4 class="text-lg font-semibold text-gray-800 mb-2">智能联动更新</h4>
+                    <p class="text-gray-600 text-sm">议题、功能、项目状态自动联动，确保信息同步</p>
+                </div>
+                
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-gradient-to-r from-orange-500 to-red-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                        <span class="text-white text-2xl">📋</span>
+                    </div>
+                    <h4 class="text-lg font-semibold text-gray-800 mb-2">完整项目管理</h4>
+                    <p class="text-gray-600 text-sm">从需求设计到代码实现的端到端项目管理</p>
+                </div>
+                
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-gradient-to-r from-emerald-500 to-green-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                        <span class="text-white text-2xl">⚡</span>
+                    </div>
+                    <h4 class="text-lg font-semibold text-gray-800 mb-2">自动化工作流</h4>
+                    <p class="text-gray-600 text-sm">减少手动操作，提高开发效率和质量</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-12">
+        <div class="container mx-auto px-6">
+            <div class="flex flex-col md:flex-row items-center justify-between">
+                <div class="flex items-center space-x-4 mb-4 md:mb-0">
+                    <div class="w-10 h-10 bg-gradient-to-r from-dd-blue to-dd-purple rounded-lg flex items-center justify-center">
+                        <span class="text-white font-bold text-lg">DD</span>
+                    </div>
+                    <span class="text-xl font-bold">CCDD 工作流系统</span>
+                </div>
+                <div class="text-gray-400 text-sm">
+                    智能化项目开发工具 - 让开发更高效
+                </div>
+            </div>
+            <div class="border-t border-gray-700 mt-8 pt-8 text-center text-gray-400 text-sm">
+                © 2024 CCDD 工作流系统. 基于 AI 智能体的项目管理解决方案.
+            </div>
+        </div>
+    </footer>
+
+    <script src="assets/js/main.js"></script>
+</body>
+</html>
