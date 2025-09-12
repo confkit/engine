@@ -61,8 +61,7 @@ ISSUE_GOAL=$(parse_json_field "$ISSUE_DATA" "goal" "")
 ISSUE_POINTS=$(parse_json_field "$ISSUE_DATA" "implementation_points" "")
 ISSUE_DETAILS=$(parse_json_field "$ISSUE_DATA" "technical_details" "")
 ISSUE_DEPENDENCIES=$(parse_json_array "$ISSUE_DATA" "dependencies")
-ISSUE_TODOS=$(parse_json_array "$ISSUE_DATA" "todos")
-ISSUE_ACCEPTANCE=$(parse_json_array "$ISSUE_DATA" "acceptance_criteria")
+ISSUE_TODOS=$(parse_json_field "$ISSUE_DATA" "todos" "")
 
 echo "=== PARSED_ISSUE_DATA ==="
 echo "ISSUE_NAME: $ISSUE_NAME"
@@ -86,35 +85,13 @@ $ISSUE_GOAL
 ## 实现要点
 EOF
 
-# 添加实现要点（如果有的话, 按行分割）
+# 添加实现要点（直接输出，因为内容已包含markdown格式）
 if [ -n "$ISSUE_POINTS" ]; then
-    echo "$ISSUE_POINTS" | sed 's/\\n/\n/g' | while IFS= read -r point; do
-        if [ -n "$point" ]; then
-            echo "- $point" >> "$ISSUE_FILE"
-        fi
-    done
+    echo "$ISSUE_POINTS" | sed 's/\\n/\n/g' >> "$ISSUE_FILE"
 else
     echo "- 待补充实现要点" >> "$ISSUE_FILE"
 fi
 
-cat >> "$ISSUE_FILE" << EOF
-
-## 验收标准
-EOF
-
-# 添加验收标准列表
-if [ -n "$ISSUE_ACCEPTANCE" ]; then
-    echo "$ISSUE_ACCEPTANCE" | sed 's/,/\n/g' | while IFS= read -r criterion; do
-        criterion=$(echo "$criterion" | sed 's/^[[:space:]]*//' | sed 's/[[:space:]]*$//')
-        if [ -n "$criterion" ]; then
-            echo "- [ ] $criterion" >> "$ISSUE_FILE"
-        fi
-    done
-else
-    echo "- [ ] 功能实现完成" >> "$ISSUE_FILE"
-    echo "- [ ] 单元测试通过" >> "$ISSUE_FILE"
-    echo "- [ ] 代码审查通过" >> "$ISSUE_FILE"
-fi
 
 cat >> "$ISSUE_FILE" << EOF
 
@@ -135,18 +112,9 @@ EOF
 
 # 添加Todo列表
 if [ -n "$ISSUE_TODOS" ]; then
-    echo "$ISSUE_TODOS" | sed 's/,/\n/g' | while IFS= read -r todo; do
-        todo=$(echo "$todo" | sed 's/^[[:space:]]*//' | sed 's/[[:space:]]*$//')
-        if [ -n "$todo" ]; then
-            echo "- [ ] $todo" >> "$ISSUE_FILE"
-        fi
-    done
+    echo "$ISSUE_TODOS" | sed 's/\\n/\n/g' >> "$ISSUE_FILE"
 else
-    echo "- [ ] 分析需求和设计方案" >> "$ISSUE_FILE"
-    echo "- [ ] 编写核心实现代码" >> "$ISSUE_FILE"
-    echo "- [ ] 编写单元测试" >> "$ISSUE_FILE"
-    echo "- [ ] 进行代码审查" >> "$ISSUE_FILE"
-    echo "- [ ] 更新相关文档" >> "$ISSUE_FILE"
+    echo "- [ ] 待补充具体实现步骤" >> "$ISSUE_FILE"
 fi
 
 echo ""

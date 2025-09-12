@@ -59,7 +59,7 @@ allowed-tools: Task, Write, Read
   ```json
   {
     "implementation_points": "- 设计数据库表结构\n- 实现数据验证规则\n- 创建数据库索引",
-    "todos": "- 分析功能数据需求\n- 创建数据库迁移脚本\n- 实现功能验证"
+    "todos": "[ ] 分析功能数据需求\n[ ] 创建数据库迁移脚本\n[ ] 实现功能验证"
   }
   ```
 - **错误示例**：`"todos": "分析需求|创建脚本|实现功能"`
@@ -101,9 +101,23 @@ bash .claude/scripts/dd/generator/generate-issue.sh "<功能名称>" "<议题ID>
   "name": "议题名称",
   "goal": "议题目标描述",
   "implementation_points": "关键实现要点（markdown列表格式）",
-  "acceptance_criteria": "验收条件（markdown列表格式）"
+  "technical_details": "详细技术实现方案（markdown格式）",
+  "todos": "具体可执行的待办事项（markdown列表格式）",
+  "dependencies": ["议题ID1", "议题ID2"]
 }
 ```
+
+**重要说明**：
+
+- `implementation_points`: 高级实现要点概览（必填，markdown列表格式）
+- `technical_details`: 详细的技术实现方案（必填，应包含具体的代码结构、算法、数据流等）
+- `todos`: 针对该议题的具体可执行步骤（必填，使用 `[ ]` 复选框格式，避免泛泛而谈的通用步骤）
+- `dependencies`: 该议题依赖的其他议题ID列表
+
+**⚠️ 关键要求**：
+- 所有字段都必须有实质内容，不能为空
+- `technical_details` 必须包含具体的技术实现细节，不能是占位符
+- `todos` 必须是针对该议题的具体可执行步骤，不能是通用步骤
 
 ### 7. 更新功能文档议题清单
 
