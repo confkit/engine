@@ -101,7 +101,6 @@ impl fmt::Display for InteractiveCleanUI {
     }
 }
 
-
 // 通用 Yes/No/Back
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum InteractiveYesNoUI {

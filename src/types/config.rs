@@ -139,6 +139,9 @@ pub struct ConfKitStepConfig {
     pub timeout: Option<u64>,
     #[serde(default)]
     pub continue_on_error: Option<bool>,
+    /// 条件表达式，用于条件执行控制
+    #[serde(default)]
+    pub condition: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

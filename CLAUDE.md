@@ -66,18 +66,21 @@
 
 所有工作流命令使用 `/dd:` 前缀, 共 22 个命令:
 
-**智能对话类**: `/dd:chat`
-**帮助状态类**: `/dd:help` `/dd:status` `/dd:version`
-**项目初始化类**: `/dd:init` `/dd:prd` `/dd:ui`
-**架构管理类**: `/dd:framework-init` `/dd:framework-audit` `/dd:framework-adjust` `/dd:prd-decompose`
-**功能管理类**: `/dd:feature-add` `/dd:feature-decompose` `/dd:feature-start` `/dd:feature-update` `/dd:feature-status` `/dd:feature-refactory` `/dd:feature-remove`
-**议题管理类**: `/dd:issue-start` `/dd:issue-update`
-**代码质量类**: `/dd:code-reflect`
+**智能对话类** (1个): `/dd:chat`
+**帮助状态类** (3个): `/dd:help` `/dd:status` `/dd:version`
+**项目初始化类** (4个): `/dd:init` `/dd:init-local` `/dd:prd` `/dd:ui`
+**架构管理类** (4个): `/dd:framework-init` `/dd:framework-audit` `/dd:framework-adjust` `/dd:prd-decompose`
+**功能管理类** (7个): `/dd:feature-add` `/dd:feature-decompose` `/dd:feature-start` `/dd:feature-update` `/dd:feature-status` `/dd:feature-refactory` `/dd:feature-remove`
+**议题管理类** (2个): `/dd:issue-start` `/dd:issue-update`
+**代码质量类** (1个): `/dd:code-reflect`
+
+**总计 22 个命令**
 
 ### 典型工作流程
 
 ```bash
-/dd:init                      # 项目初始化 (支持 --analyze 参数)
+/dd:init                      # 项目初始化
+/dd:init-local               # 本地项目初始化
 /dd:prd                      # 需求设计
 /dd:framework-init           # 架构设计
 /dd:feature-add 用户认证      # 添加功能
@@ -111,6 +114,7 @@
 **功能**: 通过入参返回系统信息和项目文件内容
 
 **使用方法**:
+
 ```bash
 # 时间信息
 .claude/scripts/dd/utils/info-getter.sh time           # 本地时间 (兼容 mac/linux)
@@ -136,6 +140,7 @@
 **位置**: `.claude/scripts/dd/utils/git-info.sh`
 
 **功能**: 提供精简的 Git 状态信息
+
 ```bash
 .claude/scripts/dd/utils/git-info.sh branch    # 当前分支名
 .claude/scripts/dd/utils/git-info.sh status    # 工作区状态

@@ -36,4 +36,9 @@ impl TaskLogger {
     pub fn error(&self, message: &str) -> Result<(), anyhow::Error> {
         self.log_with_level(message, LogLevel::Error)
     }
+
+    /// 记录 Warn 级别日志的便捷方法
+    pub fn warn(&self, message: &str) -> Result<(), anyhow::Error> {
+        self.log_with_level(message, LogLevel::Warn)
+    }
 }

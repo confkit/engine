@@ -151,7 +151,7 @@ impl Task {
             let step_number = index + 1;
             let step_continue_on_error = step.continue_on_error.unwrap_or(false);
 
-            self.info(&format!("[{}/{}] {}", step_number, total_steps, step.name))?;
+            self.info(&format!("[{}/{}] Executing: {}", step_number, total_steps, step.name))?;
 
             let result = executor.execute_step(step, step_number, total_steps).await?;
 

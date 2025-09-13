@@ -2,11 +2,10 @@
 //! Created: 2025-07-21
 //! Description: Run menu implementation
 
-use std::collections::HashMap;
-
 use anyhow::Result;
 use inquire::Select;
 use regex::Regex;
+use std::collections::HashMap;
 
 use crate::{core::executor::runner::Runner, infra::config::ConfKitConfigLoader};
 
@@ -67,7 +66,6 @@ impl InteractiveMenu {
         if let Some(project_config) = project_config {
             if let Some(interactive_configs) = &project_config.environment_from_args {
                 if !interactive_configs.is_empty() {
-                    tracing::info!("发现交互式环境变量配置，开始处理...");
                     environment_from_args =
                         process_interactive_environments(interactive_configs).await?;
                 }
@@ -78,8 +76,7 @@ impl InteractiveMenu {
 
         runner.start().await?;
 
-        self.ui = InteractiveUI::Run;
-
-        Ok(true)
+        // 任务执行完成后退出交互循环
+        Ok(false)
     }
 }
