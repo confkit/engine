@@ -153,15 +153,19 @@ impl ExecutionContext {
         env.insert("SPACE_NAME".to_string(), params.space_name.to_string());
 
         // 目录环境变量
+
         // 主机工作空间目录
         env.insert("HOST_WORKSPACE_DIR".to_string(), params.host_workspace_dir.to_string());
+
         // 主机产物目录
         env.insert("HOST_ARTIFACTS_ROOT_DIR".to_string(), params.host_artifacts_dir.to_string());
+
         // 容器工作空间目录
         env.insert(
             "CONTAINER_WORKSPACE_DIR".to_string(),
             params.container_workspace_dir.to_string(),
         );
+
         // 容器产物目录
         env.insert(
             "CONTAINER_ARTIFACTS_ROOT_DIR".to_string(),
@@ -177,16 +181,16 @@ impl ExecutionContext {
             env.insert("PROJECT_VERSION".to_string(), git_info.project_version.clone());
         }
 
-        // 参数环境变量
-        for (key, value) in params.environment_from_args {
-            env.insert(key.clone(), value.clone());
-        }
-
         // 项目环境变量
         if let Some(project_env) = &params.project_config.environment {
             for (key, value) in project_env {
                 env.insert(key.clone(), value.clone());
             }
+        }
+
+        // 参数环境变量
+        for (key, value) in params.environment_from_args {
+            env.insert(key.clone(), value.clone());
         }
 
         env

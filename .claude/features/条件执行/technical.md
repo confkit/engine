@@ -7,31 +7,31 @@ version: 1.0.0
 # 技术设计: 条件执行
 
 ## 架构设计
-基于现有的 ExecutionContext 和 StepExecutor 架构，在步骤执行前增加条件评估层。使用轻量级表达式解析器对条件进行预处理和执行时评估。
+扩展现有的步骤执行架构，在 StepExecutor 执行前增加条件评估层。条件表达式解析器独立于执行引擎，通过 Context 获取环境变量进行条件求值。
 
 ## 数据模型
-在 ConfKitStepConfig 中添加 condition: Option<String> 字段；在 ConfKitEnvironmentInteractiveConfig 中添加 condition: Option<String> 字段用于交互式条件判断
+Step 结构体增加 condition: Option<String> 字段；新增 ConditionExpression 枚举表示各种条件类型；ConditionEvaluator 结构体负责表达式解析和求值。
 
 ## API 设计
-新增 ConditionEvaluator 结构体提供条件解析和评估功能；扩展 StepExecutor::execute_step 方法支持条件判断；修改 process_interactive_environments 支持累积式环境变量处理
+ConditionEvaluator::evaluate(expression: &str, context: &ExecutionContext) -> Result<bool>；支持的表达式语法：${VAR} == 'value'、${VAR} != 'value'、${VAR} > 10、逻辑运算 && || !。
 
 ## 数据库设计
-数据库设计待规划
+无需数据库变更，条件执行是运行时特性，基于配置文件和环境变量进行计算。
 
 ## 技术栈选择
-Rust + 自定义表达式解析器（基于递归下降解析）或集成 evalexpr crate 作为解析引擎
+Rust - 表达式解析使用 nom 或自定义 parser；集成到现有的 serde YAML 配置系统；利用现有的 anyhow 错误处理机制。
 
 ## 外部集成
-与现有的环境变量系统无缝集成，支持所有三种环境变量来源（配置文件、项目环境、交互参数）
+与现有的 src/core/executor/context.rs 环境变量管理系统深度集成；兼容现有的 EventHub 事件系统，支持条件跳过事件。
 
 ## 安全考虑
-表达式解析只允许安全的操作符，禁止文件操作和系统调用；环境变量引用仅限于当前执行上下文的变量；条件表达式长度限制防止解析攻击
+条件表达式仅允许访问预定义的环境变量，防止任意代码执行；表达式解析采用安全的词法分析，避免注入攻击。
 
 ## 性能要求
-条件评估为同步操作，单个条件评估时间控制在毫秒级别；表达式解析结果可缓存避免重复解析
+条件评估开销应控制在毫秒级，不影响步骤执行性能；表达式解析结果可缓存避免重复计算。
 
 ## 部署策略
-作为 confkit-engine 的内置功能，无需额外部署步骤，向后兼容现有配置文件
+向后兼容现有配置文件，condition 字段为可选；渐进式部署，先支持简单表达式再逐步增强功能。
 
 ## 技术风险
 ### 已识别风险
@@ -56,4 +56,4 @@ Rust + 自定义表达式解析器（基于递归下降解析）或集成 evalex
 - 待确定日志记录策略
 
 ## 更新历史
-- 2025-09-12: 技术设计文档创建
+- 2025-09-13: 技术设计文档创建

@@ -28,6 +28,7 @@ clap = { version = "4.4", features = ["derive"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_yaml = "0.9"
 anyhow = "1.0"
+thiserror = "1.0"
 async-trait = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
@@ -42,6 +43,7 @@ regex = "1.10"
 once_cell = "1.19"
 serde_json = "1.0"
 toml = "0.9"
+nom = "7.1"
 
 # 交互式界面
 inquire = "0.7"

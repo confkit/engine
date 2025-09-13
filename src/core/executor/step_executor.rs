@@ -9,6 +9,7 @@ use std::time::Instant;
 use super::command_executor::CommandExecutor;
 use super::context::ExecutionContext;
 use super::types::{StepResult, StepStatus};
+use crate::core::condition::evaluator::ConditionEvaluator;
 use crate::infra::logger::TaskLogger;
 use crate::types::config::ConfKitStepConfig;
 
@@ -43,6 +44,44 @@ impl StepExecutor {
 
         let start_time = Instant::now();
 
+        // 检查步骤条件
+        if let Some(condition) = &step.condition {
+            let evaluator = ConditionEvaluator::new(self.context.environment.clone());
+            match evaluator.evaluate_string(condition) {
+                Ok(should_execute) => {
+                    if !should_execute {
+                        result.status = StepStatus::Skipped;
+                        result.exit_code = Some(0);
+                        result.output = String::new();
+                        result.error = None;
+                        result.finished_at = Some(Utc::now());
+                        result.duration_ms = Some(start_time.elapsed().as_millis() as u64);
+
+                        // 跳过步骤并记录结果
+                        self.log_step_result(
+                            &result,
+                            step_number,
+                            total_steps,
+                            Some(&format!("condition {condition}")),
+                        )?;
+                        return Ok(result);
+                    } else {
+                        self.task_logger.info(&format!(
+                            "[{}/{}] Condition satisfied: {}",
+                            step_number, total_steps, condition
+                        ))?;
+                    }
+                }
+                Err(e) => {
+                    self.task_logger.warn(&format!(
+                        "[{}/{}] Failed to evaluate step condition '{}': {}. Executing step anyway.",
+                        step_number, total_steps,
+                        condition, e
+                    ))?;
+                }
+            }
+        }
+
         let working_dir = match &step.working_dir {
             Some(working_dir) => self.context.resolve_working_dir(working_dir),
             None => {
@@ -55,7 +94,7 @@ impl StepExecutor {
         };
 
         // 记录步骤详情
-        self.log_step_details(step, &working_dir).await?;
+        self.log_step_details(step_number, total_steps, step, &working_dir).await?;
 
         // commands 长度为 0 时，直接跳过
         if step.commands.is_empty() {
@@ -118,7 +157,12 @@ impl StepExecutor {
                 result.status = StepStatus::Failed;
                 result.exit_code = Some(1);
                 result.error = Some(format!("Step timeout: {timeout} seconds"));
-                self.log_step_result(&result, step_number, total_steps)?;
+                self.log_step_result(
+                    &result,
+                    step_number,
+                    total_steps,
+                    Some(&format!("Step timeout {timeout} seconds")),
+                )?;
                 return Ok(result);
             }
         }
@@ -131,18 +175,28 @@ impl StepExecutor {
             result.error = Some(format!("Command failed with exit code: {execution_result}"));
         }
 
-        self.log_step_result(&result, step_number, total_steps)?;
+        self.log_step_result(&result, step_number, total_steps, None)?;
 
         Ok(result)
     }
 
     /// 记录步骤详情
-    async fn log_step_details(&self, step: &ConfKitStepConfig, working_dir: &str) -> Result<()> {
-        self.task_logger.info("Step Details:")?;
+    async fn log_step_details(
+        &self,
+        step_number: usize,
+        total_steps: usize,
+        step: &ConfKitStepConfig,
+        working_dir: &str,
+    ) -> Result<()> {
+        self.task_logger.info(&format!("[{}/{}] Step Details:", step_number, total_steps))?;
         self.task_logger
             .info(&format!(" - Container: {}", step.container.as_deref().unwrap_or("Host")))?;
         self.task_logger.info(&format!(" - Working Directory: {working_dir}"))?;
         self.task_logger.info(&format!(" - Command Count: {}", step.commands.len()))?;
+
+        if let Some(condition) = &step.condition {
+            self.task_logger.info(&format!(" - Condition: {}", condition))?;
+        }
 
         if let Some(timeout) = &step.timeout {
             self.task_logger.info(&format!(" - Timeout: {timeout}"))?;
@@ -156,21 +210,20 @@ impl StepExecutor {
         result: &StepResult,
         step_number: usize,
         total_steps: usize,
+        detail: Option<&str>,
     ) -> Result<()> {
         match result.status {
             StepStatus::Success => self.task_logger.info(&format!(
-                "[{}/{}] ✓ Step '{}' executed successfully (Duration: {:.1}s)",
+                "[{}/{}] Executed successfully (Duration: {:.1}s)",
                 step_number,
                 total_steps,
-                result.name,
                 result.duration_ms.unwrap_or(0) as f64 / 1000.0
             ))?,
             StepStatus::Failed => {
                 self.task_logger.error(&format!(
-                    "[{}/{}] ✗ Step '{}' executed failed (Duration: {:.1}s)",
+                    "[{}/{}] Executed failed (Duration: {:.1}s)",
                     step_number,
                     total_steps,
-                    result.name,
                     result.duration_ms.unwrap_or(0) as f64 / 1000.0
                 ))?;
 
@@ -180,16 +233,15 @@ impl StepExecutor {
             }
             StepStatus::Skipped => {
                 self.task_logger.info(&format!(
-                    "[{}/{}] ○ Step '{}' skipped",
-                    step_number, total_steps, result.name
+                    "[{}/{}] Skipped by: {}",
+                    step_number,
+                    total_steps,
+                    detail.unwrap_or("No reason provided")
                 ))?;
             }
             StepStatus::Running => {
                 // 这种情况通常不应该出现在结果记录中，但为了完整性处理
-                self.task_logger.info(&format!(
-                    "[{}/{}] ▶ Step '{}' is running...",
-                    step_number, total_steps, result.name
-                ))?;
+                self.task_logger.info(&format!("[{}/{}] Running...", step_number, total_steps))?;
             }
         }
         Ok(())

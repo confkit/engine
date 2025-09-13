@@ -13,6 +13,7 @@ allowed-tools: Read, Glob
 ```
 
 支持按状态过滤：
+
 - `--active` - 只显示开发中的功能
 - `--completed` - 只显示已完成功能
 - `--blocked` - 只显示被阻塞功能

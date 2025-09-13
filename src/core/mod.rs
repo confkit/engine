@@ -4,6 +4,7 @@
 
 pub mod builder;
 pub mod clean;
+pub mod condition;
 pub mod executor;
 pub mod interactive;
 pub mod logger;

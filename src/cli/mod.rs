@@ -5,6 +5,8 @@
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 
+use crate::infra::event_hub::EventHub;
+
 mod builder;
 mod clean;
 mod image;
@@ -48,14 +50,32 @@ pub enum Commands {
 
 impl Cli {
     pub async fn execute(self) -> Result<()> {
-        match self.command {
+        let result = match self.command {
             Some(Commands::Builder(cmd)) => cmd.execute().await,
             Some(Commands::Image(cmd)) => cmd.execute().await,
             Some(Commands::Run(args)) => run::handle_run(&args).await,
             Some(Commands::Clean(args)) => clean::handle_clean(&args).await,
             Some(Commands::Log(args)) => log::handle_log(&args).await,
             None => InteractiveCommand::execute().await,
+        };
+
+        // 确保 EventHub 优雅关闭
+        if let Err(e) = EventHub::global().graceful_shutdown(3, 5).await {
+            tracing::warn!("EventHub graceful shutdown failed: {}", e);
         }
+
+        // 根据命令执行结果决定退出状态
+        match &result {
+            Ok(_) => {
+                tracing::debug!("Command executed successfully");
+            }
+            Err(e) => {
+                tracing::error!("Command failed: {}", e);
+                std::process::exit(1);
+            }
+        }
+
+        result
     }
 
     pub fn parse_args() -> Self {

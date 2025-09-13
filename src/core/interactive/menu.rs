@@ -15,6 +15,7 @@ pub struct InteractiveMenu {
 
 // 基础交互菜单
 impl InteractiveMenu {
+    #[allow(clippy::new_without_default)]
     pub fn new() -> Self {
         Self { ui: InteractiveUI::Main }
     }

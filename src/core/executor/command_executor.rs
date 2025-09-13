@@ -5,6 +5,8 @@
 use anyhow::Result;
 use tokio::process::Command;
 
+use crate::types::common::LogCallback;
+
 use super::context::ExecutionContext;
 use crate::{
     core::executor::context::resolve_host_variables, engine::ConfKitEngine,
@@ -52,21 +54,22 @@ impl CommandExecutor {
 
             command.current_dir(working_dir);
 
-            task_logger.info(&format!(
-                "Executing host command ({}/{}): '{cmd}' in directory: {working_dir}",
-                index + 1,
-                commands.len()
-            ))?;
+            // TODO: 做好环境变量字符串替换后再开放
+            // task_logger.info(&format!(
+            //     "Executing host command ({}/{}): '{cmd}' in directory: {working_dir}",
+            //     index + 1,
+            //     commands.len()
+            // ))?;
 
             // 创建回调，避免重复代码
-            let stdout_callback: Option<Box<dyn Fn(&str) + Send + Sync>> = {
+            let stdout_callback: Option<LogCallback> = {
                 let task_logger = task_logger.clone();
                 Some(Box::new(move |line| {
                     let _ = task_logger.info(line);
                 }))
             };
 
-            let stderr_callback: Option<Box<dyn Fn(&str) + Send + Sync>> = {
+            let stderr_callback: Option<LogCallback> = {
                 let task_logger = task_logger.clone();
                 Some(Box::new(move |line| {
                     let _ = task_logger.info(line);
@@ -81,12 +84,15 @@ impl CommandExecutor {
             .await?;
 
             if exit_code != 0 {
-                task_logger
-                    .error(&format!("Command failed with exit code {exit_code}: '{cmd}'"))?;
+                task_logger.error(&format!(
+                    "({}/{}): Command failed with exit code {exit_code}",
+                    index + 1,
+                    commands.len()
+                ))?;
                 return Ok(exit_code);
             } else {
                 task_logger.info(&format!(
-                    "Command completed successfully ({}/{}): '{cmd}'",
+                    "({}/{}): execute successful.",
                     index + 1,
                     commands.len()
                 ))?;

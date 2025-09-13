@@ -1,7 +1,7 @@
 ---
-last_updated: 2025-09-11T16:54:25Z
+last_updated: 2025-09-13T01:13:58Z
 version: 1.0.0
-architecture_pattern: 分层模块化架构
+architecture_pattern: 事件驱动 + 分层架构
 ---
 
-分层模块化架构：CLI 用户界面层、Core 业务逻辑层、Engine 容器抽象层、Infrastructure 基础设施层、Shared 共享组件层。支持双模式交互和双引擎容器技术，为异步处理和 UI 集成预留扩展性。
+事件驱动 + 分层架构设计：CLI Layer、Core Layer（Executor/Interactive/Logger）、Engine Layer（Docker/Podman）、Infrastructure Layer（Config/EventHub/Logger）、Utils Layer。优势：轻量级、私有部署友好、容器原生支持。

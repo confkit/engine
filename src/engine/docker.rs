@@ -5,6 +5,8 @@
 use anyhow::Result;
 use std::{collections::HashMap, process::Command};
 
+use crate::types::common::LogCallback;
+
 use crate::{
     core::executor::context::resolve_container_variables,
     infra::config::ConfKitConfigLoader,
@@ -406,14 +408,14 @@ impl DockerEngine {
             tracing::info!("Executing in container {container} with command: {cmd}");
 
             // 创建回调，避免重复代码
-            let stdout_callback: Option<Box<dyn Fn(&str) + Send + Sync>> = {
+            let stdout_callback: Option<LogCallback> = {
                 let task_logger = task_logger.clone();
                 Some(Box::new(move |line| {
                     let _ = task_logger.info(line);
                 }))
             };
 
-            let stderr_callback: Option<Box<dyn Fn(&str) + Send + Sync>> = {
+            let stderr_callback: Option<LogCallback> = {
                 let task_logger = task_logger.clone();
                 Some(Box::new(move |line| {
                     let _ = task_logger.info(line);

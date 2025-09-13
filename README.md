@@ -6,6 +6,7 @@ ConfKit is a configuration-driven build and deployment tool designed for modern 
 
 - **Builder Management**: Full lifecycle management of Docker images and containers
 - **Configuration Driven**: Define build processes via YAML configuration files
+- **Conditional Execution**: Smart step execution based on environment variables and runtime conditions
 - **Task Execution**: Supports both local and containerized command execution
 - **Log Management**: Complete build log recording, viewing, and management
 - **Git Integration**: Native support for Git repository operations and environment variable injection
@@ -214,12 +215,23 @@ steps:
   - name: "Build Application"
     container: "golang-builder"
     working_dir: "/workspace"
+    # Conditional execution - only run if environment is production
+    condition: "${ENVIRONMENT} == 'production'"
     commands:
       - "echo 'Building ${APP_NAME} v${BUILD_VERSION}'"
       - "echo 'Git Hash: ${GIT_HASH}'"
       - "go build -o app ./main.go"
     # 5m = 300s
     timeout: 300
+    
+  - name: "Run Tests"
+    container: "golang-builder"
+    working_dir: "/workspace"
+    # Conditional execution - skip tests in production
+    condition: "${ENVIRONMENT} != 'production'"
+    commands:
+      - "go test ./..."
+    timeout: 180
 ```
 
 ## 📋 Log Management
@@ -343,6 +355,81 @@ environment_from_args:
 - `options`: Available choices for radio/checkbox types
 
 All environment variables support variable substitution using the `${VAR_NAME}` syntax.
+
+### Conditional Step Execution
+
+ConfKit supports conditional execution of build steps based on environment variables and runtime conditions. Add a `condition` field to any step to control when it should execute.
+
+#### Basic Conditional Syntax
+
+```yaml
+steps:
+  - name: "Production Build"
+    condition: "${ENVIRONMENT} == 'production'"
+    commands:
+      - "npm run build:prod"
+      
+  - name: "Development Build"  
+    condition: "${ENVIRONMENT} == 'development'"
+    commands:
+      - "npm run build:dev"
+```
+
+#### Supported Operators
+
+**Comparison Operators:**
+- `==` - Equal to
+- `!=` - Not equal to
+- `>` - Greater than
+- `<` - Less than
+- `>=` - Greater than or equal to
+- `<=` - Less than or equal to
+
+**Logical Operators:**
+- `&&` - Logical AND
+- `||` - Logical OR
+- `!` - Logical NOT
+
+#### Advanced Conditional Examples
+
+```yaml
+steps:
+  # Multiple conditions with logical operators
+  - name: "Deploy to Staging"
+    condition: "${ENVIRONMENT} == 'staging' && ${GIT_BRANCH} == 'main'"
+    commands:
+      - "deploy.sh staging"
+      
+  # Numeric comparisons
+  - name: "Performance Test"
+    condition: "${BUILD_NUMBER} > 100"
+    commands:
+      - "npm run test:performance"
+      
+  # Complex nested conditions
+  - name: "Quality Gate"
+    condition: "(${ENVIRONMENT} == 'production' || ${ENVIRONMENT} == 'staging') && !${SKIP_TESTS}"
+    commands:
+      - "npm run test:quality"
+      
+  # Boolean variables
+  - name: "Debug Mode"
+    condition: "${ENABLE_DEBUG} == true"
+    commands:
+      - "echo 'Debug mode enabled'"
+```
+
+#### Fallback Behavior
+
+When a condition expression cannot be parsed or evaluated:
+- **Default**: Step is skipped (safe fallback)
+- **Configurable**: Can be configured to execute unconditionally or use custom fallback logic
+
+#### Performance Optimization
+
+- Expressions are parsed once and cached for reuse
+- Environment variable values are cached during task execution
+- Simple expressions evaluate in < 10ms, complex expressions in < 50ms
 
 ### Smart Log Matching
 

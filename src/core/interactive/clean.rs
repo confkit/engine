@@ -31,41 +31,40 @@ impl InteractiveMenu {
                     LogCleaner::clean_all().await?;
                     println!("✓ All logs cleaned successfully");
                 }
-            },
+            }
             InteractiveCleanUI::Workspace => {
                 if self.confirm_action("clean workspace directories").await? {
                     VolumesCleaner::clean_workspace().await?;
                     println!("✓ Workspace cleaned successfully");
                 }
-            },
+            }
             InteractiveCleanUI::Artifacts => {
                 if self.confirm_action("clean build artifacts").await? {
                     VolumesCleaner::clean_artifacts().await?;
                     println!("✓ Artifacts cleaned successfully");
                 }
-            },
+            }
             InteractiveCleanUI::All => {
                 if self.confirm_action("clean ALL (logs, workspace, artifacts)").await? {
                     println!("Cleaning workspace...");
                     VolumesCleaner::clean_workspace().await?;
-                    
+
                     println!("Cleaning artifacts...");
                     VolumesCleaner::clean_artifacts().await?;
-                    
+
                     println!("Cleaning all logs...");
                     LogCleaner::clean_all().await?;
-                    
+
                     println!("✓ All resources cleaned successfully");
                 }
-            },
+            }
             InteractiveCleanUI::Back => {
                 self.ui = InteractiveUI::Main;
             }
         }
-        
+
         Ok(true)
     }
-
 
     async fn confirm_action(&self, action: &str) -> Result<bool> {
         let options = vec![InteractiveYesNoUI::Yes, InteractiveYesNoUI::No];
@@ -74,5 +73,4 @@ impl InteractiveMenu {
             .prompt()?;
         Ok(selection == InteractiveYesNoUI::Yes)
     }
-
 }

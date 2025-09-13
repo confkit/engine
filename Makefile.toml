@@ -83,7 +83,32 @@ description = "运行 clippy lints"
 [tasks.test]
 args = ["test"]
 command = "cargo"
-description = "运行测试"
+description = "运行所有测试"
+
+[tasks.test-unit]
+args = ["test", "--lib"]
+command = "cargo"
+description = "仅运行单元测试"
+
+[tasks.test-integration]
+args = ["test", "--test", "*"]
+command = "cargo"
+description = "仅运行集成测试"
+
+[tasks.test-condition]
+args = ["test", "--test", "condition_unit_tests", "--", "--test-threads=1", "--nocapture"]
+command = "cargo"
+description = "运行条件模块单元测试 (顺序执行, 显示打印输出)"
+
+[tasks.test-condition-expression]
+args = ["test", "--test", "condition_expression_tests", "--", "--test-threads=1", "--nocapture"]
+command = "cargo"
+description = "运行条件表达式解析测试 (顺序执行, 显示打印输出)"
+
+[tasks.test-condition-all]
+dependencies = ["test-condition", "test-condition-expression"]
+description = "运行所有条件模块测试"
+
 
 [tasks.profile]
 args = ["build", "--release", "--profile", "profiling"]

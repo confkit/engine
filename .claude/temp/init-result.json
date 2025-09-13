@@ -1,10 +1,10 @@
 {
   "status": "success",
   "project": {
-    "name": "confkit-engine",
-    "type": "CI/CD 引擎", 
-    "tech_stack": "Rust + Docker/Podman + 异步架构",
-    "architecture": "分层模块化架构"
+    "name": "ConfKit Engine",
+    "type": "个人 CI/CD 引擎", 
+    "tech_stack": "Rust + Docker/Podman + YAML",
+    "architecture": "事件驱动 + 分层架构"
   },
   "files_created": [
     ".claude/context/project.md",

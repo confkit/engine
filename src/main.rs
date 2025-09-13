@@ -6,6 +6,7 @@ use std::{fs, path::Path, sync::Arc};
 
 use anyhow::Result;
 use clap::Parser;
+use tokio::signal;
 
 mod infra;
 mod shared;
@@ -25,6 +26,44 @@ use shared::constants::{
 };
 
 use crate::infra::event_hub::{EventHub, LogSubscriber};
+
+/// 等待系统终止信号
+async fn wait_for_shutdown_signal() {
+    let ctrl_c = async {
+        signal::ctrl_c().await.expect("failed to install Ctrl+C handler");
+    };
+
+    #[cfg(unix)]
+    let terminate = async {
+        signal::unix::signal(signal::unix::SignalKind::terminate())
+            .expect("failed to install signal handler")
+            .recv()
+            .await;
+    };
+
+    #[cfg(not(unix))]
+    let terminate = std::future::pending::<()>();
+
+    tokio::select! {
+        _ = ctrl_c => {
+            tracing::info!("Received Ctrl+C signal, shutting down gracefully...");
+        },
+        _ = terminate => {
+            tracing::info!("Received SIGTERM signal, shutting down gracefully...");
+        },
+    }
+}
+
+/// 优雅关闭应用程序
+async fn shutdown_gracefully() -> Result<()> {
+    tracing::debug!("Shutting down application");
+
+    // 优雅关闭 EventHub
+    EventHub::global().graceful_shutdown(3, 5).await?;
+
+    tracing::debug!("Application shutdown completed");
+    Ok(())
+}
 
 // 初始化所需目录
 fn init_dirs() -> Result<()> {
@@ -104,10 +143,39 @@ async fn main() -> Result<()> {
     let cli = Cli::parse();
 
     tracing::debug!("Executing command...");
-    // 执行命令
-    cli.execute().await?;
 
-    tracing::debug!("Done!");
+    // 使用 tokio::select 来同时等待命令执行和关闭信号
+    tokio::select! {
+        // 正常执行命令
+        result = cli.execute() => {
+            match result {
+                Ok(_) => {
+                    tracing::debug!("Command executed successfully");
 
-    Ok(())
+                    // 正常完成时也需要优雅关闭 EventHub
+                    if let Err(e) = shutdown_gracefully().await {
+                        tracing::warn!("Graceful shutdown failed: {}", e);
+                    }
+
+                    Ok(())
+                },
+                Err(e) => {
+                    tracing::error!("Command failed: {}", e);
+
+                    // 即使失败也要优雅关闭
+                    if let Err(shutdown_err) = shutdown_gracefully().await {
+                        tracing::warn!("Graceful shutdown failed: {}", shutdown_err);
+                    }
+
+                    Err(e)
+                }
+            }
+        },
+        // 等待关闭信号
+        _ = wait_for_shutdown_signal() => {
+            // 收到信号，执行优雅关闭
+            shutdown_gracefully().await?;
+            Ok(())
+        }
+    }
 }

@@ -104,32 +104,22 @@ bash .claude/scripts/dd/query/get-issue.sh "<feature>:<issue_id>"
 
 ### 10. 文档更新
 
-文档位置:
-`.claude/<feature>/issues/<issue_id>.md`
+#### 更新议题文档的元数据
 
-更新议题文档的元数据：
-
-- `status` - 议题状态
+- `status` - 状态
 - `progress` - 完成进度
-- `updated_at` - 更新时间
-- `notes` - 更新说明（如有）
 
-### 11. 智能联动更新
+#### 10.1 议题文档更新
 
-议题状态更新完成后，自动触发功能整体状态更新：
+文档位置: `.claude/<feature>/issues/<issue_id>.md`
+更新条件: 有实质性改动时即可更新
 
-```bash
-# 自动调用功能更新命令，重新计算功能整体进度和状态
-/dd:feature-update <feature>
-```
+#### 10.2 关联功能更新
 
-这确保了议题状态变更能及时反映到功能和项目整体状态中。
+文档位置: `.claude/<feature>/overview.md`
+更新条件: 当议题的变更对关联功能有所推进时可更新
 
-### 12. 批量更新
-
-当需要更新功能的所有议题时，建议使用 `/dd:feature-update` 命令。
-
-### 13. 使用示例
+### 11. 使用示例
 
 ```bash
 # 自动更新议题状态

@@ -19,12 +19,14 @@ allowed-tools: Task, Read, Write, Edit, Bash
 ### 1. 收集项目信息
 
 使用 deep-thinker 智能体收集项目基础信息：
+
 - 项目名称、类型、规模、目标用户
 - 技术选型倾向、团队技术栈经验
 
 ### 2. 确认技术决策
 
 讨论关键技术选择：
+
 - **项目类型**: Web/移动/桌面应用 | 命令行工具 | API 服务 | 工具库
 - **开发语言**: 主要语言选择 | 多语言开发需求
 - **UI 技术**: 前端技术栈 | 移动端适配需求
@@ -34,6 +36,7 @@ allowed-tools: Task, Read, Write, Edit, Bash
 ### 3. 深度讨论和验证
 
 AI 主动提出质疑和建议：
+
 - 技术选型与项目需求匹配度分析
 - 团队技术栈熟悉度评估
 - 项目可行性和风险识别
@@ -43,6 +46,7 @@ AI 主动提出质疑和建议：
 ### 4. 生成项目内容
 
 基于对话结果，生成个性化的项目上下文内容：
+
 - **项目描述内容** - 基于对话的具体项目信息
 - **技术栈详情** - 深入的技术选型分析
 - **架构设计** - 个性化的架构方案
@@ -91,13 +95,13 @@ bash .claude/scripts/dd/after-init.sh "$structured_data"
 所有上下文文档必须遵循统一的格式结构：
 
 ### .claude/context/project.md 格式
+
 ```yaml
 ---
 name: 项目名称
 type: 项目类型
 status: 规划中
 ---
-
 # 项目标题
 ## 项目概述
 ## 目标用户
@@ -107,6 +111,7 @@ status: 规划中
 ```
 
 ### .claude/context/tech-stack.md 格式
+
 ```yaml
 ---
 # 技术栈规划
@@ -118,11 +123,11 @@ status: 规划中
 ```
 
 ### .claude/context/architecture.md 格式
+
 ```yaml
 ---
 architecture: 架构模式
 ---
-
 # 项目架构设计
 ## 总体架构
 ## 核心模块
@@ -132,11 +137,11 @@ architecture: 架构模式
 ```
 
 ### .claude/context/requirements.md 格式
+
 ```yaml
 ---
 type: 项目类型
 ---
-
 # 项目需求规划
 ## 功能需求
 ## 用户场景
@@ -147,12 +152,12 @@ type: 项目类型
 ```
 
 ### .claude/context/current-status.md 格式
+
 ```yaml
 ---
 phase: 项目初始化完成
 progress: 10%
 ---
-
 # 当前项目状态
 ## 项目阶段
 ## 技术准备

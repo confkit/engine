@@ -14,8 +14,9 @@ use tokio_util::sync::CancellationToken;
 #[cfg(unix)]
 use std::os::unix::process::ExitStatusExt;
 
-pub type LogCallback = Arc<dyn Fn(&str) + Send + Sync>;
-pub type LogCallbackBox = Box<dyn Fn(&str) + Send + Sync>;
+use crate::types::common::{LogCallback, LogCallbackArc};
+
+pub type LogCallbackBox = LogCallback;
 
 pub struct CommandUtil;
 
@@ -23,7 +24,7 @@ impl CommandUtil {
     // 异步读取命令输出并输出日志
     pub fn spawn_log_reader<R>(
         reader: R,
-        callback: Option<LogCallback>,
+        callback: Option<LogCallbackArc>,
         cancel_token: CancellationToken,
     ) -> tokio::task::JoinHandle<()>
     where
@@ -82,13 +83,13 @@ impl CommandUtil {
         let mut log_handles = Vec::new();
 
         if let Some(stdout) = child.stdout.take() {
-            let callback = on_stdout.map(|f| Arc::from(f) as LogCallback);
+            let callback = on_stdout.map(|f| Arc::from(f) as LogCallbackArc);
             let handle = Self::spawn_log_reader(stdout, callback, cancel_token.clone());
             log_handles.push(handle);
         }
 
         if let Some(stderr) = child.stderr.take() {
-            let callback = on_stderr.map(|f| Arc::from(f) as LogCallback);
+            let callback = on_stderr.map(|f| Arc::from(f) as LogCallbackArc);
             let handle = Self::spawn_log_reader(stderr, callback, cancel_token.clone());
             log_handles.push(handle);
         }
