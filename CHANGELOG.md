@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.0] - 2025-09-15
+
+### 🐛 Bug Fixes
+
+- 修复格式
+
 ## [0.3.0] - 2025-09-15
 
 ### 🚀 Features
@@ -22,6 +28,7 @@ All notable changes to this project will be documented in this file.
 
 - Ccdd 工作流验证 ing
 - Dd 拆解条件执行功能
+- Release confkit-engine version 0.3.0
 
 ## [0.2.3] - 2025-08-30
 
