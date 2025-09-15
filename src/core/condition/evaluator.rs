@@ -76,9 +76,12 @@ impl ConditionEvaluator {
             ConditionExpression::Comparison { left, operator, right } => {
                 self.evaluate_comparison(left, operator, right, depth + 1)
             }
-            ConditionExpression::Logical { operator, left, right } => {
-                self.evaluate_logical(operator, left.as_ref().map(|v| &**v), right.as_ref().map(|v| &**v), depth + 1)
-            }
+            ConditionExpression::Logical { operator, left, right } => self.evaluate_logical(
+                operator,
+                left.as_ref().map(|v| &**v),
+                right.as_ref().map(|v| &**v),
+                depth + 1,
+            ),
         }
     }
 

@@ -42,7 +42,7 @@ pub async fn process_interactive_environments(
             // 合并当前环境变量和已处理的变量
             let mut merged_env = env.clone();
             merged_env.extend(env_vars.clone());
-            
+
             let evaluator = ConditionEvaluator::new(merged_env);
             match evaluator.evaluate_string(condition) {
                 Ok(true) => {}

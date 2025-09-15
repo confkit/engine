@@ -103,7 +103,6 @@ impl ConditionValue {
         ConditionValue::String(s.to_string())
     }
 
-
     /// 检查值是否为真值（用于逻辑运算）
     pub fn is_truthy(&self) -> bool {
         match self {
