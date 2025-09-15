@@ -3,12 +3,15 @@
 //! Description: Execution context implementation
 
 use anyhow::Result;
-use std::{collections::HashMap, fs, path::Path};
+use std::collections::HashMap;
 use tokio::process::Command;
 
 use crate::{
     formatter::path::PathFormatter,
-    infra::git::{GitClient, GitInfo},
+    infra::{
+        config::ConfKitConfigLoader,
+        git::{GitClient, GitInfo},
+    },
     shared::constants::{
         CONTAINER_ARTIFACTS_ROOT_DIR, CONTAINER_WORKSPACE_DIR, HOST_ARTIFACTS_ROOT_DIR,
         HOST_WORKSPACE_DIR,
@@ -62,12 +65,12 @@ impl ExecutionContext {
             space_name: &space_name,
             project_name: &project_name,
             git_info: &git_client.git_info,
-            project_config,
             host_workspace_dir: &host_workspace_dir,
             container_workspace_dir: &container_workspace_dir,
             host_artifacts_dir: &host_artifacts_dir,
             container_artifacts_dir: &container_artifacts_dir,
-        });
+        })
+        .await?;
 
         let clean_workspace = if let Some(cleaner) = &project_config.cleaner {
             cleaner.workspace.unwrap_or(true)
@@ -107,7 +110,6 @@ struct BuildEnvironmentParams<'a> {
     task_id: &'a str,
     space_name: &'a str,
     project_name: &'a str,
-    project_config: &'a ConfKitProjectConfig,
     git_info: &'a Option<GitInfo>,
     host_workspace_dir: &'a str,
     container_workspace_dir: &'a str,
@@ -117,34 +119,16 @@ struct BuildEnvironmentParams<'a> {
 
 impl ExecutionContext {
     /// 构建环境变量
-    fn build_environment(params: BuildEnvironmentParams) -> HashMap<String, String> {
+    async fn build_environment(
+        params: BuildEnvironmentParams<'_>,
+    ) -> Result<HashMap<String, String>> {
         let mut env = HashMap::new();
+        let (_, env_from_conf, env_from_file) =
+            ConfKitConfigLoader::load_project_env(params.space_name, params.project_name).await?;
 
-        // 环境文件解析
-        if params.project_config.environment_files.is_some() {
-            let environment_files = params.project_config.environment_files.as_ref().unwrap();
-            for file_path in environment_files {
-                // yaml 文件解析
-                if file_path.format == "yaml" {
-                    let file_path = Path::new(&file_path.path);
-                    let file_content = fs::read_to_string(file_path).unwrap();
-                    let yaml_data: HashMap<String, String> =
-                        serde_yaml::from_str(&file_content).unwrap();
-                    for (key, value) in yaml_data {
-                        env.insert(key, value);
-                    }
-                }
-                // env 文件解析
-                if file_path.format == "env" {
-                    let file_path = Path::new(&file_path.path);
-                    let file_content = fs::read_to_string(file_path).unwrap();
-                    let env_data: HashMap<String, String> =
-                        serde_yaml::from_str(&file_content).unwrap();
-                    for (key, value) in env_data {
-                        env.insert(key, value);
-                    }
-                }
-            }
+        // 项目文件环境变量
+        for (key, value) in env_from_file {
+            env.insert(key, value);
         }
 
         // 基础环境变量
@@ -182,10 +166,8 @@ impl ExecutionContext {
         }
 
         // 项目环境变量
-        if let Some(project_env) = &params.project_config.environment {
-            for (key, value) in project_env {
-                env.insert(key.clone(), value.clone());
-            }
+        for (key, value) in env_from_conf {
+            env.insert(key.clone(), value.clone());
         }
 
         // 参数环境变量
@@ -193,7 +175,7 @@ impl ExecutionContext {
             env.insert(key.clone(), value.clone());
         }
 
-        env
+        Ok(env)
     }
 }
 

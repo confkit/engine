@@ -18,7 +18,10 @@ mod radio;
 use anyhow::Result;
 use std::collections::HashMap;
 
-use crate::types::config::{ConfKitEnvironmentInteractiveConfig, ConfKitInteractiveType};
+use crate::{
+    core::condition::evaluator::ConditionEvaluator,
+    types::config::{ConfKitEnvironmentInteractiveConfig, ConfKitInteractiveType},
+};
 
 pub use self::{
     checkbox::handle_checkbox, confirm::handle_confirm, input::handle_input, radio::handle_radio,
@@ -26,6 +29,7 @@ pub use self::{
 
 /// 处理交互式环境变量配置
 pub async fn process_interactive_environments(
+    env: &mut HashMap<String, String>,
     configs: &[ConfKitEnvironmentInteractiveConfig],
 ) -> Result<HashMap<String, String>> {
     let mut env_vars = HashMap::new();
@@ -33,6 +37,19 @@ pub async fn process_interactive_environments(
     // 遍历所有交互配置
     for config in configs {
         tracing::info!("处理交互式环境变量: {}", config.name);
+
+        if let Some(condition) = &config.condition {
+            // 合并当前环境变量和已处理的变量
+            let mut merged_env = env.clone();
+            merged_env.extend(env_vars.clone());
+            
+            let evaluator = ConditionEvaluator::new(merged_env);
+            match evaluator.evaluate_string(condition) {
+                Ok(true) => {}
+                Ok(false) => continue,
+                Err(e) => return Err(e),
+            }
+        }
 
         // 根据交互类型调用不同的处理函数
         let value = match config.interactive_type {

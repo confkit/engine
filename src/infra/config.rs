@@ -2,6 +2,8 @@
 //! Created: 2025-07-14
 //! Description: Configuration loader with caching
 
+use std::collections::HashMap;
+use std::fs;
 use std::path::Path;
 
 use anyhow::Result;
@@ -52,18 +54,6 @@ impl ConfKitConfigLoader {
 
     // ================================================ Spaces ================================================
 
-    // 获取空间配置
-    pub async fn get_project_config(
-        space_name: &str,
-        poject_name: &str,
-    ) -> Result<Option<ConfKitProjectConfig>> {
-        let project_config_list = Self::get_project_config_list(space_name).await?;
-
-        let project_config = project_config_list.iter().find(|project| project.name == poject_name);
-
-        Ok(project_config.cloned())
-    }
-
     // 获取空间配置列表
     pub async fn get_space_list() -> Result<Vec<ConfKitSpaceConfig>> {
         let spaces_config = Self::get_config();
@@ -75,21 +65,6 @@ impl ConfKitConfigLoader {
         let space_list = Self::get_space_list().await?;
         let space_config = space_list.iter().find(|space| space.name == space_name);
         Ok(space_config.cloned())
-    }
-
-    // 获取项目源信息
-    pub async fn get_project_source_info(
-        space_name: &str,
-        project_name: &str,
-    ) -> Result<Option<ConfKitSourceConfig>> {
-        let project_config = Self::get_project_config(space_name, project_name).await?;
-
-        if project_config.is_none() {
-            return Ok(None);
-        }
-
-        let project_config = project_config.unwrap();
-        Ok(project_config.source)
     }
 
     // 获取 space 下的所有项目配置
@@ -117,6 +92,90 @@ impl ConfKitConfigLoader {
         }
 
         Ok(project_config_list)
+    }
+
+    // ================================================ Projects ================================================
+
+    // 获取项目配置
+    pub async fn get_project_config(
+        space_name: &str,
+        poject_name: &str,
+    ) -> Result<Option<ConfKitProjectConfig>> {
+        let project_config_list = Self::get_project_config_list(space_name).await?;
+
+        let project_config = project_config_list.iter().find(|project| project.name == poject_name);
+
+        Ok(project_config.cloned())
+    }
+
+    // 获取项目源信息
+    pub async fn get_project_source_info(
+        space_name: &str,
+        project_name: &str,
+    ) -> Result<Option<ConfKitSourceConfig>> {
+        let project_config = Self::get_project_config(space_name, project_name).await?;
+
+        if project_config.is_none() {
+            return Ok(None);
+        }
+
+        let project_config = project_config.unwrap();
+        Ok(project_config.source)
+    }
+
+    // 获取项目 enviroment 信息
+    pub async fn load_project_env(
+        space_name: &str,
+        project_name: &str,
+    ) -> Result<(HashMap<String, String>, HashMap<String, String>, HashMap<String, String>)> {
+        let project_config = Self::get_project_config(space_name, project_name).await?;
+
+        if project_config.is_none() {
+            return Ok((HashMap::new(), HashMap::new(), HashMap::new()));
+        }
+        let project_config = project_config.unwrap();
+        let mut env_from_file = HashMap::new();
+        let mut env_from_conf = HashMap::new();
+        let mut env_mixed = HashMap::new();
+
+        // 环境文件解析
+        if project_config.environment_files.is_some() {
+            let environment_files = project_config.environment_files.as_ref().unwrap();
+            for file_path in environment_files {
+                // yaml 文件解析
+                if file_path.format == "yaml" {
+                    let file_path = Path::new(&file_path.path);
+                    let file_content = fs::read_to_string(file_path).unwrap();
+                    let yaml_data: HashMap<String, String> =
+                        serde_yaml::from_str(&file_content).unwrap();
+                    for (key, value) in yaml_data {
+                        env_from_file.insert(key.clone(), value.clone());
+                        env_mixed.insert(key, value);
+                    }
+                }
+                // env 文件解析
+                if file_path.format == "env" {
+                    let file_path = Path::new(&file_path.path);
+                    let file_content = fs::read_to_string(file_path).unwrap();
+                    let env_data: HashMap<String, String> =
+                        serde_yaml::from_str(&file_content).unwrap();
+                    for (key, value) in env_data {
+                        env_from_file.insert(key.clone(), value.clone());
+                        env_mixed.insert(key, value);
+                    }
+                }
+            }
+        }
+
+        // 项目环境变量
+        if let Some(project_env) = project_config.environment {
+            for (key, value) in project_env {
+                env_from_conf.insert(key.clone(), value.clone());
+                env_mixed.insert(key, value);
+            }
+        }
+
+        Ok((env_mixed, env_from_conf, env_from_file))
     }
 
     // ================================================ Docker Compose ================================================

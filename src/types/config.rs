@@ -302,6 +302,9 @@ pub struct ConfKitEnvironmentInteractiveConfig {
     pub required: bool,
     /// 选项列表(仅对radio和checkbox有效)
     pub options: Option<Vec<String>>,
+    /// 条件表达式，用于条件执行控制
+    #[serde(default)]
+    pub condition: Option<String>,
 }
 
 /// 默认为必填

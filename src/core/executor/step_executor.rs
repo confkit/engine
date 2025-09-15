@@ -48,29 +48,28 @@ impl StepExecutor {
         if let Some(condition) = &step.condition {
             let evaluator = ConditionEvaluator::new(self.context.environment.clone());
             match evaluator.evaluate_string(condition) {
-                Ok(should_execute) => {
-                    if !should_execute {
-                        result.status = StepStatus::Skipped;
-                        result.exit_code = Some(0);
-                        result.output = String::new();
-                        result.error = None;
-                        result.finished_at = Some(Utc::now());
-                        result.duration_ms = Some(start_time.elapsed().as_millis() as u64);
+                Ok(true) => {
+                    self.task_logger.info(&format!(
+                        "[{}/{}] Condition satisfied: {}",
+                        step_number, total_steps, condition
+                    ))?;
+                }
+                Ok(false) => {
+                    result.status = StepStatus::Skipped;
+                    result.exit_code = Some(0);
+                    result.output = String::new();
+                    result.error = None;
+                    result.finished_at = Some(Utc::now());
+                    result.duration_ms = Some(start_time.elapsed().as_millis() as u64);
 
-                        // 跳过步骤并记录结果
-                        self.log_step_result(
-                            &result,
-                            step_number,
-                            total_steps,
-                            Some(&format!("condition {condition}")),
-                        )?;
-                        return Ok(result);
-                    } else {
-                        self.task_logger.info(&format!(
-                            "[{}/{}] Condition satisfied: {}",
-                            step_number, total_steps, condition
-                        ))?;
-                    }
+                    // 跳过步骤并记录结果
+                    self.log_step_result(
+                        &result,
+                        step_number,
+                        total_steps,
+                        Some(&format!("condition {condition}")),
+                    )?;
+                    return Ok(result);
                 }
                 Err(e) => {
                     self.task_logger.warn(&format!(
