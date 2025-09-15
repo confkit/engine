@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.3.0] - 2025-09-15
+
+### 🚀 Features
+
+- 条件执行 step
+- 自定义 interactive 添加条件执行
+
+### 🐛 Bug Fixes
+
+- 修复命令异常导致进程中断问题
+- Interactive 添加 clean
+
+### 🚜 Refactor
+
+- 重构任务执行架构并优化超时处理
+
+### ⚙️ Miscellaneous Tasks
+
+- Ccdd 工作流验证 ing
+- Dd 拆解条件执行功能
+
 ## [0.2.3] - 2025-08-30
 
 ### 🐛 Bug Fixes
@@ -20,6 +41,7 @@ All notable changes to this project will be documented in this file.
 ### ⚙️ Miscellaneous Tasks
 
 - 修复 makefile 任务
+- Release confkit-engine version 0.2.3
 
 ## [0.2.2] - 2025-08-26
 
