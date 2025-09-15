@@ -59,6 +59,11 @@ impl InteractiveMenu {
         let project_config =
             ConfKitConfigLoader::get_project_config(space_name, &project_name).await?;
 
+        // 加载项目环境变量
+        let (env_mixed, _, _) =
+            ConfKitConfigLoader::load_project_env(space_name, &project_name).await?;
+        let mut env_mixed = env_mixed;
+
         // 处理交互式环境变量
         let mut environment_from_args = HashMap::new();
 
@@ -67,7 +72,8 @@ impl InteractiveMenu {
             if let Some(interactive_configs) = &project_config.environment_from_args {
                 if !interactive_configs.is_empty() {
                     environment_from_args =
-                        process_interactive_environments(interactive_configs).await?;
+                        process_interactive_environments(&mut env_mixed, interactive_configs)
+                            .await?;
                 }
             }
         }
