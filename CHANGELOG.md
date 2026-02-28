@@ -2,11 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.1] - 2026-02-28
+
+### 🐛 Bug Fixes
+
+- 优化日志记录机制, 移除日志线程, 优化打印
+
+### 📚 Documentation
+
+- Update claude rules
+
 ## [0.4.0] - 2025-09-15
 
 ### 🐛 Bug Fixes
 
 - 修复格式
+
+### ⚙️ Miscellaneous Tasks
+
+- Release confkit-engine version 0.4.0
 
 ## [0.3.0] - 2025-09-15
 
