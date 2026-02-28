@@ -11,7 +11,7 @@ use super::step_executor::StepExecutor;
 use super::types::{StepResult, StepStatus};
 use crate::core::clean::volumes::VolumesCleaner;
 use crate::formatter::log::LogFormatter;
-use crate::infra::event_hub::{Event, EventHub, LogLevel};
+use crate::infra::logger::LogLevel;
 use crate::infra::logger::TaskLogger;
 use crate::types::config::ConfKitProjectConfig;
 use crate::utils::fs::make_dir_with_permissions;
@@ -60,12 +60,7 @@ impl Task {
 
     /// 记录指定级别的日志
     pub fn log_with_level(&self, message: &str, level: LogLevel) -> Result<(), anyhow::Error> {
-        EventHub::global().publish(
-            Event::new_log(level, message.to_string(), "task".to_string())
-                .with_metadata("log_path".to_string(), self.log_path.clone()),
-        )?;
-
-        Ok(())
+        self.logger().log_with_level(message, level)
     }
 
     /// 记录 Info 级别日志的便捷方法

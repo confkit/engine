@@ -2,9 +2,13 @@
 //! Created: 2025-01-09
 //! Description: Task logger implementation
 
-use anyhow::Result;
+use std::fs::{self, OpenOptions};
+use std::io::Write;
 
-use crate::infra::event_hub::{Event, EventHub, LogLevel};
+use anyhow::Result;
+use chrono::Local;
+
+use super::LogLevel;
 
 /// 任务日志记录器 - 轻量级日志接口
 #[derive(Debug, Clone)]
@@ -19,10 +23,24 @@ impl TaskLogger {
 
     /// 记录指定级别的日志
     pub fn log_with_level(&self, message: &str, level: LogLevel) -> Result<(), anyhow::Error> {
-        EventHub::global().publish(
-            Event::new_log(level, message.to_string(), "task".to_string())
-                .with_metadata("log_path".to_string(), self.log_path.clone()),
-        )?;
+        // tracing 输出到终端
+        match level {
+            LogLevel::Error => tracing::error!("{}", message),
+            LogLevel::Warn => tracing::warn!("{}", message),
+            LogLevel::Info => tracing::info!("{}", message),
+            LogLevel::Debug => tracing::debug!("{}", message),
+            LogLevel::Trace => tracing::trace!("{}", message),
+        }
+
+        // 同步写入日志文件
+        let log_path = std::path::Path::new(&self.log_path);
+        if let Some(parent) = log_path.parent() {
+            fs::create_dir_all(parent)?;
+        }
+        let timestamp = Local::now().format("%Y-%m-%d %H:%M:%S");
+        let line = format!("[{}][{}] {}\n", timestamp, level, message);
+        let mut file = OpenOptions::new().create(true).append(true).open(log_path)?;
+        file.write_all(line.as_bytes())?;
 
         Ok(())
     }
