@@ -2,7 +2,7 @@
 //! Created: 2025-07-13
 //! Description: ConfKit Engine CLI
 
-use std::{fs, path::Path, sync::Arc};
+use std::{fs, path::Path};
 
 use anyhow::Result;
 use clap::Parser;
@@ -24,8 +24,6 @@ use infra::config::ConfKitConfigLoader;
 use shared::constants::{
     HOST_ARTIFACTS_ROOT_DIR, HOST_CACHE_DIR, HOST_LOG_DIR, HOST_TEMP_DIR, HOST_WORKSPACE_DIR,
 };
-
-use crate::infra::event_hub::{EventHub, LogSubscriber};
 
 /// 等待系统终止信号
 async fn wait_for_shutdown_signal() {
@@ -57,10 +55,6 @@ async fn wait_for_shutdown_signal() {
 /// 优雅关闭应用程序
 async fn shutdown_gracefully() -> Result<()> {
     tracing::debug!("Shutting down application");
-
-    // 优雅关闭 EventHub
-    EventHub::global().graceful_shutdown(3, 5).await?;
-
     tracing::debug!("Application shutdown completed");
     Ok(())
 }
@@ -76,12 +70,6 @@ fn init_dirs() -> Result<()> {
         }
     }
 
-    Ok(())
-}
-
-// 初始化事件中心
-async fn init_event_hub() -> Result<()> {
-    EventHub::global().subscribe(Arc::new(LogSubscriber::with_default_path("logs/app.log"))).await;
     Ok(())
 }
 
@@ -116,9 +104,6 @@ async fn main() -> Result<()> {
         );
         std::process::exit(1);
     }
-
-    // 初始化事件中心
-    init_event_hub().await?;
 
     tracing::info!("Version: {}", env!("CARGO_PKG_VERSION"));
 

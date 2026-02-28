@@ -5,8 +5,6 @@
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 
-use crate::infra::event_hub::EventHub;
-
 mod builder;
 mod clean;
 mod image;
@@ -58,11 +56,6 @@ impl Cli {
             Some(Commands::Log(args)) => log::handle_log(&args).await,
             None => InteractiveCommand::execute().await,
         };
-
-        // 确保 EventHub 优雅关闭
-        if let Err(e) = EventHub::global().graceful_shutdown(3, 5).await {
-            tracing::warn!("EventHub graceful shutdown failed: {}", e);
-        }
 
         // 根据命令执行结果决定退出状态
         match &result {
