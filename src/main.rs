@@ -92,8 +92,8 @@ async fn main() -> Result<()> {
     // 初始化日志系统
     // INFO/DEBUG/TRACE → stdout, WARN/ERROR → stderr
     use tracing_subscriber::fmt::writer::MakeWriterExt;
-    let stdout = std::io::stdout.with_max_level(tracing::Level::INFO);
-    let stderr = std::io::stderr.with_min_level(tracing::Level::WARN);
+    let stdout = std::io::stdout.with_min_level(tracing::Level::INFO);
+    let stderr = std::io::stderr.with_max_level(tracing::Level::WARN);
 
     tracing_subscriber::fmt()
         .without_time()

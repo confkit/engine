@@ -7,6 +7,7 @@ pub mod task_logger;
 pub use task_logger::TaskLogger;
 
 /// 日志级别
+#[allow(dead_code)]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum LogLevel {
     Trace,

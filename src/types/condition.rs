@@ -1,4 +1,4 @@
-//! Author: xiaoYown  
+//! Author: xiaoYown
 //! Created: 2025-09-13
 //! Description: Condition execution types
 
@@ -68,19 +68,6 @@ pub enum LogicalOperator {
     Or,
     /// 逻辑非 !
     Not,
-}
-
-/// 降级策略
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum FallbackStrategy {
-    /// 无条件执行（忽略条件）
-    ExecuteUnconditionally,
-    /// 跳过执行
-    SkipExecution,
-    /// 使用默认条件值
-    UseDefaultValue(bool),
-    /// 抛出错误
-    ThrowError,
 }
 
 impl ConditionValue {

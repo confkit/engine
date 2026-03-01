@@ -35,6 +35,13 @@ impl Task {
         let timestamp = Local::now().format("%Y.%m.%d-%H:%M:%S%.3f");
         let log_path = format!("{log_dir}/[{timestamp}]-{task_id}.log");
 
+        // 立即创建日志文件
+        let path = std::path::Path::new(&log_path);
+        if let Some(parent) = path.parent() {
+            let _ = std::fs::create_dir_all(parent);
+        }
+        let _ = std::fs::OpenOptions::new().create(true).append(true).open(path);
+
         Self {
             id: task_id,
             started_at: Local::now(),

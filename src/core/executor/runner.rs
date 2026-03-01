@@ -59,7 +59,9 @@ impl Runner {
     }
 
     pub async fn start(&mut self) -> Result<()> {
-        // 使用新的 Task 方法
+        // 立即输出 task id，方便外部调用方获取
+        tracing::info!("Task ID: {}", self.task.id);
+
         self.task.prepare().await?;
         self.task.execute_steps().await?;
         self.task.cleanup().await?;
