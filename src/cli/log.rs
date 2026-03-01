@@ -3,27 +3,51 @@
 //! Description: Log subcommand implementation
 
 use anyhow::Result;
-use clap::Args;
+use clap::{Args, Subcommand};
 
-use crate::core::logger::log::print_task_log;
+use crate::core::logger::log;
 
-#[derive(Debug, Args)]
-pub struct LogArgs {
-    /// space name
-    #[arg(short, long)]
-    pub space: String,
-
-    /// project name
-    #[arg(short, long)]
-    pub project: String,
-
-    /// task id
-    #[arg(short, long)]
-    pub task: String,
+#[derive(Args)]
+pub struct LogCommand {
+    #[command(subcommand)]
+    command: LogSubcommand,
 }
 
-pub async fn handle_log(args: &LogArgs) -> Result<()> {
-    print_task_log(args.space.as_str(), args.project.as_str(), args.task.as_str())?;
+#[derive(Subcommand)]
+pub enum LogSubcommand {
+    /// List log files for a project.
+    List {
+        /// Space name.
+        #[arg(short, long)]
+        space: String,
+        /// Project name.
+        #[arg(short, long)]
+        project: String,
+    },
+    /// Show a specific task log.
+    Show {
+        /// Space name.
+        #[arg(short, long)]
+        space: String,
+        /// Project name.
+        #[arg(short, long)]
+        project: String,
+        /// Task ID or log filename fragment.
+        #[arg(short, long)]
+        task: String,
+    },
+}
 
-    Ok(())
+impl LogCommand {
+    pub async fn execute(self) -> Result<()> {
+        match self.command {
+            LogSubcommand::List { space, project } => {
+                log::list_task_logs(&space, &project)?;
+            }
+            LogSubcommand::Show { space, project, task } => {
+                log::print_task_log(&space, &project, &task)?;
+            }
+        }
+        Ok(())
+    }
 }

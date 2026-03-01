@@ -37,13 +37,13 @@ impl Runner {
 
         let host_log_dir = PathFormatter::log_project_dir(space_name, project_name);
 
-        // 创建基础任务以获取 task_id
-        let base_task = Task::new(&host_log_dir);
-        let task_id = base_task.id.clone();
+        // 创建任务
+        let mut task = Task::new(&host_log_dir);
+        let task_id = task.id.clone();
 
         // 创建执行上下文
         let context = ExecutionContext::new(
-            task_id.clone(),
+            task_id,
             space_name.to_string(),
             project_name.to_string(),
             &project_config,
@@ -51,8 +51,9 @@ impl Runner {
         )
         .await?;
 
-        // 创建带上下文的任务
-        let task = Task::with_context(&host_log_dir, context.clone(), project_config.clone());
+        // 设置上下文和项目配置
+        task.context = Some(context);
+        task.project_config = Some(project_config);
 
         Ok(Self { task })
     }

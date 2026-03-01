@@ -16,7 +16,7 @@ use builder::BuilderCommand;
 use clean::CleanArgs;
 use image::ImageCommand;
 use interactive::InteractiveCommand;
-use log::LogArgs;
+use log::LogCommand;
 use run::RunArgs;
 
 #[derive(Parser)]
@@ -43,7 +43,7 @@ pub enum Commands {
     /// Clean logs
     Clean(CleanArgs),
     /// Log management.
-    Log(LogArgs),
+    Log(LogCommand),
 }
 
 impl Cli {
@@ -53,7 +53,7 @@ impl Cli {
             Some(Commands::Image(cmd)) => cmd.execute().await,
             Some(Commands::Run(args)) => run::handle_run(&args).await,
             Some(Commands::Clean(args)) => clean::handle_clean(&args).await,
-            Some(Commands::Log(args)) => log::handle_log(&args).await,
+            Some(Commands::Log(cmd)) => cmd.execute().await,
             None => InteractiveCommand::execute().await,
         };
 

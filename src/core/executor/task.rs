@@ -46,18 +46,6 @@ impl Task {
         }
     }
 
-    /// 创建带有执行上下文和项目配置的任务
-    pub fn with_context(
-        log_dir: &str,
-        context: ExecutionContext,
-        project_config: ConfKitProjectConfig,
-    ) -> Self {
-        let mut task = Self::new(log_dir);
-        task.context = Some(context);
-        task.project_config = Some(project_config);
-        task
-    }
-
     /// 记录指定级别的日志
     pub fn log_with_level(&self, message: &str, level: LogLevel) -> Result<(), anyhow::Error> {
         self.logger().log_with_level(message, level)
