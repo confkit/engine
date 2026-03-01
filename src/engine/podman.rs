@@ -32,6 +32,15 @@ impl PodmanEngine {
         Ok(())
     }
 
+    // 检测 Podman 守护进程是否正在运行
+    pub async fn ensure_running() -> Result<()> {
+        let output = Command::new("podman").arg("info").output()?;
+        if !output.status.success() {
+            return Err(anyhow::anyhow!("Podman is not running. Please start Podman first."));
+        }
+        Ok(())
+    }
+
     // ================================================ Image ================================================
 
     // 检查镜像是否存在

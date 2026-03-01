@@ -6,6 +6,7 @@ use anyhow::Result;
 use clap::{Args, Subcommand};
 
 use crate::core::builder::image::ImageBuilder;
+use crate::engine::ConfKitEngine;
 
 #[derive(Args)]
 pub struct ImageCommand {
@@ -43,6 +44,8 @@ pub enum ImageSubcommand {
 
 impl ImageCommand {
     pub async fn execute(self) -> Result<()> {
+        ConfKitEngine::ensure_running().await?;
+
         match self.command {
             ImageSubcommand::List {} => {
                 ImageBuilder::print_list().await?;
