@@ -6,6 +6,7 @@ use anyhow::Result;
 use clap::{Args, Subcommand};
 
 use crate::core::builder::container::ContainerBuilder;
+use crate::engine::ConfKitEngine;
 
 #[derive(Args)]
 pub struct BuilderCommand {
@@ -69,6 +70,8 @@ pub enum BuilderSubcommand {
 
 impl BuilderCommand {
     pub async fn execute(self) -> Result<()> {
+        ConfKitEngine::ensure_running().await?;
+
         match self.command {
             BuilderSubcommand::List {} => {
                 ContainerBuilder::print_list().await?;

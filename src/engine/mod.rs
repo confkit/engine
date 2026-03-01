@@ -34,6 +34,15 @@ impl ConfKitEngine {
         }
     }
 
+    // 检测容器引擎是否正在运行
+    pub async fn ensure_running() -> Result<()> {
+        let engine = Self::get_engine().await?;
+        match engine {
+            Engine::Docker => DockerEngine::ensure_running().await,
+            Engine::Podman => PodmanEngine::ensure_running().await,
+        }
+    }
+
     // 设置当前宿主机使用的引擎
     pub async fn set_engine(engine: Engine) -> Result<()> {
         // 检测当前宿主机是否支持引擎

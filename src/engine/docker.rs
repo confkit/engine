@@ -33,6 +33,17 @@ impl DockerEngine {
         Ok(())
     }
 
+    // 检测 Docker 守护进程是否正在运行
+    pub async fn ensure_running() -> Result<()> {
+        let output = Command::new("docker").arg("info").output()?;
+        if !output.status.success() {
+            return Err(anyhow::anyhow!(
+                "Docker daemon is not running. Please start Docker first."
+            ));
+        }
+        Ok(())
+    }
+
     // ================================================ Image ================================================
 
     // 检查镜像是否存在
