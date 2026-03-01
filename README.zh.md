@@ -152,6 +152,9 @@ confkit builder start golang-builder
 # 运行构建任务
 confkit run --space hello --project hello-app
 
+# 通过命令行参数注入环境变量
+confkit run --space hello --project hello-app -e KEY1=value1 -e KEY2=value2
+
 # 查看日志
 confkit log list --space hello --project hello-app
 confkit log show --space hello --project hello-app <filename>
@@ -304,6 +307,19 @@ environment:
   BUILD_VERSION: "1.0.0"
   CUSTOM_VAR: "${PROJECT_NAME}-${GIT_COMMIT_SHORT}"
 ```
+
+#### 命令行参数注入
+
+通过 `-e` / `--environments` 参数在运行时注入环境变量，无需修改配置文件：
+
+```bash
+confkit run --space hello --project hello-app \
+  -e ENVIRONMENT=production \
+  -e BUILD_VERSION=2.0.0 \
+  -e API_URL=https://api.example.com
+```
+
+通过命令行注入的环境变量会与配置文件中的环境变量合并，命令行参数的优先级更高（会覆盖同名变量）。变量格式为 `KEY=VALUE`，格式不正确的条目会被跳过并输出警告。
 
 #### 交互式环境变量
 

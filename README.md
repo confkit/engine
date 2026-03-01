@@ -146,6 +146,9 @@ confkit builder start golang-builder
 # Run build tasks
 confkit run --space hello --project hello-app
 
+# Inject environment variables via command line
+confkit run --space hello --project hello-app -e KEY1=value1 -e KEY2=value2
+
 # View logs
 confkit log list --space hello --project hello-app
 confkit log show --space hello --project hello-app <filename>
@@ -296,6 +299,19 @@ environment:
   BUILD_VERSION: "1.0.0"
   CUSTOM_VAR: "${PROJECT_NAME}-${GIT_COMMIT_SHORT}"
 ```
+
+#### Command Line Injection
+
+Inject environment variables at runtime via the `-e` / `--environments` flag, without modifying configuration files:
+
+```bash
+confkit run --space hello --project hello-app \
+  -e ENVIRONMENT=production \
+  -e BUILD_VERSION=2.0.0 \
+  -e API_URL=https://api.example.com
+```
+
+Environment variables injected via command line are merged with those defined in the configuration file. Command line arguments take higher priority and will override variables with the same name. The format is `KEY=VALUE`; malformed entries are skipped with a warning.
 
 #### Interactive Environment Variables
 
