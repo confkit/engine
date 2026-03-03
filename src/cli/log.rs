@@ -36,6 +36,18 @@ pub enum LogSubcommand {
         #[arg(short, long)]
         task: String,
     },
+    /// Show task metadata info.
+    Info {
+        /// Space name.
+        #[arg(short, long)]
+        space: String,
+        /// Project name.
+        #[arg(short, long)]
+        project: String,
+        /// Task ID.
+        #[arg(short, long)]
+        task: String,
+    },
 }
 
 impl LogCommand {
@@ -46,6 +58,9 @@ impl LogCommand {
             }
             LogSubcommand::Show { space, project, task } => {
                 log::print_task_log(&space, &project, &task)?;
+            }
+            LogSubcommand::Info { space, project, task } => {
+                log::print_task_info(&space, &project, &task)?;
             }
         }
         Ok(())

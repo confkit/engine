@@ -13,6 +13,7 @@ use crate::core::clean::volumes::VolumesCleaner;
 use crate::formatter::log::LogFormatter;
 use crate::infra::logger::LogLevel;
 use crate::infra::logger::TaskLogger;
+use crate::shared::constants::{TASK_LOG_FILE, TASK_META_FILE};
 use crate::types::config::ConfKitProjectConfig;
 use crate::utils::fs::make_dir_with_permissions;
 
@@ -43,8 +44,8 @@ impl Task {
         let task_dir_name = format!("{time_stamp}-{task_id}");
 
         let log_dir = format!("{project_log_dir}/{date}/{task_dir_name}");
-        let log_file_path = format!("{log_dir}/task.log");
-        let metadata_path = format!("{log_dir}/metadata.json");
+        let log_file_path = format!("{log_dir}/{TASK_LOG_FILE}");
+        let metadata_path = format!("{log_dir}/{TASK_META_FILE}");
 
         // 创建任务日志目录
         let _ = std::fs::create_dir_all(&log_dir);

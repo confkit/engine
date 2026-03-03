@@ -7,6 +7,7 @@ use std::fs;
 
 use crate::core::executor::types::TaskMetadata;
 use crate::formatter::path::PathFormatter;
+use crate::shared::constants::{TASK_LOG_FILE, TASK_META_FILE};
 
 /// 列出指定项目的所有任务日志
 pub fn list_task_logs(space_name: &str, project_name: &str) -> Result<()> {
@@ -66,7 +67,7 @@ pub fn list_task_logs(space_name: &str, project_name: &str) -> Result<()> {
             total_tasks += 1;
             let task_path =
                 PathFormatter::log_task_dir(space_name, project_name, date, task_dir_name);
-            let metadata_path = format!("{}/metadata.json", task_path);
+            let metadata_path = format!("{}/{}", task_path, TASK_META_FILE);
 
             if let Ok(content) = fs::read_to_string(&metadata_path) {
                 if let Ok(meta) = serde_json::from_str::<TaskMetadata>(&content) {
@@ -99,11 +100,13 @@ pub fn list_task_logs(space_name: &str, project_name: &str) -> Result<()> {
     Ok(())
 }
 
-/// 打印指定任务的日志内容
-pub fn print_task_log(space_name: &str, project_name: &str, task_id: &str) -> Result<()> {
+/// 根据 task_id 查找任务目录路径
+fn find_task_dir(
+    space_name: &str,
+    project_name: &str,
+    task_id: &str,
+) -> Result<Option<std::path::PathBuf>> {
     let project_dir = PathFormatter::log_project_dir(space_name, project_name);
-
-    // 遍历日期目录 -> 任务目录，匹配 task_id
     let date_dirs = fs::read_dir(&project_dir)?;
 
     for date_entry in date_dirs {
@@ -122,43 +125,112 @@ pub fn print_task_log(space_name: &str, project_name: &str, task_id: &str) -> Re
             let dir_name = task_entry.file_name();
             let dir_name = dir_name.to_string_lossy();
 
-            if !dir_name.ends_with(task_id) {
-                continue;
+            if dir_name.ends_with(task_id) {
+                return Ok(Some(task_entry.path()));
             }
-
-            // 打印 metadata 摘要
-            let metadata_path = format!("{}/metadata.json", task_entry.path().display());
-            if let Ok(content) = fs::read_to_string(&metadata_path) {
-                if let Ok(meta) = serde_json::from_str::<TaskMetadata>(&content) {
-                    let duration_str = match meta.duration_ms {
-                        Some(ms) => format!("{:.1}s", ms as f64 / 1000.0),
-                        None => "-".to_string(),
-                    };
-                    tracing::info!(
-                        "Task: {} | Status: {:?} | Duration: {} | Steps: {}",
-                        meta.task_id,
-                        meta.status,
-                        duration_str,
-                        meta.steps.len()
-                    );
-                    tracing::info!("---");
-                }
-            }
-
-            // 打印日志内容
-            let log_path = format!("{}/task.log", task_entry.path().display());
-            match fs::read_to_string(&log_path) {
-                Ok(content) => {
-                    tracing::info!("{}", content);
-                }
-                Err(_) => {
-                    tracing::warn!("Log file not found at: {}", log_path);
-                }
-            }
-            return Ok(());
         }
     }
 
-    tracing::warn!("Log not found for task '{}'", task_id);
+    Ok(None)
+}
+
+/// 打印指定任务的日志内容
+pub fn print_task_log(space_name: &str, project_name: &str, task_id: &str) -> Result<()> {
+    let task_dir = match find_task_dir(space_name, project_name, task_id)? {
+        Some(path) => path,
+        None => {
+            tracing::warn!("Log not found for task '{}'", task_id);
+            return Ok(());
+        }
+    };
+
+    // 打印 metadata 摘要
+    let metadata_path = task_dir.join(TASK_META_FILE);
+    if let Ok(content) = fs::read_to_string(&metadata_path) {
+        if let Ok(meta) = serde_json::from_str::<TaskMetadata>(&content) {
+            let duration_str = match meta.duration_ms {
+                Some(ms) => format!("{:.1}s", ms as f64 / 1000.0),
+                None => "-".to_string(),
+            };
+            tracing::info!(
+                "Task: {} | Status: {:?} | Duration: {} | Steps: {}",
+                meta.task_id,
+                meta.status,
+                duration_str,
+                meta.steps.len()
+            );
+            tracing::info!("---");
+        }
+    }
+
+    // 打印日志内容
+    let log_path = task_dir.join(TASK_LOG_FILE);
+    match fs::read_to_string(&log_path) {
+        Ok(content) => {
+            tracing::info!("{}", content);
+        }
+        Err(_) => {
+            tracing::warn!("Log file not found at: {}", log_path.display());
+        }
+    }
+
+    Ok(())
+}
+
+/// 打印指定任务的元数据信息
+pub fn print_task_info(space_name: &str, project_name: &str, task_id: &str) -> Result<()> {
+    let task_dir = match find_task_dir(space_name, project_name, task_id)? {
+        Some(path) => path,
+        None => {
+            tracing::warn!("Task not found: '{}'", task_id);
+            return Ok(());
+        }
+    };
+
+    let metadata_path = task_dir.join(TASK_META_FILE);
+    let content = match fs::read_to_string(&metadata_path) {
+        Ok(c) => c,
+        Err(_) => {
+            tracing::warn!("Metadata not found for task '{}'", task_id);
+            return Ok(());
+        }
+    };
+
+    let meta: TaskMetadata = serde_json::from_str(&content)?;
+
+    let duration_str = match meta.duration_ms {
+        Some(ms) => format!("{:.1}s", ms as f64 / 1000.0),
+        None => "-".to_string(),
+    };
+
+    tracing::info!("Task ID:      {}", meta.task_id);
+    tracing::info!("Space:        {}", meta.space_name);
+    tracing::info!("Project:      {}", meta.project_name);
+    tracing::info!("Status:       {:?}", meta.status);
+    tracing::info!("Started at:   {}", meta.started_at);
+    tracing::info!("Finished at:  {}", meta.finished_at.as_deref().unwrap_or("-"));
+    tracing::info!("Duration:     {}", duration_str);
+    tracing::info!("Steps:        {}", meta.steps.len());
+
+    if !meta.steps.is_empty() {
+        tracing::info!("");
+        for (i, step) in meta.steps.iter().enumerate() {
+            let step_duration = match step.duration_ms {
+                Some(ms) => format!("{:.1}s", ms as f64 / 1000.0),
+                None => "-".to_string(),
+            };
+            tracing::info!(
+                "  [Step {}] {}  [{:?}]  {}",
+                i + 1,
+                step.name,
+                step.status,
+                step_duration
+            );
+            if let Some(err) = &step.error {
+                tracing::info!("           Error: {}", err);
+            }
+        }
+    }
+
     Ok(())
 }
