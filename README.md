@@ -151,7 +151,8 @@ confkit run --space hello --project hello-app -e KEY1=value1 -e KEY2=value2
 
 # View logs
 confkit log list --space hello --project hello-app
-confkit log show --space hello --project hello-app <filename>
+confkit log show --space hello --project hello-app --task <task_id>
+confkit log info --space hello --project hello-app --task <task_id>
 ```
 
 ## 🏗 Builder Management
@@ -239,16 +240,23 @@ steps:
 
 ## 📋 Log Management
 
+Logs are stored in a hierarchical directory structure:
+
+```
+volumes/logs/<space>/<project>/<date>/<time>-<task_id>/
+  ├── task.meta.json   # Task metadata (status, duration, steps)
+  └── task.log         # Full task log output
+```
+
 ```bash
-# List log files
+# List task logs for a project
 confkit log list --space hello --project hello-app
 
-# View specific log
-confkit log show --space hello --project hello-app abc123
+# View task log content
+confkit log show --space hello --project hello-app --task <task_id>
 
-# Supports multiple matching methods
-confkit log show --space hello --project hello-app "2025-01-13_12-00-00"
-confkit log show --space hello --project hello-app complete-filename.txt
+# View task metadata (status, duration, step details)
+confkit log info --space hello --project hello-app --task <task_id>
 ```
 
 ## 🖥 Interactive Mode
@@ -447,14 +455,13 @@ When a condition expression cannot be parsed or evaluated:
 - Environment variable values are cached during task execution
 - Simple expressions evaluate in < 10ms, complex expressions in < 50ms
 
-### Smart Log Matching
+### Structured Task Logs
 
-Supports multiple log file matching methods:
+Each task produces structured output:
 
-- Full file name
-- File name fragment
-- Task ID fragment
-- Timestamp matching
+- **`task.meta.json`**: Real-time metadata including task status, start/finish time, duration, and per-step results (status, exit code, errors)
+- **`task.log`**: Full timestamped log output
+- Metadata is updated after each step, so a crashed task's progress can still be inspected
 
 ### Layered Builder Management
 

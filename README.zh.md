@@ -157,7 +157,8 @@ confkit run --space hello --project hello-app -e KEY1=value1 -e KEY2=value2
 
 # 查看日志
 confkit log list --space hello --project hello-app
-confkit log show --space hello --project hello-app <filename>
+confkit log show --space hello --project hello-app --task <task_id>
+confkit log info --space hello --project hello-app --task <task_id>
 ```
 
 ## 🏗 Builder 管理
@@ -246,16 +247,23 @@ steps:
 
 ## 📋 日志管理
 
+日志按层级目录结构存储：
+
+```
+volumes/logs/<space>/<project>/<date>/<time>-<task_id>/
+  ├── task.meta.json   # 任务元数据（状态、耗时、步骤结果）
+  └── task.log         # 完整任务日志输出
+```
+
 ```bash
-# 列出日志文件
+# 列出项目的任务日志
 confkit log list --space hello --project hello-app
 
-# 查看具体日志
-confkit log show --space hello --project hello-app abc123
+# 查看任务日志内容
+confkit log show --space hello --project hello-app --task <task_id>
 
-# 支持多种匹配方式
-confkit log show --space hello --project hello-app "2025-01-13_12-00-00"
-confkit log show --space hello --project hello-app complete-filename.txt
+# 查看任务元数据（状态、耗时、各步骤详情）
+confkit log info --space hello --project hello-app --task <task_id>
 ```
 
 ## 🖥 交互式模式
@@ -455,14 +463,13 @@ steps:
 - 任务执行期间缓存环境变量值
 - 简单表达式求值 < 10ms，复杂表达式 < 50ms
 
-### 智能日志匹配
+### 结构化任务日志
 
-支持多种日志文件匹配方式：
+每个任务产生结构化输出：
 
-- 完整文件名
-- 文件名片段
-- 任务 ID 片段
-- 时间戳匹配
+- **`task.meta.json`**：实时元数据，包含任务状态、开始/结束时间、总耗时、以及各步骤的执行结果（状态、退出码、错误信息）
+- **`task.log`**：带时间戳的完整日志输出
+- 元数据在每个步骤执行完毕后实时更新，即使任务中途崩溃也可查看执行进度
 
 ### 分层构建器管理
 
