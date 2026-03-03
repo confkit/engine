@@ -8,7 +8,7 @@ use uuid::Uuid;
 
 use super::context::ExecutionContext;
 use super::step_executor::StepExecutor;
-use super::types::{StepResult, StepStatus};
+use super::types::{StepMetadata, StepResult, StepStatus, TaskMetadata, TaskStatus};
 use crate::core::clean::volumes::VolumesCleaner;
 use crate::formatter::log::LogFormatter;
 use crate::infra::logger::LogLevel;
@@ -21,7 +21,9 @@ pub struct Task {
     pub id: String,
     pub started_at: DateTime<Local>,
     pub finished_at: Option<DateTime<Local>>,
-    pub log_path: String,
+    pub log_dir: String,
+    pub log_file_path: String,
+    pub metadata_path: String,
 
     // 新增字段用于业务逻辑执行
     pub context: Option<ExecutionContext>,
@@ -33,25 +35,31 @@ pub struct Task {
 }
 
 impl Task {
-    pub fn new(log_dir: &str) -> Self {
+    pub fn new(project_log_dir: &str) -> Self {
         let task_id = Self::generate_task_id();
-        let timestamp = Local::now().format("%Y.%m.%d-%H:%M:%S%.3f");
-        let log_path = format!("{log_dir}/[{timestamp}]-{task_id}.log");
+        let now = Local::now();
+        let date = now.format("%Y-%m-%d").to_string();
+        let time_stamp = now.format("%H.%M.%S").to_string();
+        let task_dir_name = format!("{time_stamp}-{task_id}");
 
-        // 立即创建日志文件
-        let path = std::path::Path::new(&log_path);
-        if let Some(parent) = path.parent() {
-            let _ = std::fs::create_dir_all(parent);
-        }
-        let _ = std::fs::OpenOptions::new().create(true).append(true).open(path);
+        let log_dir = format!("{project_log_dir}/{date}/{task_dir_name}");
+        let log_file_path = format!("{log_dir}/task.log");
+        let metadata_path = format!("{log_dir}/metadata.json");
 
-        let task_logger = TaskLogger::new(log_path.clone());
+        // 创建任务日志目录
+        let _ = std::fs::create_dir_all(&log_dir);
+        // 创建日志文件
+        let _ = std::fs::OpenOptions::new().create(true).append(true).open(&log_file_path);
+
+        let task_logger = TaskLogger::new(log_file_path.clone());
 
         Self {
             id: task_id,
-            started_at: Local::now(),
+            started_at: now,
             finished_at: None,
-            log_path,
+            log_dir,
+            log_file_path,
+            metadata_path,
             context: None,
             project_config: None,
             step_results: Vec::new(),
@@ -157,6 +165,7 @@ impl Task {
             let result = executor.execute_step(step, step_number, total_steps).await?;
 
             self.step_results.push(result.clone());
+            self.update_metadata()?;
 
             // 检查是否需要继续执行
             if result.status == StepStatus::Failed && !step_continue_on_error {
@@ -270,5 +279,64 @@ impl Task {
     /// 获取总执行时长（毫秒）
     pub fn get_total_duration(&self) -> u64 {
         self.step_results.iter().filter_map(|r| r.duration_ms).sum()
+    }
+
+    /// 写入初始 metadata（status: running）
+    pub fn write_initial_metadata(&self) -> Result<()> {
+        let context = self.context.as_ref().ok_or_else(|| anyhow::anyhow!("Context not set"))?;
+        let metadata = TaskMetadata {
+            task_id: self.id.clone(),
+            space_name: context.space_name.clone(),
+            project_name: context.project_name.clone(),
+            status: TaskStatus::Running,
+            started_at: self.started_at.to_rfc3339(),
+            finished_at: None,
+            duration_ms: None,
+            steps: vec![],
+        };
+        self.save_metadata(&metadata)
+    }
+
+    /// 更新 metadata（追加 step 结果）
+    pub fn update_metadata(&self) -> Result<()> {
+        let context = self.context.as_ref().ok_or_else(|| anyhow::anyhow!("Context not set"))?;
+        let steps: Vec<StepMetadata> = self.step_results.iter().map(StepMetadata::from).collect();
+        let metadata = TaskMetadata {
+            task_id: self.id.clone(),
+            space_name: context.space_name.clone(),
+            project_name: context.project_name.clone(),
+            status: TaskStatus::Running,
+            started_at: self.started_at.to_rfc3339(),
+            finished_at: None,
+            duration_ms: None,
+            steps,
+        };
+        self.save_metadata(&metadata)
+    }
+
+    /// 完成任务 metadata
+    pub fn finalize_metadata(&mut self) -> Result<()> {
+        self.finish();
+        let context = self.context.as_ref().ok_or_else(|| anyhow::anyhow!("Context not set"))?;
+        let steps: Vec<StepMetadata> = self.step_results.iter().map(StepMetadata::from).collect();
+        let has_failure = self.step_results.iter().any(|r| r.status == StepStatus::Failed);
+        let total_duration = self.get_total_duration();
+        let metadata = TaskMetadata {
+            task_id: self.id.clone(),
+            space_name: context.space_name.clone(),
+            project_name: context.project_name.clone(),
+            status: if has_failure { TaskStatus::Failed } else { TaskStatus::Completed },
+            started_at: self.started_at.to_rfc3339(),
+            finished_at: self.finished_at.map(|t| t.to_rfc3339()),
+            duration_ms: Some(total_duration),
+            steps,
+        };
+        self.save_metadata(&metadata)
+    }
+
+    fn save_metadata(&self, metadata: &TaskMetadata) -> Result<()> {
+        let json = serde_json::to_string_pretty(metadata)?;
+        std::fs::write(&self.metadata_path, json)?;
+        Ok(())
     }
 }
