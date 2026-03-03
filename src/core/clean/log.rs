@@ -23,31 +23,9 @@ impl LogCleaner {
     pub async fn clean_space(space_name: &str) -> Result<()> {
         tracing::info!("Cleaning space: {}", space_name);
 
-        let log_dir = HOST_LOG_DIR;
+        let space_dir = PathFormatter::log_space_dir(space_name);
+        VolumesCleaner::clean_dir(&space_dir, true).await?;
 
-        // 检查目录是否存在
-        if !std::path::Path::new(&log_dir).exists() {
-            tracing::error!("Log directory does not exist: {}", log_dir);
-            return Ok(());
-        }
-
-        // 获取 log_dir 下的所有目录
-        let dirs = fs::read_dir(log_dir)?;
-
-        // 遍历 dirs 下的所有目录, 删除所有目录
-        for dir in dirs {
-            if dir.is_err() {
-                continue;
-            }
-            let dir = dir.unwrap();
-            let dir_name = dir.file_name().to_string_lossy().to_string();
-            // 匹配 <space_name>
-            if !dir_name.starts_with(format!("<{space_name}>").as_str()) {
-                continue;
-            }
-            // 删除目录
-            VolumesCleaner::clean_dir(&format!("{log_dir}/{dir_name}"), true).await?;
-        }
         Ok(())
     }
 
@@ -70,22 +48,39 @@ impl LogCleaner {
         );
 
         let project_log_dir = PathFormatter::log_project_dir(space_name, project_name);
-        // 获取 log_dir 下的所有目录
-        let dirs = fs::read_dir(project_log_dir)?;
+        // 遍历日期目录
+        let date_dirs = match fs::read_dir(&project_log_dir) {
+            Ok(dirs) => dirs,
+            Err(_) => return Ok(()),
+        };
 
-        // 遍历 dirs 下的所有目录, 删除所有目录
-        for dir in dirs {
-            if dir.is_err() {
+        for date_entry in date_dirs {
+            let date_entry = match date_entry {
+                Ok(e) => e,
+                Err(_) => continue,
+            };
+            if !date_entry.path().is_dir() {
                 continue;
             }
-            let dir = dir.unwrap();
-            let dir_name = dir.file_name().to_string_lossy().to_string();
-            // 匹配 <task_id>
-            if !dir_name.ends_with(format!("{task_id}.log").as_str()) {
-                continue;
+
+            let task_dirs = match fs::read_dir(date_entry.path()) {
+                Ok(dirs) => dirs,
+                Err(_) => continue,
+            };
+
+            for task_entry in task_dirs {
+                let task_entry = match task_entry {
+                    Ok(e) => e,
+                    Err(_) => continue,
+                };
+                let dir_name = task_entry.file_name();
+                let dir_name = dir_name.to_string_lossy();
+
+                // 匹配目录名后缀中的 task_id
+                if dir_name.ends_with(task_id) {
+                    VolumesCleaner::clean_dir(task_entry.path().to_str().unwrap(), true).await?;
+                }
             }
-            // 删除文件
-            VolumesCleaner::remove_file(dir.path().to_str().unwrap()).await?;
         }
         Ok(())
     }

@@ -62,10 +62,15 @@ impl Runner {
         // 立即输出 task id，方便外部调用方获取
         self.task.info(&format!("Task ID: {}", self.task.id))?;
 
+        // 写入初始 metadata
+        self.task.write_initial_metadata()?;
+
         self.task.prepare().await?;
         self.task.execute_steps().await?;
         self.task.cleanup().await?;
-        self.task.finish();
+
+        // 完成并写入最终 metadata
+        self.task.finalize_metadata()?;
 
         // 输出执行摘要
         self.task.print_summary()?;
