@@ -8,6 +8,7 @@ mod builder;
 mod clean;
 mod custom;
 mod image;
+mod log;
 mod main;
 mod run;
 mod ui;

@@ -141,16 +141,22 @@ images:
 # 查看帮助
 confkit --help
 
+# 查看版本
+confkit -v
+
 # 交互式模式（推荐新手使用）
 confkit
 
 # 管理构建器
 confkit builder list
-confkit builder create golang-builder
-confkit builder start golang-builder
+confkit builder create -n golang-builder
+confkit builder start -n golang-builder
 
 # 运行构建任务
 confkit run --space hello --project hello-app
+
+# 预览执行步骤（不实际执行）
+confkit run --space hello --project hello-app --dry-run
 
 # 通过命令行参数注入环境变量
 confkit run --space hello --project hello-app -e KEY1=value1 -e KEY2=value2
@@ -159,6 +165,14 @@ confkit run --space hello --project hello-app -e KEY1=value1 -e KEY2=value2
 confkit log list --space hello --project hello-app
 confkit log show --space hello --project hello-app --task <task_id>
 confkit log info --space hello --project hello-app --task <task_id>
+
+# 清理日志
+confkit log clean --all
+confkit log clean --space hello --project hello-app
+
+# 查看/校验配置
+confkit config show
+confkit config validate
 ```
 
 ## 🏗 Builder 管理
@@ -182,25 +196,31 @@ confkit image remove golang:1.24
 # 列出所有构建器状态
 confkit builder list
 
-# 创建构建器（基于docker-compose.yml）
-confkit builder create golang-builder
+# 创建构建器（基于 docker-compose.yml）
+confkit builder create -n golang-builder
 
 # 启动/停止构建器
-confkit builder start golang-builder
-confkit builder stop golang-builder
+confkit builder start -n golang-builder
+confkit builder stop -n golang-builder
 
 # 删除构建器
-confkit builder remove golang-builder
+confkit builder remove -n golang-builder
 
-# 健康检查
-confkit builder health golang-builder
+# 健康检查（所有容器）
+confkit builder health
+
+# 健康检查（指定容器）
+confkit builder health -n golang-builder
 ```
 
 ### 执行构建
 
 ```bash
 # 构建项目
-confkit exec --space <space_name> --project-name <project_name>
+confkit run --space <space_name> --project <project_name>
+
+# 预览执行步骤（不实际执行）
+confkit run --space <space_name> --project <project_name> --dry-run
 ```
 
 ### 项目配置示例
@@ -264,6 +284,43 @@ confkit log show --space hello --project hello-app --task <task_id>
 
 # 查看任务元数据（状态、耗时、各步骤详情）
 confkit log info --space hello --project hello-app --task <task_id>
+
+# 清理日志
+confkit log clean --all
+confkit log clean --space hello
+confkit log clean --space hello --project hello-app
+confkit log clean --space hello --project hello-app --task <task_id>
+```
+
+## 🧹 清理管理
+
+通过子命令清理 volumes 目录和日志文件：
+
+```bash
+# 清理指定目录
+confkit clean workspace
+confkit clean artifacts
+confkit clean cache
+confkit clean temp
+
+# 清理日志（等同于 `confkit log clean`）
+confkit clean log --all
+confkit clean log --space hello --project hello-app
+
+# 清理全部（workspace、artifacts、cache、temp、logs）
+confkit clean all
+```
+
+## ⚙️ 配置管理
+
+查看和校验当前 `.confkit.yml` 配置：
+
+```bash
+# 展示配置概览（引擎、空间、项目、镜像）
+confkit config show
+
+# 校验配置文件（检查路径、必填字段等）
+confkit config validate
 ```
 
 ## 🖥 交互式模式
@@ -271,14 +328,16 @@ confkit log info --space hello --project hello-app --task <task_id>
 启动交互式模式获得最佳用户体验：
 
 ```bash
-confkit interactive
+confkit
 ```
 
 **导航路径**：
 
-- `[BUILDER] Builder 管理` → 镜像和容器管理
 - `[RUN] Run 管理` → 执行项目构建任务
-- `[LOG] Log 管理` → 查看项目日志
+- `[BUILDER] Builder 管理` → 镜像和容器管理
+- `[IMAGE] Image 管理` → 管理构建镜像
+- `[LOG] Log 管理` → 列出、查看和检查任务日志
+- `[CLEAN] Clean 管理` → 清理日志、工作空间、产物、缓存、临时文件
 
 ## 🎯 特色功能
 

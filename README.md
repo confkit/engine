@@ -135,16 +135,22 @@ images:
 # View help
 confkit --help
 
+# View version
+confkit -v
+
 # Interactive mode (recommended for beginners)
 confkit
 
 # Manage builders
 confkit builder list
-confkit builder create golang-builder
-confkit builder start golang-builder
+confkit builder create -n golang-builder
+confkit builder start -n golang-builder
 
 # Run build tasks
 confkit run --space hello --project hello-app
+
+# Preview steps without executing (dry run)
+confkit run --space hello --project hello-app --dry-run
 
 # Inject environment variables via command line
 confkit run --space hello --project hello-app -e KEY1=value1 -e KEY2=value2
@@ -153,6 +159,14 @@ confkit run --space hello --project hello-app -e KEY1=value1 -e KEY2=value2
 confkit log list --space hello --project hello-app
 confkit log show --space hello --project hello-app --task <task_id>
 confkit log info --space hello --project hello-app --task <task_id>
+
+# Clean log files
+confkit log clean --all
+confkit log clean --space hello --project hello-app
+
+# View/validate configuration
+confkit config show
+confkit config validate
 ```
 
 ## 🏗 Builder Management
@@ -177,24 +191,30 @@ confkit image remove golang:1.24
 confkit builder list
 
 # Create builder (based on docker-compose.yml)
-confkit builder create golang-builder
+confkit builder create -n golang-builder
 
 # Start/stop builder
-confkit builder start golang-builder
-confkit builder stop golang-builder
+confkit builder start -n golang-builder
+confkit builder stop -n golang-builder
 
 # Remove builder
-confkit builder remove golang-builder
+confkit builder remove -n golang-builder
 
-# Health check
-confkit builder health golang-builder
+# Health check (all containers)
+confkit builder health
+
+# Health check (specific container)
+confkit builder health -n golang-builder
 ```
 
 ### Execute Build
 
 ```bash
 # Build project
-confkit exec --space <space_name> --project-name <project_name>
+confkit run --space <space_name> --project <project_name>
+
+# Preview steps without executing
+confkit run --space <space_name> --project <project_name> --dry-run
 ```
 
 ### Project Configuration Example
@@ -257,6 +277,43 @@ confkit log show --space hello --project hello-app --task <task_id>
 
 # View task metadata (status, duration, step details)
 confkit log info --space hello --project hello-app --task <task_id>
+
+# Clean log files
+confkit log clean --all
+confkit log clean --space hello
+confkit log clean --space hello --project hello-app
+confkit log clean --space hello --project hello-app --task <task_id>
+```
+
+## 🧹 Clean Management
+
+Clean up volumes and log files with subcommands:
+
+```bash
+# Clean specific volume directories
+confkit clean workspace
+confkit clean artifacts
+confkit clean cache
+confkit clean temp
+
+# Clean log files (same as `confkit log clean`)
+confkit clean log --all
+confkit clean log --space hello --project hello-app
+
+# Clean all (workspace, artifacts, cache, temp, logs)
+confkit clean all
+```
+
+## ⚙️ Config Management
+
+View and validate the current `.confkit.yml` configuration:
+
+```bash
+# Show configuration overview (engine, spaces, projects, images)
+confkit config show
+
+# Validate configuration file (check paths, required fields, etc.)
+confkit config validate
 ```
 
 ## 🖥 Interactive Mode
@@ -264,14 +321,16 @@ confkit log info --space hello --project hello-app --task <task_id>
 Start interactive mode for the best user experience:
 
 ```bash
-confkit interactive
+confkit
 ```
 
 **Navigation Path**:
 
-- `[BUILDER] Builder Management` → Image and container management
 - `[RUN] Run Management` → Execute project build tasks
-- `[LOG] Log Management` → View project logs
+- `[BUILDER] Builder Management` → Image and container management
+- `[IMAGE] Image Management` → Manage build images
+- `[LOG] Log Management` → List, view, and inspect task logs
+- `[CLEAN] Clean Management` → Clean logs, workspace, artifacts, cache, temp
 
 ## 🎯 Featured Functions
 

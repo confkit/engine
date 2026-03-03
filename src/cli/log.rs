@@ -5,6 +5,7 @@
 use anyhow::Result;
 use clap::{Args, Subcommand};
 
+use crate::core::clean::log::LogCleaner;
 use crate::core::logger::log;
 
 #[derive(Args)]
@@ -48,6 +49,21 @@ pub enum LogSubcommand {
         #[arg(short, long)]
         task: String,
     },
+    /// Clean log files.
+    Clean {
+        /// Space name.
+        #[arg(short, long)]
+        space: Option<String>,
+        /// Project name.
+        #[arg(short, long)]
+        project: Option<String>,
+        /// Task ID.
+        #[arg(short, long)]
+        task: Option<String>,
+        /// Clean all logs.
+        #[arg(short, long, default_value = "false")]
+        all: bool,
+    },
 }
 
 impl LogCommand {
@@ -61,6 +77,27 @@ impl LogCommand {
             }
             LogSubcommand::Info { space, project, task } => {
                 log::print_task_info(&space, &project, &task)?;
+            }
+            LogSubcommand::Clean { space, project, task, all } => {
+                match (task, project, space, all) {
+                    (Some(task), Some(project), Some(space), _) => {
+                        LogCleaner::clean_task(&space, &project, &task).await?;
+                    }
+                    (None, Some(project), Some(space), _) => {
+                        LogCleaner::clean_project(&space, &project).await?;
+                    }
+                    (None, None, Some(space), _) => {
+                        LogCleaner::clean_space(&space).await?;
+                    }
+                    (None, None, None, true) => {
+                        LogCleaner::clean_all().await?;
+                    }
+                    _ => {
+                        tracing::warn!(
+                            "Please provide valid parameters for log cleaning"
+                        );
+                    }
+                }
             }
         }
         Ok(())

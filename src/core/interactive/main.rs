@@ -16,6 +16,7 @@ impl InteractiveMenu {
             InteractiveMainUI::Run,
             InteractiveMainUI::Builder,
             InteractiveMainUI::Image,
+            InteractiveMainUI::Log,
             InteractiveMainUI::Clean,
             InteractiveMainUI::Quit,
         ];
@@ -36,6 +37,10 @@ impl InteractiveMenu {
                 }
                 InteractiveMainUI::Image => {
                     self.ui = InteractiveUI::Image;
+                    Ok(true)
+                }
+                InteractiveMainUI::Log => {
+                    self.ui = InteractiveUI::Log;
                     Ok(true)
                 }
                 InteractiveMainUI::Clean => {

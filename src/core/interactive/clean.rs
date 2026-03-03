@@ -17,6 +17,8 @@ impl InteractiveMenu {
             InteractiveCleanUI::Logs,
             InteractiveCleanUI::Workspace,
             InteractiveCleanUI::Artifacts,
+            InteractiveCleanUI::Cache,
+            InteractiveCleanUI::Temp,
             InteractiveCleanUI::All,
             InteractiveCleanUI::Back,
         ];
@@ -44,13 +46,34 @@ impl InteractiveMenu {
                     println!("✓ Artifacts cleaned successfully");
                 }
             }
+            InteractiveCleanUI::Cache => {
+                if self.confirm_action("clean cache files").await? {
+                    VolumesCleaner::clean_cache().await?;
+                    println!("✓ Cache cleaned successfully");
+                }
+            }
+            InteractiveCleanUI::Temp => {
+                if self.confirm_action("clean temp files").await? {
+                    VolumesCleaner::clean_temp().await?;
+                    println!("✓ Temp cleaned successfully");
+                }
+            }
             InteractiveCleanUI::All => {
-                if self.confirm_action("clean ALL (logs, workspace, artifacts)").await? {
+                if self
+                    .confirm_action("clean ALL (logs, workspace, artifacts, cache, temp)")
+                    .await?
+                {
                     println!("Cleaning workspace...");
                     VolumesCleaner::clean_workspace().await?;
 
                     println!("Cleaning artifacts...");
                     VolumesCleaner::clean_artifacts().await?;
+
+                    println!("Cleaning cache...");
+                    VolumesCleaner::clean_cache().await?;
+
+                    println!("Cleaning temp...");
+                    VolumesCleaner::clean_temp().await?;
 
                     println!("Cleaning all logs...");
                     LogCleaner::clean_all().await?;

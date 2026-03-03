@@ -2,7 +2,9 @@
 //! Created: 2025-07-21
 //! Description: Volumes cleaner implementation
 
-use crate::shared::constants::{HOST_ARTIFACTS_ROOT_DIR, HOST_WORKSPACE_DIR};
+use crate::shared::constants::{
+    HOST_ARTIFACTS_ROOT_DIR, HOST_CACHE_DIR, HOST_TEMP_DIR, HOST_WORKSPACE_DIR,
+};
 use anyhow::Result;
 use std::{fs, path::Path};
 
@@ -17,6 +19,16 @@ impl VolumesCleaner {
     /// 清空 artifacts, 但保留 artifacts 目录
     pub async fn clean_artifacts() -> Result<()> {
         Self::clean_dir(HOST_ARTIFACTS_ROOT_DIR, false).await
+    }
+
+    /// 清空 cache, 但保留 cache 目录
+    pub async fn clean_cache() -> Result<()> {
+        Self::clean_dir(HOST_CACHE_DIR, false).await
+    }
+
+    /// 清空 temp, 但保留 temp 目录
+    pub async fn clean_temp() -> Result<()> {
+        Self::clean_dir(HOST_TEMP_DIR, false).await
     }
 
     /// 清空目录
