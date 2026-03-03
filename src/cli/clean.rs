@@ -1,93 +1,104 @@
 //! Author: xiaoYown
 //! Created: 2025-07-21
-//! Description: Clean logs subcommand implementation
+//! Description: Clean subcommand implementation
 
 use crate::core::clean::{log::LogCleaner, volumes::VolumesCleaner};
 use anyhow::Result;
-use clap::Args;
+use clap::{Args, Subcommand};
 
-#[derive(Debug, Args)]
-pub struct CleanArgs {
-    /// clean log
-    #[arg(short, long)]
-    pub log: bool,
-
-    /// clean workspace
-    #[arg(long)]
-    pub workspace: bool,
-
-    /// clean artifacts
-    #[arg(long)]
-    pub artifacts: bool,
-
-    /// clean all
-    #[arg(short, long, default_value = "false")]
-    pub all: bool,
-
-    /// clean space
-    #[arg(short, long)]
-    pub space: Option<String>,
-
-    /// clean project
-    #[arg(short, long)]
-    pub project: Option<String>,
-
-    /// clean task
-    #[arg(short, long)]
-    pub task: Option<String>,
+#[derive(Args)]
+pub struct CleanCommand {
+    #[command(subcommand)]
+    command: CleanSubcommand,
 }
 
-/// 处理 run 命令
-pub async fn handle_clean(args: &CleanArgs) -> Result<()> {
-    if args.workspace {
-        tracing::debug!("Cleaning workspace");
+#[derive(Subcommand)]
+pub enum CleanSubcommand {
+    /// Clean workspace directory.
+    Workspace,
+    /// Clean artifacts directory.
+    Artifacts,
+    /// Clean cache directory.
+    Cache,
+    /// Clean temp directory.
+    Temp,
+    /// Clean log files.
+    Log {
+        /// Space name.
+        #[arg(short, long)]
+        space: Option<String>,
+        /// Project name.
+        #[arg(short, long)]
+        project: Option<String>,
+        /// Task ID.
+        #[arg(short, long)]
+        task: Option<String>,
+        /// Clean all logs.
+        #[arg(short, long, default_value = "false")]
+        all: bool,
+    },
+    /// Clean all (workspace, artifacts, cache, temp, logs).
+    All,
+}
 
-        VolumesCleaner::clean_workspace().await?;
-        return Ok(());
-    } else if args.artifacts {
-        tracing::debug!("Cleaning artifacts");
-
-        VolumesCleaner::clean_artifacts().await?;
-        return Ok(());
-    }
-
-    if args.log {
-        tracing::debug!("Cleaning log");
-
-        return match (&args.task, &args.project, &args.space, args.all) {
-            (Some(task), Some(project), Some(space), _) => {
-                LogCleaner::clean_task(space, project, task).await?;
-                Ok(())
+impl CleanCommand {
+    pub async fn execute(self) -> Result<()> {
+        match self.command {
+            CleanSubcommand::Workspace => {
+                tracing::debug!("Cleaning workspace");
+                VolumesCleaner::clean_workspace().await?;
             }
-            (None, Some(project), Some(space), _) => {
-                LogCleaner::clean_project(space, project).await?;
-                Ok(())
+            CleanSubcommand::Artifacts => {
+                tracing::debug!("Cleaning artifacts");
+                VolumesCleaner::clean_artifacts().await?;
             }
-            (None, None, Some(space), _) => {
-                LogCleaner::clean_space(space).await?;
-                Ok(())
+            CleanSubcommand::Cache => {
+                tracing::debug!("Cleaning cache");
+                VolumesCleaner::clean_cache().await?;
             }
-            (None, None, None, true) => {
+            CleanSubcommand::Temp => {
+                tracing::debug!("Cleaning temp");
+                VolumesCleaner::clean_temp().await?;
+            }
+            CleanSubcommand::Log { space, project, task, all } => {
+                tracing::debug!("Cleaning log");
+                handle_clean_log(space, project, task, all).await?;
+            }
+            CleanSubcommand::All => {
+                tracing::debug!("Cleaning all");
+                VolumesCleaner::clean_workspace().await?;
+                VolumesCleaner::clean_artifacts().await?;
+                VolumesCleaner::clean_cache().await?;
+                VolumesCleaner::clean_temp().await?;
                 LogCleaner::clean_all().await?;
-                Ok(())
             }
-            _ => {
-                tracing::warn!("Please provide valid parameters for log cleaning");
-                Ok(())
-            }
-        };
+        }
+        Ok(())
     }
+}
 
-    if args.all {
-        tracing::debug!("Cleaning all");
-
-        VolumesCleaner::clean_workspace().await?;
-        VolumesCleaner::clean_artifacts().await?;
-        LogCleaner::clean_all().await?;
-        return Ok(());
+async fn handle_clean_log(
+    space: Option<String>,
+    project: Option<String>,
+    task: Option<String>,
+    all: bool,
+) -> Result<()> {
+    match (task, project, space, all) {
+        (Some(task), Some(project), Some(space), _) => {
+            LogCleaner::clean_task(&space, &project, &task).await?;
+        }
+        (None, Some(project), Some(space), _) => {
+            LogCleaner::clean_project(&space, &project).await?;
+        }
+        (None, None, Some(space), _) => {
+            LogCleaner::clean_space(&space).await?;
+        }
+        (None, None, None, true) => {
+            LogCleaner::clean_all().await?;
+        }
+        _ => {
+            tracing::warn!("Please provide valid parameters for log cleaning");
+        }
     }
-
-    tracing::warn!("Please provide parameters to clean");
-
     Ok(())
 }

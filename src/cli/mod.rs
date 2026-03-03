@@ -7,13 +7,15 @@ use clap::{Parser, Subcommand};
 
 mod builder;
 mod clean;
+mod config;
 mod image;
 mod interactive;
 mod log;
 mod run;
 
 use builder::BuilderCommand;
-use clean::CleanArgs;
+use clean::CleanCommand;
+use config::ConfigCommand;
 use image::ImageCommand;
 use interactive::InteractiveCommand;
 use log::LogCommand;
@@ -22,8 +24,12 @@ use run::RunArgs;
 #[derive(Parser)]
 #[command(name = "confkit")]
 #[command(about = "confkit CLI - Configuration-driven build and deployment tool")]
-#[command(version)]
+#[command(version, disable_version_flag = true)]
 pub struct Cli {
+    /// Print version
+    #[arg(short = 'v', long = "version", action = clap::ArgAction::Version)]
+    pub version: (),
+
     /// Hide level information in logs
     #[arg(long, global = true)]
     pub hide_level: bool,
@@ -40,10 +46,12 @@ pub enum Commands {
     Image(ImageCommand),
     /// Run build task
     Run(RunArgs),
-    /// Clean logs
-    Clean(CleanArgs),
+    /// Clean resources.
+    Clean(CleanCommand),
     /// Log management.
     Log(LogCommand),
+    /// Configuration management.
+    Config(ConfigCommand),
 }
 
 impl Cli {
@@ -52,8 +60,9 @@ impl Cli {
             Some(Commands::Builder(cmd)) => cmd.execute().await,
             Some(Commands::Image(cmd)) => cmd.execute().await,
             Some(Commands::Run(args)) => run::handle_run(&args).await,
-            Some(Commands::Clean(args)) => clean::handle_clean(&args).await,
+            Some(Commands::Clean(cmd)) => cmd.execute().await,
             Some(Commands::Log(cmd)) => cmd.execute().await,
+            Some(Commands::Config(cmd)) => cmd.execute().await,
             None => InteractiveCommand::execute().await,
         };
 

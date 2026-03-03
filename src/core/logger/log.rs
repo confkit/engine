@@ -100,6 +100,87 @@ pub fn list_task_logs(space_name: &str, project_name: &str) -> Result<()> {
     Ok(())
 }
 
+/// 收集指定项目的所有任务条目，返回 (显示文本, task_dir_name) 列表，按时间倒序
+pub fn collect_task_entries(
+    space_name: &str,
+    project_name: &str,
+) -> Result<Vec<(String, String)>> {
+    let project_dir = PathFormatter::log_project_dir(space_name, project_name);
+
+    let date_dirs = match fs::read_dir(&project_dir) {
+        Ok(dir) => dir,
+        Err(_) => return Ok(vec![]),
+    };
+
+    let mut date_entries: Vec<_> = date_dirs
+        .filter_map(|e| {
+            let e = e.ok()?;
+            if e.path().is_dir() {
+                Some(e.file_name().to_str()?.to_string())
+            } else {
+                None
+            }
+        })
+        .collect();
+    date_entries.sort();
+
+    let mut result = vec![];
+
+    for date in &date_entries {
+        let date_path = PathFormatter::log_date_dir(space_name, project_name, date);
+        let task_dirs = match fs::read_dir(&date_path) {
+            Ok(dir) => dir,
+            Err(_) => continue,
+        };
+
+        let mut task_entries: Vec<_> = task_dirs
+            .filter_map(|e| {
+                let e = e.ok()?;
+                if e.path().is_dir() {
+                    Some(e.file_name().to_str()?.to_string())
+                } else {
+                    None
+                }
+            })
+            .collect();
+        task_entries.sort();
+
+        for task_dir_name in task_entries {
+            let task_path =
+                PathFormatter::log_task_dir(space_name, project_name, date, &task_dir_name);
+            let metadata_path = format!("{}/{}", task_path, TASK_META_FILE);
+
+            let label = if let Ok(content) = fs::read_to_string(&metadata_path) {
+                if let Ok(meta) = serde_json::from_str::<TaskMetadata>(&content) {
+                    let duration_str = match meta.duration_ms {
+                        Some(ms) => format!("{:.1}s", ms as f64 / 1000.0),
+                        None => "-".to_string(),
+                    };
+                    format!(
+                        "{}/{}  [{:?}]  {}  ({} steps)",
+                        date,
+                        task_dir_name,
+                        meta.status,
+                        duration_str,
+                        meta.steps.len()
+                    )
+                } else {
+                    format!("{}/{}", date, task_dir_name)
+                }
+            } else {
+                format!("{}/{}", date, task_dir_name)
+            };
+
+            result.push((label, task_dir_name));
+        }
+    }
+
+    // 倒序，最新的在前面
+    result.reverse();
+
+    Ok(result)
+}
+
 /// 根据 task_id 查找任务目录路径
 fn find_task_dir(
     space_name: &str,

@@ -231,4 +231,32 @@ impl ContainerBuilder {
         BuilderContainerFormatter::print_container_list(&containers);
         Ok(())
     }
+
+    // 打印容器健康状态
+    pub async fn print_health(name: Option<&str>) -> Result<()> {
+        if let Some(name) = name {
+            let info = Self::get_info(name).await?;
+            let status_icon = match info.status {
+                ContainerStatus::Up => "OK",
+                ContainerStatus::Unbuilt => "NOT CREATED",
+                _ => "DOWN",
+            };
+            tracing::info!("{}: {} ({})", info.name, status_icon, info.status);
+        } else {
+            let containers = Self::get_list().await?;
+            if containers.is_empty() {
+                tracing::info!("No builder containers found");
+                return Ok(());
+            }
+            for info in &containers {
+                let status_icon = match info.status {
+                    ContainerStatus::Up => "OK",
+                    ContainerStatus::Unbuilt => "NOT CREATED",
+                    _ => "DOWN",
+                };
+                tracing::info!("{}: {} ({})", info.name, status_icon, info.status);
+            }
+        }
+        Ok(())
+    }
 }

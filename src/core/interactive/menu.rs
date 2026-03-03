@@ -43,6 +43,11 @@ impl InteractiveMenu {
                         break;
                     }
                 }
+                InteractiveUI::Log => {
+                    if !self.log().await? {
+                        break;
+                    }
+                }
                 InteractiveUI::Clean => {
                     if !self.clean().await? {
                         break;

@@ -61,11 +61,12 @@ pub enum BuilderSubcommand {
         #[arg(short, long)]
         force: bool,
     },
-    // /// 健康检查
-    // Health {
-    //     /// 构建器名称
-    //     name: Option<String>,
-    // },
+    /// Check builder container health status.
+    Health {
+        /// Builder name (check all if not specified)
+        #[arg(short, long)]
+        name: Option<String>,
+    },
 }
 
 impl BuilderCommand {
@@ -100,11 +101,11 @@ impl BuilderCommand {
             BuilderSubcommand::Restart { name, all } => {
                 ContainerBuilder::restart(name, all).await?;
                 Ok(())
-            } // BuilderSubcommand::Health { name: _ } => {
-              //     // 健康检查功能暂时使用列表显示
-              //     println!("• 健康检查功能，显示构建器状态:");
-              //     container::handle_builder_list().await
-              // }
+            }
+            BuilderSubcommand::Health { name } => {
+                ContainerBuilder::print_health(name.as_deref()).await?;
+                Ok(())
+            }
         }
     }
 }
