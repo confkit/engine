@@ -21,46 +21,6 @@ pub type LogCallbackBox = LogCallback;
 pub struct CommandUtil;
 
 impl CommandUtil {
-    // 异步读取命令输出并输出日志
-    pub fn spawn_log_reader<R>(
-        reader: R,
-        callback: Option<LogCallbackArc>,
-        cancel_token: CancellationToken,
-    ) -> tokio::task::JoinHandle<()>
-    where
-        R: tokio::io::AsyncRead + Unpin + Send + 'static,
-    {
-        tokio::spawn(async move {
-            let reader = BufReader::new(reader);
-            let mut lines = reader.lines();
-            loop {
-                tokio::select! {
-                    _ = cancel_token.cancelled() => {
-                        tracing::debug!("Log reader cancelled");
-                        break;
-                    }
-                    line_result = lines.next_line() => {
-                        match line_result {
-                            Ok(Some(line)) => {
-                                if let Some(ref cb) = callback {
-                                    cb(&line);
-                                }
-                            }
-                            Ok(None) => {
-                                tracing::debug!("Log reader reached EOF");
-                                break;
-                            }
-                            Err(e) => {
-                                tracing::error!("Error reading line: {}", e);
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-        })
-    }
-
     // 执行命令并输出日志
     pub async fn execute_command_with_output(
         cmd: &mut Command,
@@ -80,19 +40,74 @@ impl CommandUtil {
         let cancel_token = CancellationToken::new();
         let mut child = cmd.stdout(Stdio::piped()).stderr(Stdio::piped()).spawn()?;
 
-        let mut log_handles = Vec::new();
+        // 将 stdout 和 stderr 合并到单一 task 中顺序读取，避免两个独立 task 的竞争导致乱序
+        let stdout = child.stdout.take();
+        let stderr = child.stderr.take();
+        let stdout_cb = on_stdout.map(|f| Arc::from(f) as LogCallbackArc);
+        let stderr_cb = on_stderr.map(|f| Arc::from(f) as LogCallbackArc);
+        let cancel_clone = cancel_token.clone();
 
-        if let Some(stdout) = child.stdout.take() {
-            let callback = on_stdout.map(|f| Arc::from(f) as LogCallbackArc);
-            let handle = Self::spawn_log_reader(stdout, callback, cancel_token.clone());
-            log_handles.push(handle);
-        }
+        let log_handle = tokio::spawn(async move {
+            let mut stdout_lines = stdout.map(|s| BufReader::new(s).lines());
+            let mut stderr_lines = stderr.map(|s| BufReader::new(s).lines());
+            let mut stdout_done = stdout_lines.is_none();
+            let mut stderr_done = stderr_lines.is_none();
 
-        if let Some(stderr) = child.stderr.take() {
-            let callback = on_stderr.map(|f| Arc::from(f) as LogCallbackArc);
-            let handle = Self::spawn_log_reader(stderr, callback, cancel_token.clone());
-            log_handles.push(handle);
-        }
+            loop {
+                if stdout_done && stderr_done {
+                    break;
+                }
+
+                tokio::select! {
+                    biased;
+
+                    _ = cancel_clone.cancelled() => {
+                        tracing::debug!("Log reader cancelled");
+                        break;
+                    }
+
+                    result = stdout_lines.as_mut().unwrap().next_line(),
+                        if !stdout_done =>
+                    {
+                        match result {
+                            Ok(Some(line)) => {
+                                if let Some(ref cb) = stdout_cb {
+                                    cb(&line);
+                                }
+                            }
+                            Ok(None) => {
+                                tracing::debug!("Stdout reader reached EOF");
+                                stdout_done = true;
+                            }
+                            Err(e) => {
+                                tracing::error!("Error reading stdout: {}", e);
+                                stdout_done = true;
+                            }
+                        }
+                    }
+
+                    result = stderr_lines.as_mut().unwrap().next_line(),
+                        if !stderr_done =>
+                    {
+                        match result {
+                            Ok(Some(line)) => {
+                                if let Some(ref cb) = stderr_cb {
+                                    cb(&line);
+                                }
+                            }
+                            Ok(None) => {
+                                tracing::debug!("Stderr reader reached EOF");
+                                stderr_done = true;
+                            }
+                            Err(e) => {
+                                tracing::error!("Error reading stderr: {}", e);
+                                stderr_done = true;
+                            }
+                        }
+                    }
+                }
+            }
+        });
 
         // 设置信号处理
         let cancel_token_clone = cancel_token.clone();
@@ -149,13 +164,11 @@ impl CommandUtil {
             }
         };
 
-        // 取消日志读取任务
-        cancel_token.cancel();
+        // 等待日志读取任务完成（进程退出后 pipe 自然 EOF，reader 会读完所有缓冲数据）
+        let _ = log_handle.await;
 
-        // 等待日志读取任务完成
-        for handle in log_handles {
-            let _ = handle.await;
-        }
+        // 所有日志读取完毕后再取消（清理信号处理任务）
+        cancel_token.cancel();
 
         match wait_result {
             Ok(Ok(status)) => {

@@ -50,7 +50,7 @@ impl StepExecutor {
             match evaluator.evaluate_string(condition) {
                 Ok(true) => {
                     self.task_logger.info(&format!(
-                        "[{}/{}] Condition satisfied: {}",
+                        "[Step {}/{}] Condition satisfied: {}",
                         step_number, total_steps, condition
                     ))?;
                 }
@@ -73,9 +73,8 @@ impl StepExecutor {
                 }
                 Err(e) => {
                     self.task_logger.warn(&format!(
-                        "[{}/{}] Failed to evaluate step condition '{}': {}. Executing step anyway.",
-                        step_number, total_steps,
-                        condition, e
+                        "[Step {}/{}] Failed to evaluate condition '{}': {}. Executing step anyway.",
+                        step_number, total_steps, condition, e
                     ))?;
                 }
             }
@@ -187,18 +186,18 @@ impl StepExecutor {
         step: &ConfKitStepConfig,
         working_dir: &str,
     ) -> Result<()> {
-        self.task_logger.info(&format!("[{}/{}] Step Details:", step_number, total_steps))?;
+        self.task_logger.info(&format!("[Step {}/{}] Details:", step_number, total_steps))?;
         self.task_logger
-            .info(&format!(" - Container: {}", step.container.as_deref().unwrap_or("Host")))?;
-        self.task_logger.info(&format!(" - Working Directory: {working_dir}"))?;
-        self.task_logger.info(&format!(" - Command Count: {}", step.commands.len()))?;
+            .info(&format!("  - Container: {}", step.container.as_deref().unwrap_or("Host")))?;
+        self.task_logger.info(&format!("  - Working Directory: {working_dir}"))?;
+        self.task_logger.info(&format!("  - Command Count: {}", step.commands.len()))?;
 
         if let Some(condition) = &step.condition {
-            self.task_logger.info(&format!(" - Condition: {}", condition))?;
+            self.task_logger.info(&format!("  - Condition: {}", condition))?;
         }
 
         if let Some(timeout) = &step.timeout {
-            self.task_logger.info(&format!(" - Timeout: {timeout}"))?;
+            self.task_logger.info(&format!("  - Timeout: {timeout}"))?;
         }
         Ok(())
     }
@@ -213,26 +212,27 @@ impl StepExecutor {
     ) -> Result<()> {
         match result.status {
             StepStatus::Success => self.task_logger.info(&format!(
-                "[{}/{}] Executed successfully (Duration: {:.1}s)",
+                "[Step {}/{}] Completed ({:.1}s)",
                 step_number,
                 total_steps,
                 result.duration_ms.unwrap_or(0) as f64 / 1000.0
             ))?,
             StepStatus::Failed => {
                 self.task_logger.error(&format!(
-                    "[{}/{}] Executed failed (Duration: {:.1}s)",
+                    "[Step {}/{}] Failed ({:.1}s)",
                     step_number,
                     total_steps,
                     result.duration_ms.unwrap_or(0) as f64 / 1000.0
                 ))?;
 
                 if let Some(error) = &result.error {
-                    self.task_logger.error(&format!("Error Message: {error}"))?;
+                    self.task_logger
+                        .error(&format!("[Step {}/{}] Error: {error}", step_number, total_steps))?;
                 }
             }
             StepStatus::Skipped => {
                 self.task_logger.info(&format!(
-                    "[{}/{}] Skipped by: {}",
+                    "[Step {}/{}] Skipped: {}",
                     step_number,
                     total_steps,
                     detail.unwrap_or("No reason provided")
@@ -240,7 +240,8 @@ impl StepExecutor {
             }
             StepStatus::Running => {
                 // 这种情况通常不应该出现在结果记录中，但为了完整性处理
-                self.task_logger.info(&format!("[{}/{}] Running...", step_number, total_steps))?;
+                self.task_logger
+                    .info(&format!("[Step {}/{}] Running...", step_number, total_steps))?;
             }
         }
         Ok(())

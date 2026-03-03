@@ -388,7 +388,7 @@ impl PodmanEngine {
         environment: &HashMap<String, String>,
         task_logger: &TaskLogger,
     ) -> Result<i32> {
-        for cmd in commands {
+        for (index, cmd) in commands.iter().enumerate() {
             let mut command = tokio::process::Command::new("podman");
 
             command.arg("exec").arg("-i");
@@ -399,18 +399,20 @@ impl PodmanEngine {
 
             command.arg(container).arg(shell).arg("-c").arg(cmd);
 
+            task_logger.info(&format!("  [Cmd {}/{}] {cmd}", index + 1, commands.len()))?;
+
             // 创建回调，避免重复代码
             let stdout_callback: Option<LogCallback> = {
                 let task_logger = task_logger.clone();
                 Some(Box::new(move |line| {
-                    let _ = task_logger.info(line);
+                    let _ = task_logger.info(&format!("    | {}", line));
                 }))
             };
 
             let stderr_callback: Option<LogCallback> = {
                 let task_logger = task_logger.clone();
                 Some(Box::new(move |line| {
-                    let _ = task_logger.info(line);
+                    let _ = task_logger.info(&format!("    | {}", line));
                 }))
             };
 
@@ -422,7 +424,14 @@ impl PodmanEngine {
             .await?;
 
             if exit_code != 0 {
+                task_logger.error(&format!(
+                    "  [Cmd {}/{}] Failed (exit code: {exit_code})",
+                    index + 1,
+                    commands.len()
+                ))?;
                 return Ok(exit_code);
+            } else {
+                task_logger.info(&format!("  [Cmd {}/{}] Done", index + 1, commands.len()))?;
             }
         }
 

@@ -27,6 +27,9 @@ pub struct Task {
     pub context: Option<ExecutionContext>,
     pub project_config: Option<ConfKitProjectConfig>,
     pub step_results: Vec<StepResult>,
+
+    /// 共享的任务日志记录器实例
+    task_logger: TaskLogger,
 }
 
 impl Task {
@@ -42,6 +45,8 @@ impl Task {
         }
         let _ = std::fs::OpenOptions::new().create(true).append(true).open(path);
 
+        let task_logger = TaskLogger::new(log_path.clone());
+
         Self {
             id: task_id,
             started_at: Local::now(),
@@ -50,6 +55,7 @@ impl Task {
             context: None,
             project_config: None,
             step_results: Vec::new(),
+            task_logger,
         }
     }
 
@@ -89,9 +95,14 @@ impl Task {
         self.finished_at = Some(Local::now());
     }
 
-    /// 创建轻量级的任务日志记录器
+    /// 返回共享的任务日志记录器（clone Sender，共享同一后台消费者）
     pub fn logger(&self) -> TaskLogger {
-        TaskLogger::new(self.log_path.clone())
+        self.task_logger.clone()
+    }
+
+    /// 等待所有积压的日志消息处理完毕
+    pub async fn flush_logger(&self) -> Result<()> {
+        self.task_logger.flush().await
     }
 
     // 任务生命周期管理方法 (稍后实现)
@@ -141,7 +152,7 @@ impl Task {
             let step_number = index + 1;
             let step_continue_on_error = step.continue_on_error.unwrap_or(false);
 
-            self.info(&format!("[{}/{}] Executing: {}", step_number, total_steps, step.name))?;
+            self.info(&format!("[Step {}/{}] Executing: {}", step_number, total_steps, step.name))?;
 
             let result = executor.execute_step(step, step_number, total_steps).await?;
 

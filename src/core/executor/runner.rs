@@ -60,7 +60,7 @@ impl Runner {
 
     pub async fn start(&mut self) -> Result<()> {
         // 立即输出 task id，方便外部调用方获取
-        tracing::info!("Task ID: {}", self.task.id);
+        self.task.info(&format!("Task ID: {}", self.task.id))?;
 
         self.task.prepare().await?;
         self.task.execute_steps().await?;
@@ -69,6 +69,9 @@ impl Runner {
 
         // 输出执行摘要
         self.task.print_summary()?;
+
+        // 确保所有日志消息都已写入
+        self.task.flush_logger().await?;
 
         Ok(())
     }
