@@ -32,5 +32,8 @@ pub const TASK_LOG_FILE: &str = "task.log";
 /// 任务元数据文件名
 pub const TASK_META_FILE: &str = "task.meta.json";
 
+/// 任务数据库文件名
+pub const TASK_DB_FILE: &str = "tasks.db";
+
 // /// 容器缓存目录
 // pub const CONTAINER_CACHE_DIR: &str = "/cache";

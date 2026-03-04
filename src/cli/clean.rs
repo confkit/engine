@@ -84,8 +84,8 @@ async fn handle_clean_log(
     all: bool,
 ) -> Result<()> {
     match (task, project, space, all) {
-        (Some(task), Some(project), Some(space), _) => {
-            LogCleaner::clean_task(&space, &project, &task).await?;
+        (Some(task), _, _, _) => {
+            LogCleaner::clean_task(&task).await?;
         }
         (None, Some(project), Some(space), _) => {
             LogCleaner::clean_project(&space, &project).await?;

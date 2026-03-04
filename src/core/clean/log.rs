@@ -3,10 +3,10 @@
 //! Description: Log cleaner implementation
 
 use anyhow::Result;
-use std::fs;
+use std::path::Path;
 
 use crate::core::clean::volumes::VolumesCleaner;
-use crate::formatter::path::PathFormatter;
+use crate::infra::db::TaskDb;
 use crate::shared::constants::HOST_LOG_DIR;
 
 pub struct LogCleaner {}
@@ -14,6 +14,9 @@ pub struct LogCleaner {}
 impl LogCleaner {
     pub async fn clean_all() -> Result<()> {
         tracing::info!("Cleaning all logs");
+
+        let db = TaskDb::open()?;
+        db.delete_all()?;
 
         VolumesCleaner::clean_dir(HOST_LOG_DIR, false).await?;
 
@@ -23,8 +26,10 @@ impl LogCleaner {
     pub async fn clean_space(space_name: &str) -> Result<()> {
         tracing::info!("Cleaning space: {}", space_name);
 
-        let space_dir = PathFormatter::log_space_dir(space_name);
-        VolumesCleaner::clean_dir(&space_dir, true).await?;
+        let db = TaskDb::open()?;
+        let paths = db.list_all_by_space(space_name)?;
+        Self::remove_log_files(&paths).await;
+        db.delete_by_space(space_name)?;
 
         Ok(())
     }
@@ -32,56 +37,40 @@ impl LogCleaner {
     pub async fn clean_project(space_name: &str, project_name: &str) -> Result<()> {
         tracing::info!("Cleaning space: {}, project: {}", space_name, project_name);
 
-        let project_log_dir = PathFormatter::log_project_dir(space_name, project_name);
-
-        VolumesCleaner::clean_dir(&project_log_dir, true).await?;
+        let db = TaskDb::open()?;
+        let paths = db.list_all_by_project(space_name, project_name)?;
+        Self::remove_log_files(&paths).await;
+        db.delete_by_project(space_name, project_name)?;
 
         Ok(())
     }
 
-    pub async fn clean_task(space_name: &str, project_name: &str, task_id: &str) -> Result<()> {
-        tracing::info!(
-            "Cleaning space: {}, project: {}, task: {}",
-            space_name,
-            project_name,
-            task_id
-        );
+    pub async fn clean_task(task_id: &str) -> Result<()> {
+        tracing::info!("Cleaning task: {}", task_id);
 
-        let project_log_dir = PathFormatter::log_project_dir(space_name, project_name);
-        // 遍历日期目录
-        let date_dirs = match fs::read_dir(&project_log_dir) {
-            Ok(dirs) => dirs,
-            Err(_) => return Ok(()),
-        };
+        let db = TaskDb::open()?;
+        if let Some(record) = db.get_task(task_id)? {
+            Self::remove_log_files(&[record.log_path]).await;
+            db.delete_task(task_id)?;
+        } else {
+            tracing::warn!("Task not found: {}", task_id);
+        }
 
-        for date_entry in date_dirs {
-            let date_entry = match date_entry {
-                Ok(e) => e,
-                Err(_) => continue,
-            };
-            if !date_entry.path().is_dir() {
-                continue;
+        Ok(())
+    }
+
+    /// 根据相对路径列表删除日志文件及对应的 meta.json
+    async fn remove_log_files(relative_paths: &[String]) {
+        for rel_path in relative_paths {
+            let log_path = format!("{}/{}", HOST_LOG_DIR, rel_path);
+            let meta_path = log_path.replace(".log", ".meta.json");
+
+            if Path::new(&log_path).exists() {
+                let _ = std::fs::remove_file(&log_path);
             }
-
-            let task_dirs = match fs::read_dir(date_entry.path()) {
-                Ok(dirs) => dirs,
-                Err(_) => continue,
-            };
-
-            for task_entry in task_dirs {
-                let task_entry = match task_entry {
-                    Ok(e) => e,
-                    Err(_) => continue,
-                };
-                let dir_name = task_entry.file_name();
-                let dir_name = dir_name.to_string_lossy();
-
-                // 匹配目录名后缀中的 task_id
-                if dir_name.ends_with(task_id) {
-                    VolumesCleaner::clean_dir(task_entry.path().to_str().unwrap(), true).await?;
-                }
+            if Path::new(&meta_path).exists() {
+                let _ = std::fs::remove_file(&meta_path);
             }
         }
-        Ok(())
     }
 }

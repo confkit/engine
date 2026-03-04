@@ -11,9 +11,10 @@ use super::step_executor::StepExecutor;
 use super::types::{StepMetadata, StepResult, StepStatus, TaskMetadata, TaskStatus};
 use crate::core::clean::volumes::VolumesCleaner;
 use crate::formatter::log::LogFormatter;
+use crate::formatter::path::PathFormatter;
+use crate::infra::db::TaskDb;
 use crate::infra::logger::LogLevel;
 use crate::infra::logger::TaskLogger;
-use crate::shared::constants::{TASK_LOG_FILE, TASK_META_FILE};
 use crate::types::config::ConfKitProjectConfig;
 use crate::utils::fs::make_dir_with_permissions;
 
@@ -22,6 +23,8 @@ pub struct Task {
     pub id: String,
     pub started_at: DateTime<Local>,
     pub finished_at: Option<DateTime<Local>>,
+    pub date: String,
+    pub log_relative_path: String,
     pub log_dir: String,
     pub log_file_path: String,
     pub metadata_path: String,
@@ -35,19 +38,24 @@ pub struct Task {
     task_logger: TaskLogger,
 }
 
+impl Default for Task {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Task {
-    pub fn new(project_log_dir: &str) -> Self {
+    pub fn new() -> Self {
         let task_id = Self::generate_task_id();
         let now = Local::now();
         let date = now.format("%Y-%m-%d").to_string();
-        let time_stamp = now.format("%H.%M.%S").to_string();
-        let task_dir_name = format!("{time_stamp}-{task_id}");
 
-        let log_dir = format!("{project_log_dir}/{date}/{task_dir_name}");
-        let log_file_path = format!("{log_dir}/{TASK_LOG_FILE}");
-        let metadata_path = format!("{log_dir}/{TASK_META_FILE}");
+        let log_dir = PathFormatter::log_date_dir(&date);
+        let log_file_path = PathFormatter::log_file_path(&date, &task_id);
+        let metadata_path = PathFormatter::log_meta_path(&date, &task_id);
+        let log_relative_path = PathFormatter::log_relative_path(&date, &task_id);
 
-        // 创建任务日志目录
+        // 创建日志日期目录
         let _ = std::fs::create_dir_all(&log_dir);
         // 创建日志文件
         let _ = std::fs::OpenOptions::new().create(true).append(true).open(&log_file_path);
@@ -58,6 +66,8 @@ impl Task {
             id: task_id,
             started_at: now,
             finished_at: None,
+            date,
+            log_relative_path,
             log_dir,
             log_file_path,
             metadata_path,
@@ -82,16 +92,6 @@ impl Task {
     pub fn error(&self, message: &str) -> Result<(), anyhow::Error> {
         self.log_with_level(message, LogLevel::Error)
     }
-
-    // /// 记录 Warn 级别日志的便捷方法
-    // pub fn warn(&self, message: &str) -> Result<(), anyhow::Error> {
-    //     self.log_with_level(message, LogLevel::Warn)
-    // }
-
-    // /// 记录 Debug 级别日志的便捷方法
-    // pub fn debug(&self, message: &str) -> Result<(), anyhow::Error> {
-    //     self.log_with_level(message, LogLevel::Debug)
-    // }
 
     // 生成任务ID
     fn generate_task_id() -> String {
@@ -136,7 +136,7 @@ impl Task {
     }
 
     /// 执行所有步骤
-    pub async fn execute_steps(&mut self) -> Result<()> {
+    pub async fn execute_steps(&mut self, db: &TaskDb) -> Result<()> {
         let (context, project_config) = match (&self.context, &self.project_config) {
             (Some(ctx), Some(cfg)) => (ctx, cfg),
             _ => {
@@ -166,7 +166,7 @@ impl Task {
             let result = executor.execute_step(step, step_number, total_steps).await?;
 
             self.step_results.push(result.clone());
-            self.update_metadata()?;
+            self.update_metadata(db)?;
 
             // 检查是否需要继续执行
             if result.status == StepStatus::Failed && !step_continue_on_error {
@@ -283,7 +283,7 @@ impl Task {
     }
 
     /// 写入初始 metadata（status: running）
-    pub fn write_initial_metadata(&self) -> Result<()> {
+    pub fn write_initial_metadata(&self, db: &TaskDb) -> Result<()> {
         let context = self.context.as_ref().ok_or_else(|| anyhow::anyhow!("Context not set"))?;
         let metadata = TaskMetadata {
             task_id: self.id.clone(),
@@ -295,11 +295,17 @@ impl Task {
             duration_ms: None,
             steps: vec![],
         };
-        self.save_metadata(&metadata)
+        self.save_metadata(&metadata)?;
+
+        if let Err(e) = db.insert_task(&metadata, &self.log_relative_path) {
+            tracing::warn!("Failed to insert task into DB: {}", e);
+        }
+
+        Ok(())
     }
 
     /// 更新 metadata（追加 step 结果）
-    pub fn update_metadata(&self) -> Result<()> {
+    pub fn update_metadata(&self, db: &TaskDb) -> Result<()> {
         let context = self.context.as_ref().ok_or_else(|| anyhow::anyhow!("Context not set"))?;
         let steps: Vec<StepMetadata> = self.step_results.iter().map(StepMetadata::from).collect();
         let metadata = TaskMetadata {
@@ -312,11 +318,17 @@ impl Task {
             duration_ms: None,
             steps,
         };
-        self.save_metadata(&metadata)
+        self.save_metadata(&metadata)?;
+
+        if let Err(e) = db.update_task(&metadata) {
+            tracing::warn!("Failed to update task in DB: {}", e);
+        }
+
+        Ok(())
     }
 
     /// 完成任务 metadata
-    pub fn finalize_metadata(&mut self) -> Result<()> {
+    pub fn finalize_metadata(&mut self, db: &TaskDb) -> Result<()> {
         self.finish();
         let context = self.context.as_ref().ok_or_else(|| anyhow::anyhow!("Context not set"))?;
         let steps: Vec<StepMetadata> = self.step_results.iter().map(StepMetadata::from).collect();
@@ -332,7 +344,13 @@ impl Task {
             duration_ms: Some(total_duration),
             steps,
         };
-        self.save_metadata(&metadata)
+        self.save_metadata(&metadata)?;
+
+        if let Err(e) = db.update_task(&metadata) {
+            tracing::warn!("Failed to finalize task in DB: {}", e);
+        }
+
+        Ok(())
     }
 
     fn save_metadata(&self, metadata: &TaskMetadata) -> Result<()> {

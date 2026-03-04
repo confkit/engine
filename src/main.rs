@@ -116,6 +116,11 @@ async fn main() -> Result<()> {
     // 初始化所需目录
     init_dirs()?;
 
+    // 初始化任务数据库（确保建表）
+    if let Err(e) = infra::db::TaskDb::open() {
+        tracing::warn!("Failed to initialize task database: {}", e);
+    }
+
     tracing::debug!("Loading .confkit.yml...");
     // 加载全局配置文件
     if let Err(e) = ConfKitConfigLoader::set_config().await {

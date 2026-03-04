@@ -9,12 +9,13 @@ use tracing;
 
 use super::context::ExecutionContext;
 use super::task::Task;
-use crate::formatter::path::PathFormatter;
 use crate::infra::config::ConfKitConfigLoader;
+use crate::infra::db::TaskDb;
 
 /// 主执行器
 pub struct Runner {
     task: Task,
+    db: TaskDb,
 }
 
 impl Runner {
@@ -35,10 +36,8 @@ impl Runner {
             }
         };
 
-        let host_log_dir = PathFormatter::log_project_dir(space_name, project_name);
-
         // 创建任务
-        let mut task = Task::new(&host_log_dir);
+        let mut task = Task::new();
         let task_id = task.id.clone();
 
         // 创建执行上下文
@@ -55,7 +54,9 @@ impl Runner {
         task.context = Some(context);
         task.project_config = Some(project_config);
 
-        Ok(Self { task })
+        let db = TaskDb::open()?;
+
+        Ok(Self { task, db })
     }
 
     pub async fn start(&mut self) -> Result<()> {
@@ -63,14 +64,14 @@ impl Runner {
         self.task.info(&format!("Task ID: {}", self.task.id))?;
 
         // 写入初始 metadata
-        self.task.write_initial_metadata()?;
+        self.task.write_initial_metadata(&self.db)?;
 
         self.task.prepare().await?;
-        self.task.execute_steps().await?;
+        self.task.execute_steps(&self.db).await?;
         self.task.cleanup().await?;
 
         // 完成并写入最终 metadata
-        self.task.finalize_metadata()?;
+        self.task.finalize_metadata(&self.db)?;
 
         // 输出执行摘要
         self.task.print_summary()?;

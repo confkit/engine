@@ -161,14 +161,17 @@ confkit run --space hello --project hello-app --dry-run
 # 通过命令行参数注入环境变量
 confkit run --space hello --project hello-app -e KEY1=value1 -e KEY2=value2
 
-# 查看日志
-confkit log list --space hello --project hello-app
-confkit log show --space hello --project hello-app --task <task_id>
-confkit log info --space hello --project hello-app --task <task_id>
+# 查看日志（space/project 为可选过滤条件，支持分页）
+confkit log list
+confkit log list --space hello --project hello-app --page 1 --size 10
+confkit log show --task <task_id>
+confkit log info --task <task_id>
 
 # 清理日志
 confkit log clean --all
+confkit log clean --space hello
 confkit log clean --space hello --project hello-app
+confkit log clean --task <task_id>
 
 # 查看/校验配置
 confkit config show
@@ -267,29 +270,35 @@ steps:
 
 ## 📋 日志管理
 
-日志按层级目录结构存储：
+日志采用扁平化日期目录 + SQLite 元数据索引存储：
 
 ```
-volumes/logs/<space>/<project>/<date>/<time>-<task_id>/
-  ├── task.meta.json   # 任务元数据（状态、耗时、步骤结果）
-  └── task.log         # 完整任务日志输出
+volumes/logs/
+  ├── tasks.db                    # SQLite 元数据库
+  └── 2026-03-04/                 # 按日期扁平存储
+      ├── <task_id>.log           # 任务日志文件
+      ├── <task_id>.meta.json     # 元数据快照（便于离线查看）
+      └── ...
 ```
 
 ```bash
-# 列出项目的任务日志
+# 列出任务日志（支持可选过滤和分页）
+confkit log list
+confkit log list --space hello
 confkit log list --space hello --project hello-app
+confkit log list --space hello --project hello-app --page 1 --size 10
 
-# 查看任务日志内容
-confkit log show --space hello --project hello-app --task <task_id>
+# 查看任务日志内容（仅需 task ID）
+confkit log show --task <task_id>
 
 # 查看任务元数据（状态、耗时、各步骤详情）
-confkit log info --space hello --project hello-app --task <task_id>
+confkit log info --task <task_id>
 
 # 清理日志
-confkit log clean --all
+confkit log clean --task <task_id>
 confkit log clean --space hello
 confkit log clean --space hello --project hello-app
-confkit log clean --space hello --project hello-app --task <task_id>
+confkit log clean --all
 ```
 
 ## 🧹 清理管理
@@ -305,7 +314,9 @@ confkit clean temp
 
 # 清理日志（等同于 `confkit log clean`）
 confkit clean log --all
+confkit clean log --space hello
 confkit clean log --space hello --project hello-app
+confkit clean log --task <task_id>
 
 # 清理全部（workspace、artifacts、cache、temp、logs）
 confkit clean all
@@ -336,7 +347,7 @@ confkit
 - `[RUN] Run 管理` → 执行项目构建任务
 - `[BUILDER] Builder 管理` → 镜像和容器管理
 - `[IMAGE] Image 管理` → 管理构建镜像
-- `[LOG] Log 管理` → 列出、查看和检查任务日志
+- `[LOG] Log 管理` → 列出、查看和检查任务日志（支持全部项目 / 按 space / 按 space+project 查询）
 - `[CLEAN] Clean 管理` → 清理日志、工作空间、产物、缓存、临时文件
 
 ## 🎯 特色功能
@@ -524,11 +535,12 @@ steps:
 
 ### 结构化任务日志
 
-每个任务产生结构化输出：
+每个任务产生双重存储的结构化输出：
 
-- **`task.meta.json`**：实时元数据，包含任务状态、开始/结束时间、总耗时、以及各步骤的执行结果（状态、退出码、错误信息）
-- **`task.log`**：带时间戳的完整日志输出
-- 元数据在每个步骤执行完毕后实时更新，即使任务中途崩溃也可查看执行进度
+- **SQLite 数据库**（`tasks.db`）：元数据索引，支持分页查询、按 space/project 跨项目筛选、按 task ID 快速查找
+- **`<task_id>.meta.json`**：元数据快照文件，便于离线查看，包含任务状态、开始/结束时间、总耗时、以及各步骤的执行结果（状态、退出码、错误信息）
+- **`<task_id>.log`**：带时间戳的完整日志输出
+- 元数据在每个步骤执行完毕后同时更新 SQLite 和 JSON，即使任务中途崩溃也可查看执行进度
 
 ### 分层构建器管理
 

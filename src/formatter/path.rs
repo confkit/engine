@@ -12,28 +12,23 @@ impl PathFormatter {
         format!("--{space_name}--{project_name}-{task_id}")
     }
 
-    /// 获取日志 space 目录: volumes/logs/{space_name}
-    pub fn log_space_dir(space_name: &str) -> String {
-        format!("{}/{}", HOST_LOG_DIR, space_name)
+    /// 获取日志日期目录: volumes/logs/{date}
+    pub fn log_date_dir(date: &str) -> String {
+        format!("{}/{}", HOST_LOG_DIR, date)
     }
 
-    /// 获取日志项目目录: volumes/logs/{space_name}/{project_name}
-    pub fn log_project_dir(space_name: &str, project_name: &str) -> String {
-        format!("{}/{}/{}", HOST_LOG_DIR, space_name, project_name)
+    /// 获取日志文件路径: volumes/logs/{date}/{task_id}.log
+    pub fn log_file_path(date: &str, task_id: &str) -> String {
+        format!("{}/{}.log", Self::log_date_dir(date), task_id)
     }
 
-    /// 获取日志日期目录: volumes/logs/{space}/{project}/{date}
-    pub fn log_date_dir(space_name: &str, project_name: &str, date: &str) -> String {
-        format!("{}/{}", Self::log_project_dir(space_name, project_name), date)
+    /// 获取元数据文件路径: volumes/logs/{date}/{task_id}.meta.json
+    pub fn log_meta_path(date: &str, task_id: &str) -> String {
+        format!("{}/{}.meta.json", Self::log_date_dir(date), task_id)
     }
 
-    /// 获取任务日志目录: volumes/logs/{space}/{project}/{date}/{ts-task_id}
-    pub fn log_task_dir(
-        space_name: &str,
-        project_name: &str,
-        date: &str,
-        task_dir_name: &str,
-    ) -> String {
-        format!("{}/{}", Self::log_date_dir(space_name, project_name, date), task_dir_name)
+    /// 获取存入 DB 的相对路径: {date}/{task_id}.log
+    pub fn log_relative_path(date: &str, task_id: &str) -> String {
+        format!("{}/{}.log", date, task_id)
     }
 }

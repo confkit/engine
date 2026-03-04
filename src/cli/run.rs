@@ -53,11 +53,7 @@ async fn handle_dry_run(args: &RunArgs) -> Result<()> {
     let project_config = match project_config {
         Some(config) => config,
         None => {
-            tracing::error!(
-                "Project '{}' not found in space '{}'",
-                args.project,
-                args.space
-            );
+            tracing::error!("Project '{}' not found in space '{}'", args.project, args.space);
             return Ok(());
         }
     };
@@ -103,13 +99,7 @@ async fn handle_dry_run(args: &RunArgs) -> Result<()> {
         let status = if will_skip { "SKIP" } else { "RUN" };
 
         tracing::info!("");
-        tracing::info!(
-            "  [Step {}/{}] {} [{}]",
-            step_num,
-            total,
-            step.name,
-            status
-        );
+        tracing::info!("  [Step {}/{}] {} [{}]", step_num, total, step.name, status);
         tracing::info!("    target:    {}", target);
         tracing::info!("    commands:  {}", step.commands.len());
         for cmd in &step.commands {
