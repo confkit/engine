@@ -7,6 +7,7 @@ use clap::{Args, Subcommand};
 
 use crate::core::clean::log::LogCleaner;
 use crate::core::logger::log;
+use crate::infra::db::task_db::{PageParams, TaskFilter};
 
 #[derive(Args)]
 pub struct LogCommand {
@@ -16,35 +17,29 @@ pub struct LogCommand {
 
 #[derive(Subcommand)]
 pub enum LogSubcommand {
-    /// List log files for a project.
+    /// List log files (supports filtering and pagination).
     List {
-        /// Space name.
+        /// Space name (optional filter).
         #[arg(short, long)]
-        space: String,
-        /// Project name.
+        space: Option<String>,
+        /// Project name (optional filter).
         #[arg(short, long)]
-        project: String,
+        project: Option<String>,
+        /// Page number (default: 1).
+        #[arg(long, default_value = "1")]
+        page: usize,
+        /// Page size (default: 20).
+        #[arg(long, default_value = "20")]
+        size: usize,
     },
     /// Show a specific task log.
     Show {
-        /// Space name.
-        #[arg(short, long)]
-        space: String,
-        /// Project name.
-        #[arg(short, long)]
-        project: String,
-        /// Task ID or log filename fragment.
+        /// Task ID.
         #[arg(short, long)]
         task: String,
     },
     /// Show task metadata info.
     Info {
-        /// Space name.
-        #[arg(short, long)]
-        space: String,
-        /// Project name.
-        #[arg(short, long)]
-        project: String,
         /// Task ID.
         #[arg(short, long)]
         task: String,
@@ -69,19 +64,21 @@ pub enum LogSubcommand {
 impl LogCommand {
     pub async fn execute(self) -> Result<()> {
         match self.command {
-            LogSubcommand::List { space, project } => {
-                log::list_task_logs(&space, &project)?;
+            LogSubcommand::List { space, project, page, size } => {
+                let filter = TaskFilter { space_name: space, project_name: project };
+                let page_params = PageParams { page, size };
+                log::list_task_logs(&filter, &page_params)?;
             }
-            LogSubcommand::Show { space, project, task } => {
-                log::print_task_log(&space, &project, &task)?;
+            LogSubcommand::Show { task } => {
+                log::print_task_log(&task)?;
             }
-            LogSubcommand::Info { space, project, task } => {
-                log::print_task_info(&space, &project, &task)?;
+            LogSubcommand::Info { task } => {
+                log::print_task_info(&task)?;
             }
             LogSubcommand::Clean { space, project, task, all } => {
                 match (task, project, space, all) {
-                    (Some(task), Some(project), Some(space), _) => {
-                        LogCleaner::clean_task(&space, &project, &task).await?;
+                    (Some(task), _, _, _) => {
+                        LogCleaner::clean_task(&task).await?;
                     }
                     (None, Some(project), Some(space), _) => {
                         LogCleaner::clean_project(&space, &project).await?;
@@ -93,9 +90,7 @@ impl LogCommand {
                         LogCleaner::clean_all().await?;
                     }
                     _ => {
-                        tracing::warn!(
-                            "Please provide valid parameters for log cleaning"
-                        );
+                        tracing::warn!("Please provide valid parameters for log cleaning");
                     }
                 }
             }

@@ -50,6 +50,28 @@ pub enum TaskStatus {
     Failed,
 }
 
+impl std::fmt::Display for TaskStatus {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            TaskStatus::Running => write!(f, "running"),
+            TaskStatus::Completed => write!(f, "completed"),
+            TaskStatus::Failed => write!(f, "failed"),
+        }
+    }
+}
+
+impl std::str::FromStr for TaskStatus {
+    type Err = std::convert::Infallible;
+
+    fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
+        Ok(match s {
+            "completed" => TaskStatus::Completed,
+            "failed" => TaskStatus::Failed,
+            _ => TaskStatus::Running,
+        })
+    }
+}
+
 /// 步骤元数据
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StepMetadata {

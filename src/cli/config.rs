@@ -39,14 +39,8 @@ async fn handle_show() -> Result<()> {
     // Engine
     tracing::info!("Engine:           {:?}", config.engine);
     tracing::info!("Version:          {}", config.version);
-    tracing::info!(
-        "Compose file:     {}",
-        config.engine_compose.file
-    );
-    tracing::info!(
-        "Compose project:  {}",
-        config.engine_compose.project
-    );
+    tracing::info!("Compose file:     {}", config.engine_compose.file);
+    tracing::info!("Compose project:  {}", config.engine_compose.project);
 
     // Images
     tracing::info!("");
@@ -74,12 +68,7 @@ async fn handle_show() -> Result<()> {
                 Some(src) => format!("git: {}", src.git_repo),
                 None => "no source".to_string(),
             };
-            tracing::info!(
-                "    - {} | {} | {} steps",
-                project.name,
-                source_info,
-                step_count
-            );
+            tracing::info!("    - {} | {} | {} steps", project.name, source_info, step_count);
         }
     }
 
@@ -127,10 +116,7 @@ async fn handle_validate() -> Result<()> {
                 }
             }
             Err(e) => {
-                errors.push(format!(
-                    "Failed to load projects for space '{}': {}",
-                    space.name, e
-                ));
+                errors.push(format!("Failed to load projects for space '{}': {}", space.name, e));
             }
         }
     }
@@ -150,10 +136,7 @@ async fn handle_validate() -> Result<()> {
 
     // 校验 compose file
     if !std::path::Path::new(&config.engine_compose.file).exists() {
-        errors.push(format!(
-            "Compose file does not exist: {}",
-            config.engine_compose.file
-        ));
+        errors.push(format!("Compose file does not exist: {}", config.engine_compose.file));
     }
 
     if errors.is_empty() {
