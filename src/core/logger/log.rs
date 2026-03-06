@@ -34,10 +34,11 @@ pub fn list_task_logs(filter: &TaskFilter, page_params: &PageParams) -> Result<(
             None => "-".to_string(),
         };
         tracing::info!(
-            "  {}  {}/{}  [{}]  {}  ({} steps)",
+            "  {}  {}/{}  {}  [{}]  {}  ({} steps)",
             task.task_id,
             task.space_name,
             task.project_name,
+            task.started_at,
             task.status,
             duration_str,
             task.steps.len()
