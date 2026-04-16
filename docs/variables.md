@@ -25,6 +25,7 @@ Auto-injected by ConfKit during task execution:
 | `PROJECT_NAME` | Project name from config file | `hello-app` |
 | `PROJECT_VERSION` | Project version from remote repo (package.json / Cargo.toml) | `1.0.0` |
 | `SPACE_NAME` | Space name | `hello` |
+| `HOST_VOLUMES_DIR` | Host volumes root directory | `volumes` |
 | `HOST_WORKSPACE_DIR` | Host task workspace directory | `volumes/workspace/...` |
 | `CONTAINER_WORKSPACE_DIR` | Container task workspace directory | `/workspace/...` |
 | `HOST_ARTIFACTS_ROOT_DIR` | Host artifact root directory | `volumes/artifacts` |
