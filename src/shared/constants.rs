@@ -5,6 +5,9 @@
 /// 配置文件名
 pub const CONFKIT_CONFIG_FILE: &str = ".confkit.yml";
 
+/// Volumes 根目录
+pub const HOST_VOLUMES_DIR: &str = "volumes";
+
 /// 工作目录
 pub const HOST_WORKSPACE_DIR: &str = "volumes/workspace";
 

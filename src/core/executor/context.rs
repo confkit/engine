@@ -14,7 +14,7 @@ use crate::{
     },
     shared::constants::{
         CONTAINER_ARTIFACTS_ROOT_DIR, CONTAINER_WORKSPACE_DIR, HOST_ARTIFACTS_ROOT_DIR,
-        HOST_WORKSPACE_DIR,
+        HOST_VOLUMES_DIR, HOST_WORKSPACE_DIR,
     },
     types::config::ConfKitProjectConfig,
 };
@@ -137,6 +137,9 @@ impl ExecutionContext {
         env.insert("SPACE_NAME".to_string(), params.space_name.to_string());
 
         // 目录环境变量
+
+        // 主机 volumes 根目录
+        env.insert("HOST_VOLUMES_DIR".to_string(), HOST_VOLUMES_DIR.to_string());
 
         // 主机工作空间目录
         env.insert("HOST_WORKSPACE_DIR".to_string(), params.host_workspace_dir.to_string());
