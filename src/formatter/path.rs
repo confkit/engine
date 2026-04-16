@@ -9,7 +9,7 @@ pub struct PathFormatter;
 impl PathFormatter {
     // 格式化任务路径
     pub fn get_task_path(space_name: &str, project_name: &str, task_id: &str) -> String {
-        format!("--{space_name}--{project_name}-{task_id}")
+        format!("{space_name}--{project_name}-{task_id}")
     }
 
     /// 获取日志日期目录: volumes/logs/{date}
