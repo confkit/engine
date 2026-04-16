@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.3] - 2026-04-16
+
+### 🐛 Bug Fixes
+
+- 移除 task path 的 '--' 前缀, 避免和命令参数冲突
+- 添加 TASK_WORKSPACE_DIR 变量支持, 移除无用字段导致的 check 警告
 ## [0.4.2] - 2026-04-16
 
 ### 🚀 Features
@@ -27,6 +33,10 @@ All notable changes to this project will be documented in this file.
 ### ⚡ Performance
 
 - 日志列表打印添加开始时间
+
+### ⚙️ Miscellaneous Tasks
+
+- Release confkit-engine version 0.4.2
 ## [0.4.1] - 2026-02-28
 
 ### 🐛 Bug Fixes
