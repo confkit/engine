@@ -25,6 +25,7 @@ ConfKit 在执行任务时自动注入：
 | `PROJECT_NAME` | 配置文件中的项目名称 | `hello-app` |
 | `PROJECT_VERSION` | 项目版本号（取自 package.json / Cargo.toml） | `1.0.0` |
 | `SPACE_NAME` | 空间名称 | `hello` |
+| `TASK_WORKSPACE_DIR` | 任务工作目录名 | `hello--app-a0eb394d` |
 | `HOST_VOLUMES_DIR` | 主机 volumes 根目录 | `volumes` |
 | `HOST_WORKSPACE_DIR` | 主机任务工作空间目录 | `volumes/workspace/...` |
 | `CONTAINER_WORKSPACE_DIR` | 容器任务工作空间目录 | `/workspace/...` |

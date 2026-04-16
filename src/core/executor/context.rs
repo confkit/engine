@@ -65,6 +65,7 @@ impl ExecutionContext {
             space_name: &space_name,
             project_name: &project_name,
             git_info: &git_client.git_info,
+            task_path_identify: &task_path_identify,
             host_workspace_dir: &host_workspace_dir,
             container_workspace_dir: &container_workspace_dir,
             host_artifacts_dir: &host_artifacts_dir,
@@ -111,6 +112,7 @@ struct BuildEnvironmentParams<'a> {
     space_name: &'a str,
     project_name: &'a str,
     git_info: &'a Option<GitInfo>,
+    task_path_identify: &'a str,
     host_workspace_dir: &'a str,
     container_workspace_dir: &'a str,
     host_artifacts_dir: &'a str,
@@ -135,6 +137,9 @@ impl ExecutionContext {
         env.insert("TASK_ID".to_string(), params.task_id.to_string());
         env.insert("PROJECT_NAME".to_string(), params.project_name.to_string());
         env.insert("SPACE_NAME".to_string(), params.space_name.to_string());
+
+        // 任务工作目录标识
+        env.insert("TASK_WORKSPACE_DIR".to_string(), params.task_path_identify.to_string());
 
         // 目录环境变量
 

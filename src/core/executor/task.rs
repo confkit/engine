@@ -23,10 +23,7 @@ pub struct Task {
     pub id: String,
     pub started_at: DateTime<Local>,
     pub finished_at: Option<DateTime<Local>>,
-    pub date: String,
     pub log_relative_path: String,
-    pub log_dir: String,
-    pub log_file_path: String,
     pub metadata_path: String,
 
     // 新增字段用于业务逻辑执行
@@ -60,16 +57,13 @@ impl Task {
         // 创建日志文件
         let _ = std::fs::OpenOptions::new().create(true).append(true).open(&log_file_path);
 
-        let task_logger = TaskLogger::new(log_file_path.clone());
+        let task_logger = TaskLogger::new(log_file_path);
 
         Self {
             id: task_id,
             started_at: now,
             finished_at: None,
-            date,
             log_relative_path,
-            log_dir,
-            log_file_path,
             metadata_path,
             context: None,
             project_config: None,
