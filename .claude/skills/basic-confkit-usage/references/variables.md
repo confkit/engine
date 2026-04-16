@@ -19,6 +19,7 @@ All variables support `${VAR_NAME}` substitution syntax.
 | `PROJECT_NAME` | Project name from config |
 | `PROJECT_VERSION` | Version from remote repo (package.json / Cargo.toml) |
 | `SPACE_NAME` | Space name |
+| `TASK_WORKSPACE_DIR` | Task workspace directory name (e.g. `hello--app-a0eb394d`) |
 | `HOST_VOLUMES_DIR` | Host volumes root directory |
 | `HOST_WORKSPACE_DIR` | Host workspace directory |
 | `CONTAINER_WORKSPACE_DIR` | Container workspace directory |

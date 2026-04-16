@@ -62,16 +62,4 @@ impl VolumesCleaner {
         }
         Ok(())
     }
-
-    /// 删除文件
-    pub async fn remove_file(file: &str) -> Result<()> {
-        let file_path = Path::new(file);
-
-        if !file_path.exists() {
-            return Ok(());
-        }
-
-        fs::remove_file(file_path)?;
-        Ok(())
-    }
 }

@@ -29,12 +29,6 @@ pub const HOST_CACHE_DIR: &str = "volumes/cache";
 /// 临时目录(用于临时文件存储, 仓库信息获取等)
 pub const HOST_TEMP_DIR: &str = "volumes/temp";
 
-/// 任务日志文件名
-pub const TASK_LOG_FILE: &str = "task.log";
-
-/// 任务元数据文件名
-pub const TASK_META_FILE: &str = "task.meta.json";
-
 /// 任务数据库文件名
 pub const TASK_DB_FILE: &str = "tasks.db";
 
