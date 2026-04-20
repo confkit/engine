@@ -2,12 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.4] - 2026-04-20
+
+### 🐛 Bug Fixes
+
+- 修复 env file 文件反序列化注入环境变量 panic
 ## [0.4.3] - 2026-04-16
 
 ### 🐛 Bug Fixes
 
 - 移除 task path 的 '--' 前缀, 避免和命令参数冲突
 - 添加 TASK_WORKSPACE_DIR 变量支持, 移除无用字段导致的 check 警告
+
+### ⚙️ Miscellaneous Tasks
+
+- Release confkit-engine version 0.4.3
 ## [0.4.2] - 2026-04-16
 
 ### 🚀 Features

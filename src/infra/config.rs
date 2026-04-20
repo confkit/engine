@@ -145,23 +145,29 @@ impl ConfKitConfigLoader {
                 let file_content = match fs::read_to_string(path) {
                     Ok(content) => content,
                     Err(e) => {
-                        tracing::warn!("Failed to read environment file '{}': {}", env_file.path, e);
+                        tracing::warn!(
+                            "Failed to read environment file '{}': {}",
+                            env_file.path,
+                            e
+                        );
                         continue;
                     }
                 };
 
                 let parsed = match env_file.format.as_str() {
-                    "yaml" => match serde_yaml::from_str::<HashMap<String, String>>(&file_content) {
-                        Ok(data) => data,
-                        Err(e) => {
-                            tracing::warn!(
-                                "Failed to parse yaml environment file '{}': {}",
-                                env_file.path,
-                                e
-                            );
-                            continue;
+                    "yaml" => {
+                        match serde_yaml::from_str::<HashMap<String, String>>(&file_content) {
+                            Ok(data) => data,
+                            Err(e) => {
+                                tracing::warn!(
+                                    "Failed to parse yaml environment file '{}': {}",
+                                    env_file.path,
+                                    e
+                                );
+                                continue;
+                            }
                         }
-                    },
+                    }
                     "env" => Self::parse_env_file(&file_content),
                     _ => {
                         tracing::warn!(
