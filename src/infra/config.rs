@@ -139,30 +139,42 @@ impl ConfKitConfigLoader {
         let mut env_mixed = HashMap::new();
 
         // 环境文件解析
-        if project_config.environment_files.is_some() {
-            let environment_files = project_config.environment_files.as_ref().unwrap();
-            for file_path in environment_files {
-                // yaml 文件解析
-                if file_path.format == "yaml" {
-                    let file_path = Path::new(&file_path.path);
-                    let file_content = fs::read_to_string(file_path).unwrap();
-                    let yaml_data: HashMap<String, String> =
-                        serde_yaml::from_str(&file_content).unwrap();
-                    for (key, value) in yaml_data {
-                        env_from_file.insert(key.clone(), value.clone());
-                        env_mixed.insert(key, value);
+        if let Some(environment_files) = &project_config.environment_files {
+            for env_file in environment_files {
+                let path = Path::new(&env_file.path);
+                let file_content = match fs::read_to_string(path) {
+                    Ok(content) => content,
+                    Err(e) => {
+                        tracing::warn!("Failed to read environment file '{}': {}", env_file.path, e);
+                        continue;
                     }
-                }
-                // env 文件解析
-                if file_path.format == "env" {
-                    let file_path = Path::new(&file_path.path);
-                    let file_content = fs::read_to_string(file_path).unwrap();
-                    let env_data: HashMap<String, String> =
-                        serde_yaml::from_str(&file_content).unwrap();
-                    for (key, value) in env_data {
-                        env_from_file.insert(key.clone(), value.clone());
-                        env_mixed.insert(key, value);
+                };
+
+                let parsed = match env_file.format.as_str() {
+                    "yaml" => match serde_yaml::from_str::<HashMap<String, String>>(&file_content) {
+                        Ok(data) => data,
+                        Err(e) => {
+                            tracing::warn!(
+                                "Failed to parse yaml environment file '{}': {}",
+                                env_file.path,
+                                e
+                            );
+                            continue;
+                        }
+                    },
+                    "env" => Self::parse_env_file(&file_content),
+                    _ => {
+                        tracing::warn!(
+                            "Unsupported environment file format '{}', skipping",
+                            env_file.format
+                        );
+                        continue;
                     }
+                };
+
+                for (key, value) in parsed {
+                    env_from_file.insert(key.clone(), value.clone());
+                    env_mixed.insert(key, value);
                 }
             }
         }
@@ -199,6 +211,27 @@ impl ConfKitConfigLoader {
         }
 
         Ok(image.cloned())
+    }
+
+    /// 解析 .env 格式文件内容
+    ///
+    /// 每行格式为 `KEY=VALUE`，忽略空行和 `#` 开头的注释行。
+    fn parse_env_file(content: &str) -> HashMap<String, String> {
+        let mut map = HashMap::new();
+        for line in content.lines() {
+            let trimmed = line.trim();
+            if trimmed.is_empty() || trimmed.starts_with('#') {
+                continue;
+            }
+            if let Some((key, value)) = trimmed.split_once('=') {
+                let key = key.trim();
+                let value = value.trim();
+                if !key.is_empty() {
+                    map.insert(key.to_string(), value.to_string());
+                }
+            }
+        }
+        map
     }
 
     /// 验证配置
