@@ -192,8 +192,14 @@ impl StepExecutor {
         self.task_logger.info(&format!("  - Working Directory: {working_dir}"))?;
         self.task_logger.info(&format!("  - Command Count: {}", step.commands.len()))?;
 
+        for (i, cmd) in step.commands.iter().enumerate() {
+            let resolved = self.context.resolve_variables(cmd);
+            self.task_logger.info(&format!("  - Command {}: {resolved}", i + 1))?;
+        }
+
         if let Some(condition) = &step.condition {
-            self.task_logger.info(&format!("  - Condition: {}", condition))?;
+            let resolved = self.context.resolve_variables(condition);
+            self.task_logger.info(&format!("  - Condition: {resolved}"))?;
         }
 
         if let Some(timeout) = &step.timeout {

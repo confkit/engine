@@ -94,14 +94,19 @@ impl ExecutionContext {
         })
     }
 
-    pub fn resolve_working_dir(&self, working_dir: &str) -> String {
-        let mut result = working_dir.to_string();
+    /// 替换字符串中的 `${VAR}` 变量引用
+    pub fn resolve_variables(&self, input: &str) -> String {
+        let mut result = input.to_string();
         for (key, value) in &self.environment {
             let pattern = format!("${{{key}}}");
             result = result.replace(&pattern, value);
         }
 
         result
+    }
+
+    pub fn resolve_working_dir(&self, working_dir: &str) -> String {
+        self.resolve_variables(working_dir)
     }
 }
 
