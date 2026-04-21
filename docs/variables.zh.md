@@ -66,6 +66,8 @@ environment:
 environment_files:
   - format: "yaml"
     path: "./volumes/environment.yml"
+  - format: "env"
+    path: "./volumes/production.env"
 ```
 
 ---

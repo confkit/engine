@@ -114,6 +114,13 @@ images:
 | `context` | String | 构建上下文目录 |
 | `engine_file` | String | Dockerfile 路径 |
 
+### `print_environment`
+
+- **类型**: Boolean
+- **必填**: 否
+- **默认值**: `false`
+- **说明**: 是否在任务日志中打印环境变量。可被项目配置覆盖。
+
 ---
 
 ## 项目配置
@@ -201,8 +208,13 @@ steps:
 
 | 字段 | 类型 | 说明 |
 |------|------|------|
-| `format` | String | 文件格式（`yaml`） |
+| `format` | String | 文件格式：`yaml` 或 `env` |
 | `path` | String | 环境变量文件路径 |
+
+#### `format` 说明
+
+- `yaml`: 标准 YAML 键值对（`KEY: "value"`）
+- `env`: 行格式 `.env` 文件（`KEY=VALUE`），支持 `#` 注释和空行
 
 #### `environment`
 
@@ -222,6 +234,12 @@ environment:
 - **类型**: Object 数组
 - **必填**: 否
 - **说明**: 交互式环境变量定义，详见 [变量指南](variables.zh.md#交互式环境变量)。
+
+#### `print_environment`
+
+- **类型**: Boolean
+- **必填**: 否
+- **说明**: 是否在任务日志中打印环境变量。覆盖 `.confkit.yml` 全局设置。默认：`false`。
 
 #### `steps`
 

@@ -66,6 +66,8 @@ Load variables from external files via the `environment_files` section:
 environment_files:
   - format: "yaml"
     path: "./volumes/environment.yml"
+  - format: "env"
+    path: "./volumes/production.env"
 ```
 
 ---

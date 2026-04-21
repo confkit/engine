@@ -11,6 +11,7 @@ use super::step_executor::StepExecutor;
 use super::types::{StepMetadata, StepResult, StepStatus, TaskMetadata, TaskStatus};
 use crate::core::clean::volumes::VolumesCleaner;
 use crate::formatter::log::LogFormatter;
+use crate::infra::config::ConfKitConfigLoader;
 use crate::formatter::path::PathFormatter;
 use crate::infra::db::TaskDb;
 use crate::infra::logger::LogLevel;
@@ -123,8 +124,16 @@ impl Task {
         // 创建工作目录
         make_dir_with_permissions(&context.host_workspace_dir, 0o777)?;
 
+        // 合并 print_environment: 缺省 false < .confkit.yml < <project>.yml
+        let global = ConfKitConfigLoader::get_config().print_environment;
+        let project = self
+            .project_config
+            .as_ref()
+            .and_then(|cfg| cfg.print_environment);
+        let print_environment = project.or(global).unwrap_or(false);
+
         // 打印任务信息
-        self.print_info()?;
+        self.print_info(print_environment)?;
 
         Ok(())
     }
@@ -195,7 +204,7 @@ impl Task {
     // 信息输出方法 (稍后实现)
 
     /// 打印任务信息
-    pub fn print_info(&self) -> Result<()> {
+    pub fn print_info(&self, print_environment: bool) -> Result<()> {
         let context = match &self.context {
             Some(ctx) => ctx,
             None => {
@@ -223,9 +232,11 @@ impl Task {
         }
 
         // 环境变量
-        self.info(&LogFormatter::header("Environment"))?;
-        for (key, value) in &context.environment {
-            self.info(&format!("{key}: {value}"))?;
+        if print_environment {
+            self.info(&LogFormatter::header("Environment"))?;
+            for (key, value) in &context.environment {
+                self.info(&format!("{key}: {value}"))?;
+            }
         }
 
         Ok(())

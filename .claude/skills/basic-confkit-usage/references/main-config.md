@@ -88,3 +88,10 @@ images:
 | `tag` | String | Tag (shared by base and target) |
 | `context` | String | Build context directory |
 | `engine_file` | String | Dockerfile path |
+
+### `print_environment`
+
+- Type: Boolean
+- Required: No
+- Default: `false`
+- Whether to print environment variables in task logs. Can be overridden per project.

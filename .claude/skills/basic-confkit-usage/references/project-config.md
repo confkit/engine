@@ -82,7 +82,7 @@ steps:
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `format` | String | File format (`yaml`) |
+| `format` | String | File format: `yaml` or `env` |
 | `path` | String | File path |
 
 ### `environment`
@@ -102,6 +102,12 @@ environment:
 - Type: Array
 - Required: No
 - Interactive variable definitions. See `references/variables.md` for full details.
+
+### `print_environment`
+
+- Type: Boolean
+- Required: No
+- Whether to print environment variables in task logs. Overrides `.confkit.yml` global setting. Default: `false`.
 
 ### `steps`
 
