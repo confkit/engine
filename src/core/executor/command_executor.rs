@@ -25,15 +25,33 @@ impl CommandExecutor {
         commands: &[String],
         task_logger: &TaskLogger,
     ) -> Result<i32> {
-        ConfKitEngine::execute_in_container(
-            container,
-            &context.project_config.shell.container,
-            working_dir,
-            commands,
-            &context.environment,
-            task_logger,
-        )
-        .await
+        for (index, cmd) in commands.iter().enumerate() {
+            let resolved = context.resolve_variables(cmd);
+            task_logger.info(&format!("  [Cmd {}/{}] {resolved}", index + 1, commands.len()))?;
+
+            let exit_code = ConfKitEngine::execute_in_container(
+                container,
+                &context.project_config.shell.container,
+                working_dir,
+                cmd,
+                &context.environment,
+                task_logger,
+            )
+            .await?;
+
+            if exit_code != 0 {
+                task_logger.error(&format!(
+                    "  [Cmd {}/{}] Failed (exit code: {exit_code})",
+                    index + 1,
+                    commands.len()
+                ))?;
+                return Ok(exit_code);
+            } else {
+                task_logger.info(&format!("  [Cmd {}/{}] Done", index + 1, commands.len()))?;
+            }
+        }
+
+        Ok(0)
     }
 
     /// 在本地执行命令
@@ -54,7 +72,8 @@ impl CommandExecutor {
 
             command.current_dir(working_dir);
 
-            task_logger.info(&format!("  [Cmd {}/{}] {cmd}", index + 1, commands.len()))?;
+            let resolved = context.resolve_variables(cmd);
+            task_logger.info(&format!("  [Cmd {}/{}] {resolved}", index + 1, commands.len()))?;
 
             // 创建回调，避免重复代码
             let stdout_callback: Option<LogCallback> = {

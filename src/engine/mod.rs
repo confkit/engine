@@ -179,7 +179,7 @@ impl ConfKitEngine {
         container: &str,
         shell: &str,
         working_dir: &str,
-        commands: &[String],
+        cmd: &str,
         environment: &HashMap<String, String>,
         task_logger: &TaskLogger,
     ) -> Result<i32> {
@@ -190,7 +190,7 @@ impl ConfKitEngine {
                     container,
                     shell,
                     working_dir,
-                    commands,
+                    cmd,
                     environment,
                     task_logger,
                 )
@@ -201,7 +201,7 @@ impl ConfKitEngine {
                     container,
                     shell,
                     working_dir,
-                    commands,
+                    cmd,
                     environment,
                     task_logger,
                 )

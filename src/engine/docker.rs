@@ -401,58 +401,41 @@ impl DockerEngine {
         container: &str,
         shell: &str,
         working_dir: &str,
-        commands: &[String],
+        cmd: &str,
         environment: &HashMap<String, String>,
         task_logger: &TaskLogger,
     ) -> Result<i32> {
-        for (index, cmd) in commands.iter().enumerate() {
-            let mut command = tokio::process::Command::new("docker");
+        let mut command = tokio::process::Command::new("docker");
 
-            command.args(["exec", "-i"]);
+        command.args(["exec", "-i"]);
 
-            resolve_container_variables(&mut command, environment);
+        resolve_container_variables(&mut command, environment);
 
-            command.args(["-w", working_dir]);
+        command.args(["-w", working_dir]);
 
-            command.args([container, shell, "-c", cmd]);
+        command.args([container, shell, "-c", cmd]);
 
-            task_logger.info(&format!("  [Cmd {}/{}] {cmd}", index + 1, commands.len()))?;
+        // 创建回调
+        let stdout_callback: Option<LogCallback> = {
+            let task_logger = task_logger.clone();
+            Some(Box::new(move |line| {
+                let _ = task_logger.info(&format!("    | {}", line));
+            }))
+        };
 
-            // 创建回调，避免重复代码
-            let stdout_callback: Option<LogCallback> = {
-                let task_logger = task_logger.clone();
-                Some(Box::new(move |line| {
-                    let _ = task_logger.info(&format!("    | {}", line));
-                }))
-            };
+        let stderr_callback: Option<LogCallback> = {
+            let task_logger = task_logger.clone();
+            Some(Box::new(move |line| {
+                let _ = task_logger.info(&format!("    | {}", line));
+            }))
+        };
 
-            let stderr_callback: Option<LogCallback> = {
-                let task_logger = task_logger.clone();
-                Some(Box::new(move |line| {
-                    let _ = task_logger.info(&format!("    | {}", line));
-                }))
-            };
-
-            let exit_code = CommandUtil::execute_command_with_output(
-                &mut command,
-                stdout_callback,
-                stderr_callback,
-            )
-            .await?;
-
-            if exit_code != 0 {
-                task_logger.error(&format!(
-                    "  [Cmd {}/{}] Failed (exit code: {exit_code})",
-                    index + 1,
-                    commands.len()
-                ))?;
-                return Ok(exit_code);
-            } else {
-                task_logger.info(&format!("  [Cmd {}/{}] Done", index + 1, commands.len()))?;
-            }
-        }
-
-        Ok(0)
+        CommandUtil::execute_command_with_output(
+            &mut command,
+            stdout_callback,
+            stderr_callback,
+        )
+        .await
     }
 
     // ================================================ Docker Compose ================================================
