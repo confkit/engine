@@ -214,6 +214,9 @@ impl PodmanEngine {
 
         let mut command = tokio::process::Command::new("podman");
 
+        // 抑制 podman compose 的外部 provider 横幅警告
+        command.env("PODMAN_COMPOSE_WARNING_LOGS", "false");
+
         command
             .arg("compose")
             .arg("-p")
