@@ -2,11 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
-## [0.4.4] - 2026-04-20
+## [0.4.5] - 2026-04-21
 
 ### 🐛 Bug Fixes
 
 - 修复 env file 文件反序列化注入环境变量 panic
+- 移除 podman 警告 Executing external compose provider /usr/local/bin/docker-compose
+- Cmd 打印时替换变量
+- 支持环境变量是否打印控制, 默认不打印
+
+### ⚙️ Miscellaneous Tasks
+
+- Release confkit-engine version 0.4.4
 ## [0.4.3] - 2026-04-16
 
 ### 🐛 Bug Fixes
