@@ -88,6 +88,9 @@ pub struct ConfKitConfig {
     pub engine_compose: ConfKitEngineComposeConfig,
     pub spaces: Vec<ConfKitSpaceConfig>,
     pub images: Vec<ConfKitImageConfig>,
+    /// 是否打印环境变量, 缺省 false
+    #[serde(default)]
+    pub print_environment: Option<bool>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -111,6 +114,9 @@ pub struct ConfKitProjectConfig {
     /// 来自参数的环境变量, 优先级最高(仅 interfactive 模式下生效)
     pub environment_from_args: Option<Vec<ConfKitEnvironmentInteractiveConfig>>,
     pub cleaner: Option<ConfKitCleanerConfig>,
+    /// 是否打印环境变量, 缺省 false, 优先级高于 .confkit.yml
+    #[serde(default)]
+    pub print_environment: Option<bool>,
     pub steps: Vec<ConfKitStepConfig>,
 }
 

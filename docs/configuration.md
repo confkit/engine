@@ -114,6 +114,13 @@ images:
 | `context` | String | Build context directory |
 | `engine_file` | String | Path to Dockerfile |
 
+### `print_environment`
+
+- **Type**: Boolean
+- **Required**: No
+- **Default**: `false`
+- **Description**: Whether to print environment variables in task logs. Can be overridden per project in the project YAML.
+
 ---
 
 ## Project Configuration
@@ -201,8 +208,13 @@ steps:
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `format` | String | File format (`yaml`) |
+| `format` | String | File format: `yaml` or `env` |
 | `path` | String | Path to environment file |
+
+#### `format` Details
+
+- `yaml`: Standard YAML key-value map (`KEY: "value"`)
+- `env`: Line-based `.env` format (`KEY=VALUE`), supports `#` comments and blank lines
 
 #### `environment`
 
@@ -222,6 +234,12 @@ environment:
 - **Type**: Array of Objects
 - **Required**: No
 - **Description**: Interactive environment variable definitions. See [Variables Guide](variables.md#interactive-environment-variables) for details.
+
+#### `print_environment`
+
+- **Type**: Boolean
+- **Required**: No
+- **Description**: Whether to print environment variables in task logs. Overrides `.confkit.yml` global setting. Default: `false`.
 
 #### `steps`
 
