@@ -416,12 +416,8 @@ impl PodmanEngine {
             }))
         };
 
-        CommandUtil::execute_command_with_output(
-            &mut command,
-            stdout_callback,
-            stderr_callback,
-        )
-        .await
+        CommandUtil::execute_command_with_output(&mut command, stdout_callback, stderr_callback)
+            .await
     }
 
     // ================================================ Docker Compose ================================================

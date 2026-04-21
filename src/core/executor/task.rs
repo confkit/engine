@@ -11,8 +11,8 @@ use super::step_executor::StepExecutor;
 use super::types::{StepMetadata, StepResult, StepStatus, TaskMetadata, TaskStatus};
 use crate::core::clean::volumes::VolumesCleaner;
 use crate::formatter::log::LogFormatter;
-use crate::infra::config::ConfKitConfigLoader;
 use crate::formatter::path::PathFormatter;
+use crate::infra::config::ConfKitConfigLoader;
 use crate::infra::db::TaskDb;
 use crate::infra::logger::LogLevel;
 use crate::infra::logger::TaskLogger;
@@ -126,10 +126,7 @@ impl Task {
 
         // 合并 print_environment: 缺省 false < .confkit.yml < <project>.yml
         let global = ConfKitConfigLoader::get_config().print_environment;
-        let project = self
-            .project_config
-            .as_ref()
-            .and_then(|cfg| cfg.print_environment);
+        let project = self.project_config.as_ref().and_then(|cfg| cfg.print_environment);
         let print_environment = project.or(global).unwrap_or(false);
 
         // 打印任务信息
