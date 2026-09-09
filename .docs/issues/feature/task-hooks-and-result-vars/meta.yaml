@@ -1,0 +1,12 @@
+id: "FEAT-task-hooks-and-result-vars-1f4d13"
+type: "feature"
+slug: "task-hooks-and-result-vars"
+title: "任务 Hooks 机制与结果变量注入"
+status: "open"
+priority: "high"
+owner: "CORE"
+tags:
+  - "hooks"
+  - "executor"
+created_at: "2026-09-09"
+updated_at: "2026-09-09"

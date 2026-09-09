@@ -153,6 +153,14 @@
 
 **功能**: 获取当前 Claude Code 会话的对话历史和统计信息
 
+## 文档仓库 (.docs)
+
+需求 / 架构 / 测试 / issue 文档统一放 `.docs/`, 创建或调整时遵循 `.claude/skills/docs-repo`:
+
+- `requirements/`、`architectures/`、`testing/` 走模板型路径 (读对应 `references/*.md` 直接编写)
+- `issues/` 走脚本型路径, 元数据统一用 `node .claude/skills/docs-repo/scripts/docsctl.mjs` 维护, 不手改 `meta.yaml` / `tasks.yaml`
+- 正文固定中文, slug / 文件名 / 稳定 ID 保持英文
+
 ## 配置管理
 
 系统使用 YAML 元数据配置工具限制, 规则层次从绝对安全要求到行为指导.

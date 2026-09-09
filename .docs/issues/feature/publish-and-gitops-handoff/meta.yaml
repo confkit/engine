@@ -1,0 +1,13 @@
+id: "FEAT-publish-and-gitops-handoff-b3e3b1"
+type: "feature"
+slug: "publish-and-gitops-handoff"
+title: "镜像发布能力与 GitOps 交接"
+status: "open"
+priority: "medium"
+owner: "CORE"
+tags:
+  - "publish"
+  - "registry"
+  - "gitops"
+created_at: "2026-09-09"
+updated_at: "2026-09-09"
