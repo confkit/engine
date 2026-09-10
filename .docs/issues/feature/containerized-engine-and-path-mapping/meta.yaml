@@ -1,0 +1,13 @@
+id: "FEAT-containerized-engine-and-path-mapping-ed7f56"
+type: "feature"
+slug: "containerized-engine-and-path-mapping"
+title: "Engine 容器化运行与宿主机路径翻译"
+status: "open"
+priority: "low"
+owner: "CORE"
+tags:
+  - "engine"
+  - "runtime"
+  - "deploy"
+created_at: "2026-09-10"
+updated_at: "2026-09-10"
